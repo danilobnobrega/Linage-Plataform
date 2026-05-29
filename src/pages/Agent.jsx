@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useStore from '../store';
-import { 
-  Send, 
-  Sparkles, 
-  Clock, 
-  BookOpen, 
-  HelpCircle, 
-  TrendingUp, 
+import {
+  Send,
+  Sparkles,
+  Clock,
+  BookOpen,
+  HelpCircle,
+  TrendingUp,
   Zap,
   Coins,
   Check,
@@ -16,6 +16,15 @@ import {
   FileCheck,
   Award
 } from 'lucide-react';
+import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
+
+const CHAT_PHRASES = [
+  'Qual tema quer desenvolver hoje?',
+  'Compartilhe sua ideia bruta...',
+  'O que você quer transformar em post?',
+  'Descreva seu ponto de vista...',
+  'Qual conceito quer posicionar?',
+];
 
 function Agent() {
   const { id } = useParams();
@@ -23,11 +32,11 @@ function Agent() {
   const { agents, posts, addPost, credits, addMessageToAgent, user } = useStore();
 
   const headlines = {
-    cirurgiao: 'Assessor de Investimentos | Análise Técnica & Fundamentos',
-    provocador: 'Consultor Financeiro | Questionando Consensos de Mercado',
-    narrador: 'Gestor de Patrimônio | Conectando Histórias & Resultados',
-    estrategista: 'Wealth Strategist | Planejamento Macro & Cenários de 3ª Ordem',
-    carismatico: 'Advisory Privado | Insights Financeiros Descontraídos & Substância'
+    ashe:   'Assessor de Investimentos | Análise Técnica & Fundamentos',
+    jace:   'Consultor Financeiro | Questionando Consensos de Mercado',
+    aiden:  'Gestor de Patrimônio | Conectando Histórias & Resultados',
+    venn:   'Wealth Strategist | Planejamento Macro & Cenários de 3ª Ordem',
+    dexter: 'Advisory Privado | Insights Financeiros Descontraídos & Substância'
   };
   
   const [inputText, setInputText] = useState('');
@@ -40,6 +49,7 @@ function Agent() {
   const [copySuccess, setCopySuccess] = useState(false);
 
   const chatEndRef = useRef(null);
+  const { ref: chatInputRef, onFocus: chatFocus, onBlur: chatBlur } = useDecryptPlaceholder(CHAT_PHRASES);
 
   const agent = agents.find(a => a.id === id);
 
@@ -59,7 +69,7 @@ function Agent() {
 
   // Configuration for Agent Styles
   const agentConfigs = {
-    cirurgiao: {
+    ashe: {
       color: '#3b82f6',
       accentGlow: 'rgba(59, 130, 246, 0.15)',
       gradient: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
@@ -75,7 +85,7 @@ function Agent() {
         content: `**A Anatomia Oculta de: ${topic}**\n\nExiste uma falha metodológica grave na forma como a maioria dos analistas observa este tema. \n\nSe desmembrarmos a questão em seus componentes primários, identificamos **três alavancas de causalidade** que determinam o sucesso ou fracasso deste movimento:\n\n1. **A Assimetria de Dados Reativos**: Decisões baseadas em indicadores passados criam um atraso estrutural de 45 a 90 dias. A precisão exige leitura de fluxos de liquidez em tempo real.\n\n2. **A Elasticidade da Demanda Especulativa**: Ao contrário do senso comum, o comportamento do usuário neste nicho é inelástico sob estresse macroeconômico, o que valida a resiliência operacional do modelo.\n\n3. **A Taxa de Retenção Incremental (LTV/CAC)**: A margem de contribuição só se estabiliza a partir do 14º mês. Ignorar o custo de carregamento do cliente no curto prazo é um erro de sobrevida.\n\n**O Gráfico Mental de Decisão:**\n[Inputs Iniciais] ➔ [Análise de Fluxo de Caixa] ➔ [Filtro de Liquidez] ➔ [Retorno Real]\n\n*Conclusão*: O valor não está na volatilidade diária, mas na arquitetura de longo prazo. Estude os fundamentos antes de se posicionar.`
       })
     },
-    provocador: {
+    jace: {
       color: '#ef4444',
       accentGlow: 'rgba(239, 68, 68, 0.15)',
       gradient: 'linear-gradient(135deg, #7f1d1d 0%, #ef4444 100%)',
@@ -91,7 +101,7 @@ function Agent() {
         content: `**Por que tudo o que te ensinaram sobre ${topic} está ERRADO**\n\nDesculpe o choque de realidade, mas a maioria das pessoas que você segue está mentindo para você — ou simplesmente não entende o jogo de verdade.\n\nEles te vendem a ilusão de que este caminho é seguro, previsível e garantido. Não é.\n\nA verdade desconfortável que ninguém tem coragem de dizer:\n\n- **O consenso é burro**: Se todo mundo está comprando a mesma tese, a assimetria positiva de retorno simplesmente deixou de existir. Você está apenas pagando o almoço de quem entrou cedo.\n- **A segurança é uma armadilha**: O que você chama de estabilidade é, na verdade, uma morte lenta em termos de rentabilidade.\n- **O medo do debate é sinal de fraqueza**: Se a sua tese não sobrevive a 5 minutos de questionamento ácido, ela não é uma estratégia de negócios — é um dogma religioso.\n\nSe você quer continuar na média, continue aplaudindo os posts genéricos de sempre. Mas se você busca vantagem competitiva real, comece questionando o óbvio.\n\nQual é o seu lado nessa mesa? O dos que repetem mantras ou o dos que mudam as regras do jogo? Discorde de mim nos comentários.`
       })
     },
-    narrador: {
+    aiden: {
       color: '#10b981',
       accentGlow: 'rgba(16, 185, 129, 0.15)',
       gradient: 'linear-gradient(135deg, #064e3b 0%, #10b981 100%)',
@@ -107,7 +117,7 @@ function Agent() {
         content: `**A Incrível Parábola sobre ${topic}**\n\nEra uma terça-feira chuvosa quando o telefone dele tocou. Do outro lado da linha, um investidor em pânico exigia respostas. Aquela ligação custaria milhões de dólares — ou ensinaria a maior lição de nossas vidas.\n\nEssa não é apenas mais uma história corporativa. É o retrato vivo de como encaramos o tema:\n\n**O Cenário:**\nImagine uma pequena embarcação no meio de uma tempestade sem precedentes. A tripulação tem duas escolhas claras:\n1. Ajustar as velas para a direção da tempestade na esperança de cruzar mais rápido.\n2. Recolher tudo e esperar o mar se acalmar, correndo o risco de perder a rota principal.\n\nA maioria dos marinheiros amadores escolhe uma terceira via invisível: o pânico absoluto.\n\nNo mundo corporativo e nos investimentos, agir sob o calor das notícias é exatamente como tentar consertar o motor de um barco enquanto as ondas batem no convés.\n\n*A lição silenciosa*: Os melhores navegadores não são os que evitam tempestades, mas os que conhecem a fundo a resistência da própria madeira.\n\nVocê está pronto para ajustar suas velas na próxima tempestade ou vai continuar culpando o vento?`
       })
     },
-    estrategista: {
+    venn: {
       color: '#8b5cf6',
       accentGlow: 'rgba(139, 92, 246, 0.15)',
       gradient: 'linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%)',
@@ -123,7 +133,7 @@ function Agent() {
         content: `**A Reação em Cadeia Invisível de ${topic}**\n\nA maioria dos profissionais olha para o mercado e enxerga apenas eventos isolados. Mas quem domina o jogo de verdade sabe que cada ação gera ondas invisíveis de segunda e terceira ordem.\n\nVamos conectar os pontos fundamentais que estão desenhando o cenário atual de forma silenciosa:\n\n- **1ª Ordem (O Óbvio)**: A mudança imediata atrai a atenção da mídia e dos curiosos. É o efeito de superfície.\n- **2ª Ordem (O Deslocamento)**: A escassez de recursos gerada pelo ponto anterior migra silenciosamente para os setores adjacentes, abrindo janelas de assimetria que ninguém está olhando.\n- **3ª Ordem (O Novo Normal)**: Consolidação estrutural. Quem se posicionou na segunda fase agora colhe lucros exponenciais enquanto a massa tenta correr atrás do prejuízo.\n\n**O Mapa das Consequências:**\n[Mudança Inicial] ➔ [Escassez Setorial] ➔ [Readequação de Preços] ➔ [Barreira de Entrada Elevada]\n\n*A Projeção*: Em 18 meses, este nicho estará saturado e caro. A janela de entrada estratégica com alta assimetria positiva está aberta **agora**.\n\nNão seja o passageiro que embarca quando o navio já está lotado. Projete seus passos com inteligência macro.`
       })
     },
-    carismatico: {
+    dexter: {
       color: '#f59e0b',
       accentGlow: 'rgba(245, 158, 11, 0.15)',
       gradient: 'linear-gradient(135deg, #78350f 0%, #f59e0b 100%)',
@@ -141,7 +151,7 @@ function Agent() {
     }
   };
 
-  const config = agentConfigs[id] || agentConfigs.cirurgiao;
+  const config = agentConfigs[id] || agentConfigs.ashe;
 
   // Handle User Send message
   const handleSendMessage = (e) => {
@@ -267,7 +277,7 @@ function Agent() {
             {/* Initial Welcome message */}
             <div className="message-row agent">
               <div className="msg-avatar-wrapper" style={{ borderColor: config.color }}>
-                {config.badge[2]}
+                {agent.name[0]}
               </div>
               <div className="msg-bubble">
                 <p>{config.greeting}</p>
@@ -280,7 +290,7 @@ function Agent() {
               <div key={index} className={`message-row ${msg.sender}`}>
                 {msg.sender === 'agent' && (
                   <div className="msg-avatar-wrapper" style={{ borderColor: config.color }}>
-                    {config.badge[2]}
+                    {agent.name[0]}
                   </div>
                 )}
                 <div className="msg-bubble">
@@ -293,7 +303,7 @@ function Agent() {
             {isTyping && (
               <div className="message-row agent">
                 <div className="msg-avatar-wrapper" style={{ borderColor: config.color }}>
-                  {config.badge[2]}
+                  {agent.name[0]}
                 </div>
                 <div className="msg-bubble typing-bubble">
                   <div className="typing-dot"></div>
@@ -308,11 +318,13 @@ function Agent() {
 
           {/* Form Input */}
           <form onSubmit={handleSendMessage} className="chat-input-bar">
-            <input 
+            <input
+              ref={chatInputRef}
               type="text"
-              placeholder={`Escreva uma ideia ou peça para o ${agent.name} formular algo...`}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
+              onFocus={chatFocus}
+              onBlur={chatBlur}
               className="chat-text-input"
             />
             <button type="submit" className="chat-send-btn" style={{ backgroundColor: config.color }}>
@@ -437,7 +449,7 @@ function Agent() {
                       <div className="social-preview-card">
                         <div className="social-card-header">
                           <div className="mock-avatar" style={{ backgroundColor: config.color }}>
-                            {config.badge[2]}
+                            {agent.name[0]}
                           </div>
                           <div>
                             <h4 className="mock-user-name">{user.name || 'Especialista Financeiro'}</h4>

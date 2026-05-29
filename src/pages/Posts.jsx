@@ -80,11 +80,11 @@ function Posts() {
 
   const getAgentColor = (agentId) => {
     const colors = {
-      cirurgiao: '#3b82f6',
-      provocador: '#ef4444',
-      narrador: '#10b981',
-      estrategista: '#8b5cf6',
-      carismatico: '#f59e0b',
+      ashe:   '#3b82f6',
+      jace:   '#ef4444',
+      aiden:  '#10b981',
+      venn:   '#8b5cf6',
+      dexter: '#f59e0b',
     };
     return colors[agentId] || 'var(--accent)';
   };
@@ -251,7 +251,7 @@ function Posts() {
                           className="mock-render-avatar"
                           style={{ backgroundColor: getAgentColor(selectedPost.agentId) }}
                         >
-                          {agents.find(a => a.id === selectedPost.agentId)?.name[2] || 'L'}
+                          {agents.find(a => a.id === selectedPost.agentId)?.name[0] || 'L'}
                         </div>
                         <div>
                           <h4 className="mock-render-name">{user.name || 'Especialista Financeiro'}</h4>

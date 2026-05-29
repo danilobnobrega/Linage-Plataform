@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store';
+import ConsensusConverter from '../components/ConsensusConverter';
+import DecryptText from '../components/DecryptText';
+
+const HOME_PHRASES = [
+  'Construindo autoridade inquestionável.',
+  'Flipando consensos em teses outlier.',
+  'Gerando leads de alto valor.',
+  'Orquestrando sua narrativa de marca.',
+  'Transformando dados em posts de impacto.',
+];
 import { 
   Sparkles, 
   ArrowRight, 
@@ -18,6 +28,8 @@ function Home() {
   const navigate = useNavigate();
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState('');
+  
+
 
   // Daily Quote & Dynamic Welcome
   const getTimeOfDayGreeting = () => {
@@ -47,26 +59,26 @@ function Home() {
 
   // Pre-configured custom backgrounds for agent quick launcher
   const agentThemeStyles = {
-    cirurgiao: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)',
-    provocador: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%)',
-    narrador: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%)',
-    estrategista: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
-    carismatico: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%)',
+    ashe:    'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)',
+    jace:    'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%)',
+    aiden:   'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%)',
+    venn:    'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
+    dexter:  'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%)',
   };
 
   const agentBorders = {
-    cirurgiao: 'rgba(59, 130, 246, 0.25)',
-    provocador: 'rgba(239, 68, 68, 0.25)',
-    narrador: 'rgba(16, 185, 129, 0.25)',
-    estrategista: 'rgba(139, 92, 246, 0.25)',
-    carismatico: 'rgba(245, 158, 11, 0.25)',
+    ashe:   'rgba(59, 130, 246, 0.25)',
+    jace:   'rgba(239, 68, 68, 0.25)',
+    aiden:  'rgba(16, 185, 129, 0.25)',
+    venn:   'rgba(139, 92, 246, 0.25)',
+    dexter: 'rgba(245, 158, 11, 0.25)',
   };
 
   const getAgentTag = (id) => {
-    if (id === 'cirurgiao') return 'O Técnico';
-    if (id === 'provocador') return 'O Disruptor';
-    if (id === 'narrador') return 'O Storyteller';
-    if (id === 'estrategista') return 'O Visionário';
+    if (id === 'ashe')   return 'O Técnico';
+    if (id === 'jace')   return 'O Disruptor';
+    if (id === 'aiden')  return 'O Storyteller';
+    if (id === 'venn')   return 'O Visionário';
     return 'O Magnético';
   };
 
@@ -77,6 +89,7 @@ function Home() {
         <div className="welcome-section">
           <span className="greeting-pill">{getTimeOfDayGreeting()}, {user.name || 'Especialista'}</span>
           <h1 className="home-title">Sua Fábrica de Opinião de Alto Impacto</h1>
+          <DecryptText phrases={HOME_PHRASES} className="decrypt-subtitle" />
         </div>
         
         {/* Quick Credit indicator */}
@@ -136,23 +149,33 @@ function Home() {
           <p className="card-desc">Cada agente possui um estilo autoral refinado para converter sua audiência em leads. Escolha o ideal:</p>
           
           <div className="agents-quick-grid">
-            {agents.map((agent) => (
-              <button
-                key={agent.id}
-                className="quick-agent-btn"
-                style={{ 
-                  background: agentThemeStyles[agent.id], 
-                  borderColor: agentBorders[agent.id] 
-                }}
-                onClick={() => navigate(`/agent/${agent.id}`)}
-              >
-                <span className="quick-agent-name">{agent.name}</span>
-                <span className="quick-agent-desc">{getAgentTag(agent.id)}</span>
-              </button>
-            ))}
+            {agents.map((agent) => {
+              const available = agent.id === 'dexter';
+              return (
+                <button
+                  key={agent.id}
+                  className={`quick-agent-btn ${!available ? 'quick-agent-btn--soon' : ''}`}
+                  style={{
+                    background: agentThemeStyles[agent.id],
+                    borderColor: agentBorders[agent.id],
+                  }}
+                  onClick={() => available && navigate(`/agent/${agent.id}`)}
+                  disabled={!available}
+                >
+                  <span className="quick-agent-name">{agent.name}</span>
+                  <span className="quick-agent-desc">{getAgentTag(agent.id)}</span>
+                  {!available && <span className="quick-agent-soon">Em breve</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
+
+
+
+      {/* Consensus Converter */}
+      <ConsensusConverter />
 
       {/* Recent Posts Section */}
       <section className="recent-posts-section">

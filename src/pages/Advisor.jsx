@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store';
-import { 
-  Send, 
-  Sparkles, 
-  ChevronRight, 
-  Map, 
-  TrendingUp, 
-  Calendar, 
-  Layers, 
-  ShieldAlert, 
+import {
+  Send,
+  Sparkles,
+  ChevronRight,
   Activity
 } from 'lucide-react';
+import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
+
+const ADVISOR_PHRASES = [
+  'Qual é a sua dúvida estratégica?',
+  'Pergunte sobre frequência de posts...',
+  'Qual tese editorial quer desenvolver?',
+  'Como posso orquestrar seu conteúdo?',
+  'Qual agente usar para este tema?',
+];
 
 function Advisor() {
   const navigate = useNavigate();
@@ -19,6 +23,9 @@ function Advisor() {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
+  const { ref: advisorInputRef, onFocus: advisorFocus, onBlur: advisorBlur } = useDecryptPlaceholder(ADVISOR_PHRASES);
+
+
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -72,8 +79,9 @@ function Advisor() {
   return (
     <div className="page-container advisor-page animate-fade-in">
       <header className="page-header">
-        <div className="header-icon-wrapper advisor-glow">
-          <Sparkles className="advisor-star-icon" size={24} />
+        <div className="ai-orb-wrapper">
+          <div className="ai-orb-glow"></div>
+          <div className="ai-orb-core"></div>
         </div>
         <div className="header-text-container">
           <span className="header-subtitle">Advisor Estratégico</span>
@@ -137,11 +145,13 @@ function Advisor() {
           </div>
 
           <form onSubmit={handleSendMessage} className="advisor-chat-input">
-            <input 
-              type="text" 
-              placeholder="Pergunte ao Linage sobre estratégia de canais, cadência ou qual agente utilizar..."
+            <input
+              ref={advisorInputRef}
+              type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
+              onFocus={advisorFocus}
+              onBlur={advisorBlur}
               className="advisor-input-text"
             />
             <button type="submit" className="advisor-send-btn">
@@ -170,11 +180,11 @@ function Advisor() {
                   <div className="routing-agent-info">
                     <span className="routing-agent-name">{agent.name}</span>
                     <span className="routing-agent-meta">
-                      {agent.id === 'cirurgiao' && 'Induções Lógicas & Dados'}
-                      {agent.id === 'provocador' && 'Desconstrução de Clichês'}
-                      {agent.id === 'narrador' && 'Analogias & Conexão'}
-                      {agent.id === 'estrategista' && 'Visão de Futuro e Padrões'}
-                      {agent.id === 'carismatico' && 'Humor Inteligente & Charme'}
+                      {agent.id === 'ashe'   && 'Induções Lógicas & Dados'}
+                      {agent.id === 'jace'   && 'Desconstrução de Clichês'}
+                      {agent.id === 'aiden'  && 'Analogias & Conexão'}
+                      {agent.id === 'venn'   && 'Visão de Futuro e Padrões'}
+                      {agent.id === 'dexter' && 'Humor Inteligente & Charme'}
                     </span>
                   </div>
                   <ChevronRight size={16} className="routing-arrow" />
@@ -205,6 +215,7 @@ function Advisor() {
               Próximo diagnóstico editorial em 48h.
             </div>
           </div>
+
         </div>
       </div>
     </div>

@@ -1,26 +1,20 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useStore from '../store';
-import { 
-  Home, 
-  Sparkles, 
-  Bot, 
-  FileText, 
-  Settings as SettingsIcon, 
-  Coins, 
-  Plus, 
-  Sun, 
-  Moon,
-  ChevronRight
+import {
+  Home,
+  Sparkles,
+  FileText,
+  Settings as SettingsIcon,
+  Coins,
+  Plus,
+  ChevronRight,
+  Lock
 } from 'lucide-react';
 
 function Sidebar() {
-  const { theme, setTheme, credits, addCredits, agents } = useStore();
+  const { credits, addCredits, agents } = useStore();
   const navigate = useNavigate();
-
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
 
   const handleAddCredits = (e) => {
     e.stopPropagation();
@@ -29,11 +23,11 @@ function Sidebar() {
 
   // Archetype badge colors
   const agentBadges = {
-    cirurgiao: { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)', char: 'C' },
-    provocador: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'rgba(239, 68, 68, 0.3)', char: 'P' },
-    narrador: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: 'rgba(16, 185, 129, 0.3)', char: 'N' },
-    estrategista: { bg: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', border: 'rgba(139, 92, 246, 0.3)', char: 'E' },
-    carismatico: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)', char: 'K' },
+    ashe:   { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)', char: 'A' },
+    jace:   { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'rgba(239, 68, 68, 0.3)', char: 'J' },
+    aiden:  { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: 'rgba(16, 185, 129, 0.3)', char: 'N' },
+    venn:   { bg: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', border: 'rgba(139, 92, 246, 0.3)', char: 'V' },
+    dexter: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)', char: 'D' },
   };
 
   return (
@@ -82,16 +76,38 @@ function Sidebar() {
           <div className="agents-list">
             {agents.map((agent) => {
               const badge = agentBadges[agent.id] || { bg: '#888', color: '#fff', char: 'A' };
+              const locked = agent.id !== 'dexter';
+              if (locked) {
+                return (
+                  <div key={agent.id} className="sidebar-agent-link sidebar-agent-locked">
+                    <div
+                      className="agent-avatar-badge"
+                      style={{
+                        backgroundColor: badge.bg,
+                        color: badge.color,
+                        border: `1px solid ${badge.border}`
+                      }}
+                    >
+                      {badge.char}
+                    </div>
+                    <div className="agent-link-info">
+                      <span className="agent-link-name">{agent.name}</span>
+                      <span className="agent-link-archetype">Em breve</span>
+                    </div>
+                    <Lock size={12} className="lock-icon" />
+                  </div>
+                );
+              }
               return (
                 <NavLink
                   key={agent.id}
                   to={`/agent/${agent.id}`}
                   className={({ isActive }) => `sidebar-agent-link ${isActive ? 'active' : ''}`}
                 >
-                  <div 
+                  <div
                     className="agent-avatar-badge"
-                    style={{ 
-                      backgroundColor: badge.bg, 
+                    style={{
+                      backgroundColor: badge.bg,
                       color: badge.color,
                       border: `1px solid ${badge.border}`
                     }}
@@ -100,13 +116,7 @@ function Sidebar() {
                   </div>
                   <div className="agent-link-info">
                     <span className="agent-link-name">{agent.name}</span>
-                    <span className="agent-link-archetype">
-                      {agent.id === 'cirurgiao' && 'O Técnico'}
-                      {agent.id === 'provocador' && 'O Disruptor'}
-                      {agent.id === 'narrador' && 'O Storyteller'}
-                      {agent.id === 'estrategista' && 'O Visionário'}
-                      {agent.id === 'carismatico' && 'O Magnético'}
-                    </span>
+                    <span className="agent-link-archetype">O Magnético</span>
                   </div>
                   <ChevronRight className="arrow-icon" size={14} />
                 </NavLink>
@@ -126,19 +136,6 @@ function Sidebar() {
             <span>Configurações</span>
           </NavLink>
 
-          <button className="theme-toggle-btn" onClick={toggleTheme}>
-            {theme === 'light' ? (
-              <>
-                <Moon size={18} />
-                <span>Modo Escuro</span>
-              </>
-            ) : (
-              <>
-                <Sun size={18} />
-                <span>Modo Claro</span>
-              </>
-            )}
-          </button>
         </nav>
       </div>
 

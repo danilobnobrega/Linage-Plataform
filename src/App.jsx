@@ -1,24 +1,31 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
+
+const UNLOCKED_AGENTS = ['dexter'];
+
+function AgentGuard({ children }) {
+  const { id } = useParams();
+  if (!UNLOCKED_AGENTS.includes(id)) return <Navigate to="/home" replace />;
+  return children;
+}
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import Agent from './pages/Agent';
 import Advisor from './pages/Advisor';
 import Settings from './pages/Settings';
 import Posts from './pages/Posts';
-import useStore from './store';
+import CustomCursor from './components/CustomCursor';
 
 function App() {
-  const theme = useStore(state => state.theme);
-  const setTheme = useStore(state => state.setTheme);
-
-  // Apply theme class to <html>
+  // Dark theme is permanent — set once on mount
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = 'dark';
+  }, []);
 
   return (
     <Router>
+      <CustomCursor />
       <div className="app-layout">
         <Sidebar />
         <main className="main-content">
@@ -28,7 +35,7 @@ function App() {
             <Route path="/advisor" element={<Advisor />} />
             <Route path="/posts" element={<Posts />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/agent/:id" element={<Agent />} />
+            <Route path="/agent/:id" element={<AgentGuard><Agent /></AgentGuard>} />
           </Routes>
         </main>
       </div>
