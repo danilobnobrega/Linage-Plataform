@@ -10,6 +10,7 @@ import Posts from './pages/Posts';
 import SignInPage from './pages/SignIn';
 import SignUpPage from './pages/SignUp';
 import CustomCursor from './components/CustomCursor';
+import PlatformStyles from './components/PlatformStyles';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -41,12 +42,12 @@ function AppContent() {
     document.documentElement.style.colorScheme = 'dark';
   }, []);
 
-  const { isSignedIn, isLoaded } = useAuth();
   const { pathname } = useLocation();
   const isAuthPage = pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up');
 
   return (
     <>
+      <PlatformStyles />
       <ScrollToTop />
       {isAuthPage ? (
         <Routes>
