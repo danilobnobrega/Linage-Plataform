@@ -10,7 +10,6 @@ import Posts from './pages/Posts';
 import SignInPage from './pages/SignIn';
 import SignUpPage from './pages/SignUp';
 import CustomCursor from './components/CustomCursor';
-import PlatformStyles from './components/PlatformStyles';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -47,7 +46,6 @@ function AppContent() {
 
   return (
     <>
-      <PlatformStyles />
       <ScrollToTop />
       {isAuthPage ? (
         <Routes>
