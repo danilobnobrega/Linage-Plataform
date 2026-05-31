@@ -63,8 +63,8 @@ function SignUpPage() {
         <div className="auth-content">
           <div className="auth-logo">Linage</div>
           <SignUp
-            fallbackRedirectUrl="/home"
-            signInUrl="/sign-in"
+            fallbackRedirectUrl="/dashboard/home"
+            signInUrl="/dashboard/sign-in"
             appearance={appearance}
           />
         </div>
