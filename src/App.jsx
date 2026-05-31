@@ -75,7 +75,7 @@ function AppContent() {
 
 function App() {
   return (
-    <Router basename="/dashboard">
+    <Router>
       <AppContent />
     </Router>
   );
