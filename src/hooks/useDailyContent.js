@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { anthropic, MODELS, ADVISOR_SYSTEM_PROMPT } from '../lib/anthropic';
+import { anthropic, MODELS, LINAGE_SYSTEM_PROMPT } from '../lib/anthropic';
 
 const TAVILY_KEY = import.meta.env.VITE_TAVILY_API_KEY;
 const todayKey = () => `linage_daily_${new Date().toISOString().split('T')[0]}`;
@@ -23,9 +23,9 @@ async function fetchDailyContent() {
 
   // Gera perspectiva do dia + sugestões de pauta com a voz e personalidade do Linage
   const response = await anthropic.messages.create({
-    model: MODELS.advisor,
+    model: MODELS.agent,
     max_tokens: 400,
-    system: ADVISOR_SYSTEM_PROMPT,
+    system: LINAGE_SYSTEM_PROMPT,
     messages: [{
       role: 'user',
       content: `Notícias do mercado financeiro de hoje:\n${headlines}\n\nCom base nisso, gere o conteúdo do dia para a plataforma:\n1. PERSPECTIVA: Uma frase sua — como você vê o posicionamento profissional no contexto de hoje. Máx 25 palavras. Com sua voz, sem fórmula.\n2. PAUTA_1: Um tema para post no LinkedIn baseado nas notícias (máx 15 palavras, formulado como pergunta ou provocação)\n3. PAUTA_2: Outro ângulo diferente (máx 15 palavras)\n4. PAUTA_3: Mais um tema diferente (máx 15 palavras)\n\nRetorne exatamente neste formato, sem mais nada:\nPERSPECTIVA: [texto]\nPAUTA_1: [texto]\nPAUTA_2: [texto]\nPAUTA_3: [texto]`

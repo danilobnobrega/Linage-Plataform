@@ -9,7 +9,6 @@ import {
   Coins,
   Plus,
   ChevronRight,
-  Lock
 } from 'lucide-react';
 
 function Sidebar() {
@@ -23,11 +22,7 @@ function Sidebar() {
 
   // Archetype badge colors
   const agentBadges = {
-    ashe:   { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)', char: 'A' },
-    jace:   { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'rgba(239, 68, 68, 0.3)', char: 'J' },
-    aiden:  { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: 'rgba(16, 185, 129, 0.3)', char: 'N' },
-    venn:   { bg: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', border: 'rgba(139, 92, 246, 0.3)', char: 'V' },
-    dexter: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)', char: 'D' },
+    linage: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)', char: 'L' },
   };
 
   return (
@@ -54,14 +49,6 @@ function Sidebar() {
           </NavLink>
           
           <NavLink 
-            to="/advisor" 
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <Sparkles size={18} className="advisor-spark" />
-            <span>Falar com Linage</span>
-          </NavLink>
-
-          <NavLink 
             to="/posts" 
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
           >
@@ -72,56 +59,28 @@ function Sidebar() {
 
         {/* Agents Group */}
         <nav className="sidebar-group">
-          <div className="group-label">Os 5 Agentes</div>
+          <div className="group-label">Agente</div>
           <div className="agents-list">
-            {agents.map((agent) => {
-              const badge = agentBadges[agent.id] || { bg: '#888', color: '#fff', char: 'A' };
-              const locked = agent.id !== 'dexter';
-              if (locked) {
-                return (
-                  <div key={agent.id} className="sidebar-agent-link sidebar-agent-locked">
-                    <div
-                      className="agent-avatar-badge"
-                      style={{
-                        backgroundColor: badge.bg,
-                        color: badge.color,
-                        border: `1px solid ${badge.border}`
-                      }}
-                    >
-                      {badge.char}
-                    </div>
-                    <div className="agent-link-info">
-                      <span className="agent-link-name">{agent.name}</span>
-                      <span className="agent-link-archetype">Em breve</span>
-                    </div>
-                    <Lock size={12} className="lock-icon" />
-                  </div>
-                );
-              }
-              return (
-                <NavLink
-                  key={agent.id}
-                  to={`/agent/${agent.id}`}
-                  className={({ isActive }) => `sidebar-agent-link ${isActive ? 'active' : ''}`}
-                >
-                  <div
-                    className="agent-avatar-badge"
-                    style={{
-                      backgroundColor: badge.bg,
-                      color: badge.color,
-                      border: `1px solid ${badge.border}`
-                    }}
-                  >
-                    {badge.char}
-                  </div>
-                  <div className="agent-link-info">
-                    <span className="agent-link-name">{agent.name}</span>
-                    <span className="agent-link-archetype">O Magnético</span>
-                  </div>
-                  <ChevronRight className="arrow-icon" size={14} />
-                </NavLink>
-              );
-            })}
+            <NavLink
+              to="/agent/linage"
+              className={({ isActive }) => `sidebar-agent-link ${isActive ? 'active' : ''}`}
+            >
+              <div
+                className="agent-avatar-badge"
+                style={{
+                  backgroundColor: agentBadges.linage.bg,
+                  color: agentBadges.linage.color,
+                  border: `1px solid ${agentBadges.linage.border}`
+                }}
+              >
+                L
+              </div>
+              <div className="agent-link-info">
+                <span className="agent-link-name">Linage</span>
+                <span className="agent-link-archetype">O Magnético</span>
+              </div>
+              <ChevronRight className="arrow-icon" size={14} />
+            </NavLink>
           </div>
         </nav>
 

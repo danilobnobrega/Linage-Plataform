@@ -17,7 +17,7 @@ import {
   Award
 } from 'lucide-react';
 import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
-import { anthropic, MODELS } from '../lib/anthropic';
+import { anthropic, MODELS, LINAGE_SYSTEM_PROMPT } from '../lib/anthropic';
 import { fetchNewsForTopic } from '../lib/news';
 
 const CHAT_PHRASES = [
@@ -34,11 +34,7 @@ function Agent() {
   const { agents, posts, addPost, credits, addMessageToAgent, user } = useStore();
 
   const headlines = {
-    ashe:   'Assessor de Investimentos | Análise Técnica & Fundamentos',
-    jace:   'Consultor Financeiro | Questionando Consensos de Mercado',
-    aiden:  'Gestor de Patrimônio | Conectando Histórias & Resultados',
-    venn:   'Wealth Strategist | Planejamento Macro & Cenários de 3ª Ordem',
-    dexter: 'Advisory Privado | Insights Financeiros Descontraídos & Substância'
+    linage: 'Advisory Privado | Insights Financeiros Descontraídos & Substância'
   };
   
   const [inputText, setInputText] = useState('');
@@ -70,14 +66,10 @@ function Agent() {
   }
 
   const agentConfigs = {
-    ashe:   { color: '#3b82f6', accentGlow: 'rgba(59, 130, 246, 0.15)',  gradient: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', badge: 'O Técnico',      stats: { accuracy: '99.4%', density: 'Alta', speed: 'Rápido' },         greeting: 'Vamos direto ao ponto. Qual tese ou dado você quer transformar em argumento hoje?' },
-    jace:   { color: '#ef4444', accentGlow: 'rgba(239, 68, 68, 0.15)',   gradient: 'linear-gradient(135deg, #7f1d1d 0%, #ef4444 100%)', badge: 'O Disruptor',    stats: { engagement: 'Extremo', boldness: '98%', debate: 'Crítico' },     greeting: 'Pronto para rasgar o roteiro tradicional? Diga-me qual consenso confortável do mercado você quer explodir hoje.' },
-    aiden:  { color: '#10b981', accentGlow: 'rgba(16, 185, 129, 0.15)',  gradient: 'linear-gradient(135deg, #064e3b 0%, #10b981 100%)', badge: 'O Storyteller',  stats: { retention: 'Máxima', imagery: 'Rica', pacing: 'Fluido' },        greeting: 'Toda grande lição começa com uma história inesquecível. Qual acontecimento ou conceito vamos transformar em enredo hoje?' },
-    venn:   { color: '#8b5cf6', accentGlow: 'rgba(139, 92, 246, 0.15)',  gradient: 'linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%)', badge: 'O Visionário',   stats: { foresight: 'Global', logic: 'Implacável', macro: 'Avançado' },   greeting: 'Minha mente mapeia o padrão invisível. O que parece ser um evento isolado é parte de um dominó. O que vamos projetar hoje?' },
-    dexter: { color: '#f59e0b', accentGlow: 'rgba(245, 158, 11, 0.15)',  gradient: 'linear-gradient(135deg, #78350f 0%, #f59e0b 100%)', badge: 'O Magnético',    stats: { wit: 'Espirituoso', dynamic: 'Humano', vibe: '10/10' },          greeting: 'E aí. Pode jogar qualquer tema — eu transformo em algo que as pessoas vão querer comentar. Do que vamos falar hoje?' },
+    linage: { color: '#f59e0b', accentGlow: 'rgba(245, 158, 11, 0.15)', gradient: 'linear-gradient(135deg, #78350f 0%, #f59e0b 100%)', badge: 'O Magnético', stats: { wit: 'Espirituoso', dynamic: 'Humano', vibe: '10/10' }, greeting: 'E aí. Pode jogar qualquer tema — eu transformo em algo que as pessoas vão querer comentar. Do que vamos falar hoje?' },
   };
 
-  const config = agentConfigs[id] || agentConfigs.ashe;
+  const config = agentConfigs[id] || agentConfigs.linage;
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -100,7 +92,7 @@ function Agent() {
         content: msg.text,
       }));
 
-      const systemPrompt = `${agent.personality}\n\nVocê é ${agent.name}, um dos cinco agentes de escrita da plataforma Linage. Seu papel é conversar com um profissional do mercado financeiro e ajudá-lo a criar posts para o LinkedIn.\n\nRegras:\n- Mantenha sua voz e personalidade em cada resposta.\n- Quando o usuário tiver um tema definido, encoraje-o a clicar em "Gerar Rascunho de Post" para ver o resultado completo.\n- Nunca use jargão genérico de marketing. Nunca diga "leads qualificados", "engajamento", "linha editorial".\n- Respostas concisas. Você não explica — você reage, pergunta, provoca ou sugere.`;
+      const systemPrompt = LINAGE_SYSTEM_PROMPT;
 
       const response = await anthropic.messages.create({
         model: MODELS.agent,
@@ -143,7 +135,7 @@ function Agent() {
       const topicMsg = [...(agent.history || [])].reverse().find(m => m.sender === 'user')?.text || '';
       const newsContext = await fetchNewsForTopic(topicMsg);
 
-      const systemPrompt = `${agent.personality}\n\nVocê é ${agent.name}. Escreva um post completo para LinkedIn em português, com base na conversa e nas notícias recentes sobre o tema. O post deve soar como você — com sua voz, seu ritmo, seu estilo. Nada genérico.\n\nRetorne exatamente neste formato:\nTÍTULO: [título do post]\nCONTEÚDO:\n[corpo completo do post]`;
+      const systemPrompt = `${LINAGE_SYSTEM_PROMPT}\n\nEscreva um post completo para LinkedIn em português, com base na conversa e nas notícias recentes sobre o tema. O post deve soar como Linage — com sua voz, seu ritmo, seu estilo. Nada genérico.\n\nRetorne exatamente neste formato:\nTÍTULO: [título do post]\nCONTEÚDO:\n[corpo completo do post]`;
 
       const userContent = `Conversa:\n${conversationContext}${newsContext ? `\n\nNotícias recentes sobre o tema:\n${newsContext}` : ''}\n\nEscreva o post agora.`;
 

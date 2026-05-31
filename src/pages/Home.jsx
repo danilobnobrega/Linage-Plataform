@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store';
 import ConsensusConverter from '../components/ConsensusConverter';
@@ -28,8 +28,6 @@ function Home() {
   const { user, posts, agents, addPost, credits, addMessageToAgent } = useStore();
   const daily = useDailyContent(user.dailyQuote, user.suggestions);
   const navigate = useNavigate();
-  const [showSuggestModal, setShowSuggestModal] = useState(false);
-  const [selectedSuggestion, setSelectedSuggestion] = useState('');
   
 
 
@@ -42,46 +40,21 @@ function Home() {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setSelectedSuggestion(suggestion);
-    setShowSuggestModal(true);
-  };
-
-  const handleStartSuggestion = (agentId) => {
-    // Inject the suggestion as a first message to that agent
-    addMessageToAgent(agentId, {
+    addMessageToAgent('linage', {
       sender: 'user',
-      text: `Quero criar um conteúdo baseado nesta pauta: "${selectedSuggestion}". Como podemos começar?`,
+      text: `Quero criar um conteúdo baseado nesta pauta: "${suggestion}". Como podemos começar?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     });
-    
-    // Redirect to the agent's chat page
-    navigate(`/agent/${agentId}`);
-    setShowSuggestModal(false);
+    navigate('/agent/linage');
   };
 
   // Pre-configured custom backgrounds for agent quick launcher
   const agentThemeStyles = {
-    ashe:    'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)',
-    jace:    'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%)',
-    aiden:   'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%)',
-    venn:    'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
-    dexter:  'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%)',
+    linage: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%)',
   };
 
   const agentBorders = {
-    ashe:   'rgba(59, 130, 246, 0.25)',
-    jace:   'rgba(239, 68, 68, 0.25)',
-    aiden:  'rgba(16, 185, 129, 0.25)',
-    venn:   'rgba(139, 92, 246, 0.25)',
-    dexter: 'rgba(245, 158, 11, 0.25)',
-  };
-
-  const getAgentTag = (id) => {
-    if (id === 'ashe')   return 'O Técnico';
-    if (id === 'jace')   return 'O Disruptor';
-    if (id === 'aiden')  return 'O Storyteller';
-    if (id === 'venn')   return 'O Visionário';
-    return 'O Magnético';
+    linage: 'rgba(245, 158, 11, 0.25)',
   };
 
   return (
@@ -117,7 +90,7 @@ function Home() {
             <p className="quote-text">"{daily.quote}"</p>
           </div>
         </div>
-        <button className="quote-action-btn" onClick={() => navigate('/advisor')}>
+        <button className="quote-action-btn" onClick={() => navigate('/agent/linage')}>
           Explorar com Linage <ArrowRight size={16} />
         </button>
       </div>
@@ -152,28 +125,20 @@ function Home() {
         {/* Create Card (Quick Agent Select) */}
         <div className="glass-card launcher-card">
           <h2 className="card-title">Começar Criação Imediata</h2>
-          <p className="card-desc">Cinco estilos. Escolha o que faz mais sentido para o que você quer dizer hoje.</p>
-          
+          <p className="card-desc">Jogue qualquer tema. O Linage transforma em algo que as pessoas vão querer comentar.</p>
+
           <div className="agents-quick-grid">
-            {agents.map((agent) => {
-              const available = agent.id === 'dexter';
-              return (
-                <button
-                  key={agent.id}
-                  className={`quick-agent-btn ${!available ? 'quick-agent-btn--soon' : ''}`}
-                  style={{
-                    background: agentThemeStyles[agent.id],
-                    borderColor: agentBorders[agent.id],
-                  }}
-                  onClick={() => available && navigate(`/agent/${agent.id}`)}
-                  disabled={!available}
-                >
-                  <span className="quick-agent-name">{agent.name}</span>
-                  <span className="quick-agent-desc">{getAgentTag(agent.id)}</span>
-                  {!available && <span className="quick-agent-soon">Em breve</span>}
-                </button>
-              );
-            })}
+            <button
+              className="quick-agent-btn"
+              style={{
+                background: agentThemeStyles.linage,
+                borderColor: agentBorders.linage,
+              }}
+              onClick={() => navigate('/agent/linage')}
+            >
+              <span className="quick-agent-name">Linage</span>
+              <span className="quick-agent-desc">O Magnético</span>
+            </button>
           </div>
         </div>
       </div>
@@ -197,7 +162,7 @@ function Home() {
             <PenTool size={36} className="empty-icon animate-bounce" />
             <h3>Ainda silencioso por aqui.</h3>
             <p>Os agentes estão esperando qualquer tema, qualquer notícia, qualquer insight que ficou na cabeça durante a semana.</p>
-            <button className="primary-action-btn" onClick={() => navigate('/advisor')}>
+            <button className="primary-action-btn" onClick={() => navigate('/agent/linage')}>
               Conversar com Linage
             </button>
           </div>
@@ -225,37 +190,6 @@ function Home() {
         )}
       </section>
 
-      {/* Suggestion Router Modal */}
-      {showSuggestModal && (
-        <div className="modal-overlay" onClick={() => setShowSuggestModal(false)}>
-          <div className="modal-container glass-modal animate-scale-up" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Desenvolver Conteúdo</h3>
-              <button className="close-modal-btn" onClick={() => setShowSuggestModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p className="modal-instruction">Você selecionou a pauta:</p>
-              <div className="modal-topic-quote">
-                "{selectedSuggestion}"
-              </div>
-              <p className="modal-instruction">Qual agente deve estruturar este post?</p>
-              
-              <div className="modal-agents-grid">
-                {agents.map((agent) => (
-                  <button
-                    key={agent.id}
-                    className="modal-agent-select-btn"
-                    onClick={() => handleStartSuggestion(agent.id)}
-                  >
-                    <h4>{agent.name}</h4>
-                    <p>{getAgentTag(agent.id)}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
