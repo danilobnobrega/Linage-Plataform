@@ -17,7 +17,10 @@ const useStore = create(persist(
     // Theme handling
     theme: 'light',
     setTheme: (t) => set({ theme: t }),
-    // Credit balance
+    // DB user (synced from backend after login)
+    dbUser: null,
+    setDbUser: (u) => set({ dbUser: u, credits: u?.credits ?? 0 }),
+    // Credit balance (local mirror of dbUser.credits)
     credits: 0,
     addCredits: (amt) => set((s) => ({ credits: s.credits + amt })),
     // Agents definitions

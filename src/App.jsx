@@ -1,5 +1,15 @@
 import React, { useEffect, useLayoutEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
+import { useUserSync } from './hooks/useUserSync';
+import Sidebar from './components/Sidebar';
+import Home from './pages/Home';
+import Agent from './pages/Agent';
+import Settings from './pages/Settings';
+import Posts from './pages/Posts';
+import SignInPage from './pages/SignIn';
+import SignUpPage from './pages/SignUp';
+import CustomCursor from './components/CustomCursor';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -10,45 +20,62 @@ function ScrollToTop() {
   return null;
 }
 
-const UNLOCKED_AGENTS = ['dexter'];
-
-function AgentGuard({ children }) {
-  const { id } = useParams();
-  if (!UNLOCKED_AGENTS.includes(id)) return <Navigate to="/home" replace />;
+function ProtectedRoute({ children }) {
+  const { isLoaded, isSignedIn } = useAuth();
+  if (!isLoaded) return null;
+  if (!isSignedIn) return <Navigate to="/sign-in" replace />;
   return children;
 }
-import Sidebar from './components/Sidebar';
-import Home from './pages/Home';
-import Agent from './pages/Agent';
-import Advisor from './pages/Advisor';
-import Settings from './pages/Settings';
-import Posts from './pages/Posts';
-import CustomCursor from './components/CustomCursor';
 
-function App() {
-  // Dark theme is permanent — set once on mount
+function RootRedirect() {
+  const { isLoaded, isSignedIn } = useAuth();
+  if (!isLoaded) return null;
+  return <Navigate to={isSignedIn ? '/home' : '/sign-in'} replace />;
+}
+
+function AppContent() {
+  useUserSync();
+
   useEffect(() => {
     document.documentElement.removeAttribute('data-theme');
     document.documentElement.style.colorScheme = 'dark';
   }, []);
 
+  const { isSignedIn, isLoaded } = useAuth();
+  const { pathname } = useLocation();
+  const isAuthPage = pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up');
+
   return (
-    <Router>
+    <>
       <ScrollToTop />
       <CustomCursor />
-      <div className="app-layout">
-        <Sidebar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Navigate to="/home" replace />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/advisor" element={<Advisor />} />
-            <Route path="/posts" element={<Posts />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/agent/:id" element={<AgentGuard><Agent /></AgentGuard>} />
-          </Routes>
-        </main>
-      </div>
+      {isAuthPage ? (
+        <Routes>
+          <Route path="/sign-in/*" element={<SignInPage />} />
+          <Route path="/sign-up/*" element={<SignUpPage />} />
+        </Routes>
+      ) : (
+        <div className="app-layout">
+          <Sidebar />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<RootRedirect />} />
+              <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/agent/:id" element={<ProtectedRoute><Agent /></ProtectedRoute>} />
+              <Route path="/posts" element={<ProtectedRoute><Posts /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            </Routes>
+          </main>
+        </div>
+      )}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
