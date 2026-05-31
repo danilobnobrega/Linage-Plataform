@@ -48,25 +48,27 @@ function AppContent() {
   return (
     <>
       <ScrollToTop />
-      <CustomCursor />
       {isAuthPage ? (
         <Routes>
           <Route path="/sign-in/*" element={<SignInPage />} />
           <Route path="/sign-up/*" element={<SignUpPage />} />
         </Routes>
       ) : (
-        <div className="app-layout">
-          <Sidebar />
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<RootRedirect />} />
-              <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-              <Route path="/agent/:id" element={<ProtectedRoute><Agent /></ProtectedRoute>} />
-              <Route path="/posts" element={<ProtectedRoute><Posts /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            </Routes>
-          </main>
-        </div>
+        <>
+          <CustomCursor />
+          <div className="app-layout">
+            <Sidebar />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<RootRedirect />} />
+                <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                <Route path="/agent/:id" element={<ProtectedRoute><Agent /></ProtectedRoute>} />
+                <Route path="/posts" element={<ProtectedRoute><Posts /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              </Routes>
+            </main>
+          </div>
+        </>
       )}
     </>
   );
