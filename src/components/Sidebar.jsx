@@ -7,7 +7,6 @@ import {
   FileText,
   Settings as SettingsIcon,
   Coins,
-  Plus,
 } from 'lucide-react';
 
 function Sidebar() {
@@ -81,23 +80,19 @@ function Sidebar() {
             <Coins size={16} className="credits-icon" />
             <span className="credits-title">Saldo de Créditos</span>
           </div>
-          <button 
-            className="add-credits-btn" 
-            onClick={handleAddCredits}
-            title="Recarregar créditos de demonstração"
-          >
-            <Plus size={14} />
-          </button>
         </div>
         <div className="credits-amount">
           {credits} <span className="credits-unit">créditos</span>
         </div>
         <div className="credits-bar-container">
-          <div 
-            className="credits-bar" 
+          <div
+            className="credits-bar"
             style={{ width: `${Math.min(100, (credits / 500) * 100)}%` }}
           ></div>
         </div>
+        <button className="credits-recharge-link" onClick={handleAddCredits}>
+          + Recarregar
+        </button>
       </div>
     </aside>
   );
