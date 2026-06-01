@@ -1457,6 +1457,12 @@ body {
   color: var(--text-secondary);
 }
 
+.advisor-full {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
 .advisor-grid {
   display: grid;
   grid-template-columns: 1fr 360px;

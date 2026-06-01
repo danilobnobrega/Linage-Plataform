@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store';
-import {
-  Send,
-  ChevronRight,
-  Activity,
-  PenTool
-} from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
 import { anthropic, MODELS, LINAGE_SYSTEM_PROMPT } from '../lib/anthropic';
 
@@ -91,7 +86,7 @@ function Advisor() {
       </header>
 
       {/* Grid of quick prompts & chat */}
-      <div className="advisor-grid">
+      <div className="advisor-full">
         {/* Chat Area */}
         <div className="advisor-chat-card glass-card">
           <div className="advisor-chat-messages">
@@ -159,49 +154,6 @@ function Advisor() {
           </form>
         </div>
 
-        {/* Strategic Guidelines Panel */}
-        <div className="advisor-strategic-sidebar">
-          {/* Criar Post shortcut */}
-          <div className="glass-card strategic-card">
-            <div className="card-header-with-badge">
-              <h3 className="strategic-title">Pronto para escrever?</h3>
-              <span className="pulse-dot-green">Online</span>
-            </div>
-            <p className="strategic-desc">Quando tiver o tema em mente, abra o modo de criação de post.</p>
-            <button
-              className="advisor-create-post-btn"
-              onClick={() => navigate('/agent/linage')}
-            >
-              <PenTool size={14} />
-              <span>Criar Post com Linage</span>
-              <ChevronRight size={14} />
-            </button>
-          </div>
-
-          {/* Strategic stats card */}
-          <div className="glass-card strategic-card metrics-card">
-            <h3 className="strategic-title">Diagnóstico do Canal</h3>
-            <div className="metrics-grid">
-              <div className="metric-box">
-                <span className="metric-num">3/sem</span>
-                <span className="metric-lbl">Frequência Ótima</span>
-              </div>
-              <div className="metric-box">
-                <span className="metric-num">89%</span>
-                <span className="metric-lbl">Sinal Analítico</span>
-              </div>
-              <div className="metric-box">
-                <span className="metric-num">11%</span>
-                <span className="metric-lbl">Ruído Comercial</span>
-              </div>
-            </div>
-            <div className="strategic-disclaimer">
-              <Activity size={12} style={{marginRight: 6}} />
-              Próximo diagnóstico editorial em 48h.
-            </div>
-          </div>
-
-        </div>
       </div>
     </div>
   );
