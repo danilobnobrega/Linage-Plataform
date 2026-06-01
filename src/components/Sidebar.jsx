@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useClerk } from '@clerk/clerk-react';
+import { useClerk, useUser } from '@clerk/clerk-react';
 import useStore from '../store';
 import {
   Home,
@@ -18,6 +18,7 @@ function Sidebar() {
   const { user, credits } = useStore();
   const navigate = useNavigate();
   const { signOut } = useClerk();
+  const { user: clerkUser } = useUser();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
 
@@ -131,7 +132,12 @@ function Sidebar() {
             className="sidebar-user-btn"
             onClick={() => setShowUserMenu(!showUserMenu)}
           >
-            <div className="user-avatar-hex">{getInitials(user.name)}</div>
+            <div className="user-avatar-hex">
+              {clerkUser?.imageUrl
+                ? <img src={clerkUser.imageUrl} alt="" className="user-avatar-hex-img" />
+                : getInitials(user.name)
+              }
+            </div>
             <span className="sidebar-user-name">{firstName}</span>
           </button>
         </div>

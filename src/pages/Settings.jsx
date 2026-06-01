@@ -3,7 +3,7 @@ import { useUser } from '@clerk/clerk-react';
 import useStore from '../store';
 import {
   SlidersHorizontal, User, Shield, CreditCard, BarChart2, Zap,
-  Check, X, ArrowDown, Mail, ChevronRight,
+  Check, X, ArrowDown, Mail, ChevronRight, Camera,
 } from 'lucide-react';
 import { PLANS } from './Credits';
 
@@ -32,6 +32,12 @@ function Settings() {
   );
   const isPaidPlan = user.plan !== 'free';
   const email = clerkUser?.primaryEmailAddress?.emailAddress || '—';
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !clerkUser) return;
+    await clerkUser.setProfileImage({ file });
+  };
   const creditsPercent = Math.min(100, (credits / 500) * 100);
   const messagesSent = advisorHistory.filter((m) => m.sender === 'user').length;
 
@@ -93,22 +99,33 @@ function Settings() {
           {activeSection === 'conta' && (
             <div className="settings-section-card glass-card">
               <h3 className="settings-section-heading">Conta</h3>
+
+              {/* Profile photo */}
+              <div className="settings-photo-row">
+                <div className="settings-photo-wrap">
+                  {clerkUser?.imageUrl
+                    ? <img src={clerkUser.imageUrl} alt="Foto de perfil" className="settings-photo-img" />
+                    : <div className="settings-photo-placeholder"><User size={24} /></div>
+                  }
+                  <label className="settings-photo-overlay" title="Alterar foto">
+                    <Camera size={14} />
+                    <input type="file" accept="image/*" hidden onChange={handlePhotoChange} />
+                  </label>
+                </div>
+                <div>
+                  <h4 className="settings-action-title">Foto de perfil</h4>
+                  <p className="settings-action-desc">Sincronizada pelo LinkedIn. Clique na foto para substituir.</p>
+                </div>
+              </div>
+
+              <div className="settings-divider" />
+
               <div className="settings-info-row">
                 <Mail size={16} className="settings-info-icon" />
                 <div>
                   <span className="settings-info-label">Email</span>
                   <span className="settings-info-value">{email}</span>
                 </div>
-              </div>
-              <div className="settings-divider" />
-              <div className="settings-action-row">
-                <div>
-                  <h4 className="settings-action-title">Senha</h4>
-                  <p className="settings-action-desc">Altere sua senha de acesso</p>
-                </div>
-                <button className="settings-action-btn">
-                  Alterar senha <ChevronRight size={14} />
-                </button>
               </div>
             </div>
           )}
