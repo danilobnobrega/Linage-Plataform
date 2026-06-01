@@ -3,24 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import useStore from '../store';
 import {
   Send,
-  Sparkles,
   ChevronRight,
-  Activity
+  Activity,
+  PenTool
 } from 'lucide-react';
 import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
-import { anthropic, MODELS, ADVISOR_SYSTEM_PROMPT } from '../lib/anthropic';
+import { anthropic, MODELS, LINAGE_SYSTEM_PROMPT } from '../lib/anthropic';
 
 const ADVISOR_PHRASES = [
   'Qual é a sua dúvida estratégica?',
   'Pergunte sobre frequência de posts...',
   'Qual tese editorial quer desenvolver?',
   'Como posso orquestrar seu conteúdo?',
-  'Qual agente usar para este tema?',
+  'Sobre o que quer falar hoje?',
 ];
 
 function Advisor() {
   const navigate = useNavigate();
-  const { advisorHistory, addAdvisorMessage, agents } = useStore();
+  const { advisorHistory, addAdvisorMessage } = useStore();
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
@@ -43,7 +43,6 @@ function Advisor() {
     };
 
     addAdvisorMessage(userMessage);
-    const currentInput = inputText;
     setInputText('');
     setIsTyping(true);
 
@@ -55,17 +54,15 @@ function Advisor() {
       }));
 
       const response = await anthropic.messages.create({
-        model: MODELS.advisor,
+        model: MODELS.agent,
         max_tokens: 1024,
-        system: ADVISOR_SYSTEM_PROMPT,
+        system: LINAGE_SYSTEM_PROMPT,
         messages,
       });
 
-      const replyText = response.content[0].text;
-
       addAdvisorMessage({
         sender: 'advisor',
-        text: replyText,
+        text: response.content[0].text,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
     } catch (err) {
@@ -79,10 +76,6 @@ function Advisor() {
     }
   };
 
-  const handleRouteAgent = (agentId) => {
-    navigate(`/agent/${agentId}`);
-  };
-
   return (
     <div className="page-container advisor-page animate-fade-in">
       <header className="page-header">
@@ -93,7 +86,7 @@ function Advisor() {
         <div className="header-text-container">
           <span className="header-subtitle">Advisor Estratégico</span>
           <h1 className="header-title">Fale com Linage</h1>
-          <p className="header-desc">Pergunte sobre frequência, posicionamento ou qual agente faz mais sentido para o que você quer dizer. Eu conheço os cinco de perto.</p>
+          <p className="header-desc">Pergunte qualquer coisa — um tema que ficou entalado, uma dúvida de posicionamento, ou só uma ideia bruta que precisa de ângulo.</p>
         </div>
       </header>
 
@@ -108,19 +101,19 @@ function Advisor() {
                 L
               </div>
               <div className="advisor-msg-bubble">
-                <p>Pode jogar qualquer coisa — uma dúvida sobre qual agente usar, uma notícia do dia que você não sabe por onde pegar, ou só um tema que ficou entalado. A gente vai de lá.</p>
+                <p>Pode jogar qualquer coisa — uma notícia do dia que você não sabe por onde pegar, uma dúvida de posicionamento, ou só um tema que ficou entalado. A gente vai de lá.</p>
                 <div className="advisor-msg-suggestions">
-                  <button onClick={() => setInputText("Qual agente usar para o que quero publicar?")} className="advisor-quick-btn">
-                    Qual agente usar?
-                  </button>
                   <button onClick={() => setInputText("Com que frequência devo publicar?")} className="advisor-quick-btn">
                     Com que frequência publicar?
                   </button>
                   <button onClick={() => setInputText("Como estruturo meu posicionamento no LinkedIn?")} className="advisor-quick-btn">
                     Como estruturo meu posicionamento?
                   </button>
+                  <button onClick={() => setInputText("Tenho uma ideia de post mas não sei por onde começar.")} className="advisor-quick-btn">
+                    Tenho uma ideia, mas...
+                  </button>
                 </div>
-                <span className="advisor-msg-time">09:00</span>
+                <span className="advisor-msg-time">agora</span>
               </div>
             </div>
 
@@ -168,35 +161,21 @@ function Advisor() {
 
         {/* Strategic Guidelines Panel */}
         <div className="advisor-strategic-sidebar">
-          {/* Quick Routing Card */}
+          {/* Criar Post shortcut */}
           <div className="glass-card strategic-card">
             <div className="card-header-with-badge">
-              <h3 className="strategic-title">Os Agentes</h3>
-              <span className="pulse-dot-green">Ativos</span>
+              <h3 className="strategic-title">Pronto para escrever?</h3>
+              <span className="pulse-dot-green">Online</span>
             </div>
-            <p className="strategic-desc">Clique para abrir uma conversa direta.</p>
-            
-            <div className="routing-agents-list">
-              {agents.map(agent => (
-                <button 
-                  key={agent.id} 
-                  className="routing-agent-row-btn"
-                  onClick={() => handleRouteAgent(agent.id)}
-                >
-                  <div className="routing-agent-info">
-                    <span className="routing-agent-name">{agent.name}</span>
-                    <span className="routing-agent-meta">
-                      {agent.id === 'ashe'   && 'Induções Lógicas & Dados'}
-                      {agent.id === 'jace'   && 'Desconstrução de Clichês'}
-                      {agent.id === 'aiden'  && 'Analogias & Conexão'}
-                      {agent.id === 'venn'   && 'Visão de Futuro e Padrões'}
-                      {agent.id === 'dexter' && 'Humor Inteligente & Charme'}
-                    </span>
-                  </div>
-                  <ChevronRight size={16} className="routing-arrow" />
-                </button>
-              ))}
-            </div>
+            <p className="strategic-desc">Quando tiver o tema em mente, abra o modo de criação de post.</p>
+            <button
+              className="advisor-create-post-btn"
+              onClick={() => navigate('/agent/linage')}
+            >
+              <PenTool size={14} />
+              <span>Criar Post com Linage</span>
+              <ChevronRight size={14} />
+            </button>
           </div>
 
           {/* Strategic stats card */}

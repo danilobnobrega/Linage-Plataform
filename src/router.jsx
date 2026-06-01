@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuth } from '@clerk/clerk-react';
 import Home from './pages/Home';
 import Agent from './pages/Agent';
+import Advisor from './pages/Advisor';
 import Settings from './pages/Settings';
 import Posts from './pages/Posts';
 import SignInPage from './pages/SignIn';
@@ -24,6 +25,7 @@ function AppRouter() {
         <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/agent/:id" element={<ProtectedRoute><Agent /></ProtectedRoute>} />
+        <Route path="/advisor" element={<ProtectedRoute><Advisor /></ProtectedRoute>} />
         <Route path="/posts" element={<ProtectedRoute><Posts /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       </Routes>

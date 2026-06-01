@@ -1747,6 +1747,33 @@ body {
   border-radius: 4px;
 }
 
+.advisor-create-post-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  margin-top: 4px;
+}
+
+.advisor-create-post-btn:hover {
+  background: rgba(0, 255, 136, 0.06);
+  box-shadow: 0 0 14px rgba(0, 255, 136, 0.12);
+}
+
+.advisor-create-post-btn span {
+  flex-grow: 1;
+  text-align: left;
+}
+
 /* ==========================================================================
    MEUS POSTS PAGE
    ========================================================================== */

@@ -8,21 +8,15 @@ import {
   Settings as SettingsIcon,
   Coins,
   Plus,
-  ChevronRight,
 } from 'lucide-react';
 
 function Sidebar() {
-  const { credits, addCredits, agents } = useStore();
+  const { credits, addCredits } = useStore();
   const navigate = useNavigate();
 
   const handleAddCredits = (e) => {
     e.stopPropagation();
     addCredits(100);
-  };
-
-  // Archetype badge colors
-  const agentBadges = {
-    linage: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)', char: 'L' },
   };
 
   return (
@@ -40,48 +34,29 @@ function Sidebar() {
       <div className="sidebar-nav-scroll">
         <nav className="sidebar-group">
           <div className="group-label">Navegação</div>
-          <NavLink 
-            to="/home" 
+          <NavLink
+            to="/home"
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
           >
             <Home size={18} />
             <span>Home</span>
           </NavLink>
-          
-          <NavLink 
-            to="/posts" 
+
+          <NavLink
+            to="/advisor"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+          >
+            <Sparkles size={18} className="advisor-spark" />
+            <span>Falar com Linage</span>
+          </NavLink>
+
+          <NavLink
+            to="/posts"
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
           >
             <FileText size={18} />
             <span>Meus Posts</span>
           </NavLink>
-        </nav>
-
-        {/* Agents Group */}
-        <nav className="sidebar-group">
-          <div className="group-label">Agente</div>
-          <div className="agents-list">
-            <NavLink
-              to="/agent/linage"
-              className={({ isActive }) => `sidebar-agent-link ${isActive ? 'active' : ''}`}
-            >
-              <div
-                className="agent-avatar-badge"
-                style={{
-                  backgroundColor: agentBadges.linage.bg,
-                  color: agentBadges.linage.color,
-                  border: `1px solid ${agentBadges.linage.border}`
-                }}
-              >
-                L
-              </div>
-              <div className="agent-link-info">
-                <span className="agent-link-name">Linage</span>
-                <span className="agent-link-archetype">O Magnético</span>
-              </div>
-              <ChevronRight className="arrow-icon" size={14} />
-            </NavLink>
-          </div>
         </nav>
 
         {/* Utility Group */}
