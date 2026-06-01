@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 
+const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 function CustomCursor() {
+  if (isTouch) return null;
   const dotRef = useRef(null);
   const ringRef = useRef(null);
   const mouse = useRef({ x: -100, y: -100 });
