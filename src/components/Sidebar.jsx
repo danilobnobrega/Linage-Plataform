@@ -98,9 +98,6 @@ function Sidebar() {
             style={{ width: `${Math.min(100, (credits / 500) * 100)}%` }}
           ></div>
         </div>
-        <div className="credits-footer">
-          Demonstração Ilimitada
-        </div>
       </div>
     </aside>
   );
