@@ -131,7 +131,7 @@ function Settings() {
             <div className="plan-cancel-section">
               <div className="plan-cancel-info">
                 <h4>Cancelar assinatura</h4>
-                <p>Você mantém acesso ao plano {currentPlan.name} até o fim do ciclo atual.</p>
+                <p>Você perderá acesso ao plano {currentPlan.name} ao fim do ciclo atual.</p>
               </div>
               <button className="plan-cancel-btn">
                 Cancelar assinatura
