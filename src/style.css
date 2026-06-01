@@ -249,7 +249,8 @@ body {
 }
 
 .logo-icon-wrapper {
-  display: none;
+  display: flex;
+  align-items: center;
 }
 
 .logo-sparkle {
