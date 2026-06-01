@@ -12,7 +12,6 @@ import {
   Zap,
   ExternalLink,
   LogOut,
-  ChevronUp,
 } from 'lucide-react';
 
 function Sidebar() {
@@ -134,10 +133,6 @@ function Sidebar() {
           >
             <div className="user-avatar-hex">{getInitials(user.name)}</div>
             <span className="sidebar-user-name">{firstName}</span>
-            <ChevronUp
-              size={14}
-              className={`sidebar-user-chevron${showUserMenu ? ' open' : ''}`}
-            />
           </button>
         </div>
       </div>
