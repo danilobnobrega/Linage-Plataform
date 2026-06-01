@@ -3638,7 +3638,6 @@ body {
   border-radius: 50%;
   pointer-events: none;
   z-index: 99999;
-  will-change: transform;
   transition: opacity 0.15s;
 }
 
