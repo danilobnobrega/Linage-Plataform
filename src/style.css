@@ -839,6 +839,88 @@ body {
   color: var(--text-secondary);
 }
 
+/* Linage Agent Hero Card */
+.linage-agent-card {
+  margin-top: 16px;
+  padding: 22px 24px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.12) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  outline: none;
+}
+
+.linage-agent-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.linage-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.linage-card-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(245, 158, 11, 0.95);
+  flex-shrink: 0;
+}
+
+.linage-card-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.linage-card-name {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1;
+}
+
+.linage-card-archetype {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(245, 158, 11, 0.7);
+  font-weight: 500;
+}
+
+.linage-card-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.linage-card-cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(245, 158, 11, 0.85);
+}
+
 /* Recent Posts sections */
 .recent-posts-section {
   display: flex;
