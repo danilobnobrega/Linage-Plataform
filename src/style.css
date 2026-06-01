@@ -821,6 +821,169 @@ body {
   border-color: rgba(0, 255, 136, 0.5);
 }
 
+.credits-best-plan {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  color: var(--text-secondary);
+}
+
+.credits-best-plan h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.credits-best-plan p {
+  font-size: 13px;
+}
+
+.plan-cta-btn--downgrade {
+  background: transparent;
+  border: 1px solid var(--border-secondary);
+  color: var(--text-secondary);
+}
+
+.plan-cta-btn--downgrade:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+  transform: none;
+  opacity: 1;
+}
+
+/* Settings — Meu Plano card */
+.settings-plan-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.settings-plan-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-plan-icon-wrap {
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.settings-plan-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.settings-plan-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.settings-plan-credits {
+  font-size: 12px;
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+.settings-change-plan-btn {
+  background: none;
+  border: 1px solid var(--border-secondary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  white-space: nowrap;
+}
+
+.settings-change-plan-btn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+/* Downgrade Modal */
+.plan-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.plan-modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  padding: 28px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.plan-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.plan-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.plan-modal-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.plan-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.plan-modal-close:hover {
+  color: var(--text-primary);
+}
+
 @media (max-width: 768px) {
   .plans-grid,
   .packs-grid {
@@ -830,6 +993,16 @@ body {
   .credits-page .page-header {
     flex-direction: column;
     gap: 12px;
+  }
+
+  .settings-plan-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .plan-modal {
+    padding: 20px;
   }
 }
 

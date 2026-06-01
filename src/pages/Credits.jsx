@@ -1,8 +1,10 @@
 import React from 'react';
 import useStore from '../store';
-import { Check, Zap, Crown, Star, ArrowRight, Coins } from 'lucide-react';
+import { Check, Zap, Crown, Star, ArrowRight, Coins, Sparkles } from 'lucide-react';
 
-const PLANS = [
+const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
+
+export const PLANS = [
   {
     id: 'free',
     name: 'Gratuito',
@@ -58,6 +60,10 @@ const CREDIT_PACKS = [
 function Credits() {
   const { user, credits } = useStore();
 
+  const upgradePlans = PLANS.filter(
+    (p) => PLAN_ORDER[p.id] > PLAN_ORDER[user.plan]
+  );
+
   return (
     <div className="page-container credits-page animate-fade-in">
       <header className="page-header">
@@ -75,50 +81,50 @@ function Credits() {
       </header>
 
       <section className="credits-section">
-        <h2 className="credits-section-title">Planos</h2>
-        <div className="plans-grid">
-          {PLANS.map((plan) => {
-            const isCurrent = user.plan === plan.id;
-            const { Icon } = plan;
-            return (
-              <div
-                key={plan.id}
-                className={`plan-card glass-card${plan.highlight ? ' plan-card--highlight' : ''}${isCurrent ? ' plan-card--current' : ''}`}
-              >
-                {plan.highlight && (
-                  <div className="plan-badge">Mais popular</div>
-                )}
-                {isCurrent && !plan.highlight && (
-                  <div className="plan-badge plan-badge--current">Plano atual</div>
-                )}
-                <div className="plan-icon-wrap">
-                  <Icon size={20} />
-                </div>
-                <h3 className="plan-name">{plan.name}</h3>
-                <div className="plan-price-row">
-                  <span className="plan-price-value">{plan.price}</span>
-                  <span className="plan-price-period">{plan.period}</span>
-                </div>
-                <span className="plan-credits-label">{plan.creditsLabel}</span>
-                <ul className="plan-features">
-                  {plan.features.map((f, i) => (
-                    <li key={i} className="plan-feature-item">
-                      <Check size={13} className="plan-check-icon" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  className={`plan-cta-btn${isCurrent ? ' plan-cta-btn--current' : ''}`}
-                  disabled={isCurrent}
+        <h2 className="credits-section-title">Upgrade de Plano</h2>
+        {upgradePlans.length === 0 ? (
+          <div className="credits-best-plan glass-card">
+            <Sparkles size={24} style={{ color: 'var(--accent)' }} />
+            <div>
+              <h3>Você já está no melhor plano</h3>
+              <p>Para alterar ou cancelar, acesse Configurações → Meu Plano.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="plans-grid">
+            {upgradePlans.map((plan) => {
+              const { Icon } = plan;
+              return (
+                <div
+                  key={plan.id}
+                  className={`plan-card glass-card${plan.highlight ? ' plan-card--highlight' : ''}`}
                 >
-                  {isCurrent ? 'Plano atual' : 'Fazer upgrade'}
-                  {!isCurrent && <ArrowRight size={14} />}
-                </button>
-              </div>
-            );
-          })}
-        </div>
+                  {plan.highlight && <div className="plan-badge">Mais popular</div>}
+                  <div className="plan-icon-wrap">
+                    <Icon size={20} />
+                  </div>
+                  <h3 className="plan-name">{plan.name}</h3>
+                  <div className="plan-price-row">
+                    <span className="plan-price-value">{plan.price}</span>
+                    <span className="plan-price-period">{plan.period}</span>
+                  </div>
+                  <span className="plan-credits-label">{plan.creditsLabel}</span>
+                  <ul className="plan-features">
+                    {plan.features.map((f, i) => (
+                      <li key={i} className="plan-feature-item">
+                        <Check size={13} className="plan-check-icon" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="plan-cta-btn">
+                    Fazer upgrade <ArrowRight size={14} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <section className="credits-section">

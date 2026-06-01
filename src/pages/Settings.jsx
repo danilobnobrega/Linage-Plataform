@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import useStore from '../store';
-import { 
-  Settings as SettingsIcon, 
-  User, 
-  Sparkles, 
-  Trash2, 
-  Plus, 
-  RotateCcw, 
-  Check, 
-  Moon, 
-  Sun
+import {
+  Settings as SettingsIcon,
+  User,
+  Sparkles,
+  Trash2,
+  Plus,
+  RotateCcw,
+  Check,
+  Moon,
+  Sun,
+  X,
+  ArrowDown,
 } from 'lucide-react';
+import { PLANS } from './Credits';
+
+const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
 
 function Settings() {
   const { user, theme, setTheme, credits, addCredits } = useStore();
@@ -21,6 +26,12 @@ function Settings() {
   const [suggestions, setSuggestions] = useState([...user.suggestions]);
   const [newSuggestionText, setNewSuggestionText] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
+
+  const currentPlan = PLANS.find((p) => p.id === user.plan) || PLANS[0];
+  const downgradePlans = PLANS.filter(
+    (p) => PLAN_ORDER[p.id] < PLAN_ORDER[user.plan]
+  );
 
   const handleSaveSettings = (e) => {
     e.preventDefault();
@@ -69,6 +80,74 @@ function Settings() {
           <p className="header-desc">Personalize sua experiência Linage. Altere as sugestões de pauta diária, edite a frase do dia e redefina os créditos.</p>
         </div>
       </header>
+
+      {/* Meu Plano Card */}
+      <div className="settings-plan-card glass-card">
+        <div className="settings-plan-left">
+          <div className="settings-plan-icon-wrap">
+            <currentPlan.Icon size={18} />
+          </div>
+          <div>
+            <span className="settings-plan-label">Meu Plano</span>
+            <h3 className="settings-plan-name">{currentPlan.name}</h3>
+            <span className="settings-plan-credits">{currentPlan.creditsLabel}</span>
+          </div>
+        </div>
+        {downgradePlans.length > 0 && (
+          <button
+            className="settings-change-plan-btn"
+            onClick={() => setShowPlanModal(true)}
+          >
+            Mudar de plano
+          </button>
+        )}
+      </div>
+
+      {/* Downgrade Modal */}
+      {showPlanModal && (
+        <div className="plan-modal-overlay" onClick={() => setShowPlanModal(false)}>
+          <div className="plan-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="plan-modal-header">
+              <div>
+                <h2 className="plan-modal-title">Alterar Plano</h2>
+                <p className="plan-modal-desc">Selecione o plano para o qual deseja fazer downgrade.</p>
+              </div>
+              <button className="plan-modal-close" onClick={() => setShowPlanModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="plans-grid">
+              {downgradePlans.map((plan) => {
+                const { Icon } = plan;
+                return (
+                  <div key={plan.id} className="plan-card glass-card">
+                    <div className="plan-icon-wrap">
+                      <Icon size={20} />
+                    </div>
+                    <h3 className="plan-name">{plan.name}</h3>
+                    <div className="plan-price-row">
+                      <span className="plan-price-value">{plan.price}</span>
+                      <span className="plan-price-period">{plan.period}</span>
+                    </div>
+                    <span className="plan-credits-label">{plan.creditsLabel}</span>
+                    <ul className="plan-features">
+                      {plan.features.map((f, i) => (
+                        <li key={i} className="plan-feature-item">
+                          <Check size={13} className="plan-check-icon" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <button className="plan-cta-btn plan-cta-btn--downgrade">
+                      <ArrowDown size={14} /> Fazer downgrade
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="settings-grid">
         {/* Main Settings Form */}
