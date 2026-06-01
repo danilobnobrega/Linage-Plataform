@@ -984,6 +984,48 @@ body {
   color: var(--text-primary);
 }
 
+.plan-cancel-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: var(--radius-sm);
+  background: rgba(239, 68, 68, 0.04);
+}
+
+.plan-cancel-info h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.plan-cancel-info p {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.plan-cancel-btn {
+  background: none;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: rgb(239, 68, 68);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition-smooth);
+  flex-shrink: 0;
+}
+
+.plan-cancel-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.7);
+}
+
 @media (max-width: 768px) {
   .plans-grid,
   .packs-grid {

@@ -30,8 +30,9 @@ function Settings() {
 
   const currentPlan = PLANS.find((p) => p.id === user.plan) || PLANS[0];
   const downgradePlans = PLANS.filter(
-    (p) => PLAN_ORDER[p.id] < PLAN_ORDER[user.plan]
+    (p) => PLAN_ORDER[p.id] < PLAN_ORDER[user.plan] && p.id !== 'free'
   );
+  const isPaidPlan = user.plan !== 'free';
 
   const handleSaveSettings = (e) => {
     e.preventDefault();
@@ -93,7 +94,7 @@ function Settings() {
             <span className="settings-plan-credits">{currentPlan.creditsLabel}</span>
           </div>
         </div>
-        {downgradePlans.length > 0 && (
+        {isPaidPlan && (
           <button
             className="settings-change-plan-btn"
             onClick={() => setShowPlanModal(true)}
@@ -103,47 +104,64 @@ function Settings() {
         )}
       </div>
 
-      {/* Downgrade Modal */}
+      {/* Plan Modal */}
       {showPlanModal && (
         <div className="plan-modal-overlay" onClick={() => setShowPlanModal(false)}>
           <div className="plan-modal" onClick={(e) => e.stopPropagation()}>
             <div className="plan-modal-header">
               <div>
                 <h2 className="plan-modal-title">Alterar Plano</h2>
-                <p className="plan-modal-desc">Selecione o plano para o qual deseja fazer downgrade.</p>
+                <p className="plan-modal-desc">
+                  {downgradePlans.length > 0
+                    ? 'Faça downgrade para um plano menor ou cancele sua assinatura.'
+                    : 'Cancele sua assinatura a qualquer momento.'}
+                </p>
               </div>
               <button className="plan-modal-close" onClick={() => setShowPlanModal(false)}>
                 <X size={18} />
               </button>
             </div>
-            <div className="plans-grid">
-              {downgradePlans.map((plan) => {
-                const { Icon } = plan;
-                return (
-                  <div key={plan.id} className="plan-card glass-card">
-                    <div className="plan-icon-wrap">
-                      <Icon size={20} />
+
+            {downgradePlans.length > 0 && (
+              <div className="plans-grid" style={{ marginBottom: 24 }}>
+                {downgradePlans.map((plan) => {
+                  const { Icon } = plan;
+                  return (
+                    <div key={plan.id} className="plan-card glass-card">
+                      <div className="plan-icon-wrap">
+                        <Icon size={20} />
+                      </div>
+                      <h3 className="plan-name">{plan.name}</h3>
+                      <div className="plan-price-row">
+                        <span className="plan-price-value">{plan.price}</span>
+                        <span className="plan-price-period">{plan.period}</span>
+                      </div>
+                      <span className="plan-credits-label">{plan.creditsLabel}</span>
+                      <ul className="plan-features">
+                        {plan.features.map((f, i) => (
+                          <li key={i} className="plan-feature-item">
+                            <Check size={13} className="plan-check-icon" />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                      <button className="plan-cta-btn plan-cta-btn--downgrade">
+                        <ArrowDown size={14} /> Fazer downgrade
+                      </button>
                     </div>
-                    <h3 className="plan-name">{plan.name}</h3>
-                    <div className="plan-price-row">
-                      <span className="plan-price-value">{plan.price}</span>
-                      <span className="plan-price-period">{plan.period}</span>
-                    </div>
-                    <span className="plan-credits-label">{plan.creditsLabel}</span>
-                    <ul className="plan-features">
-                      {plan.features.map((f, i) => (
-                        <li key={i} className="plan-feature-item">
-                          <Check size={13} className="plan-check-icon" />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <button className="plan-cta-btn plan-cta-btn--downgrade">
-                      <ArrowDown size={14} /> Fazer downgrade
-                    </button>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="plan-cancel-section">
+              <div className="plan-cancel-info">
+                <h4>Cancelar assinatura</h4>
+                <p>Você perderá acesso ao plano {currentPlan.name} ao fim do ciclo atual.</p>
+              </div>
+              <button className="plan-cancel-btn">
+                Cancelar assinatura
+              </button>
             </div>
           </div>
         </div>
