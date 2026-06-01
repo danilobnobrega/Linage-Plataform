@@ -12,20 +12,10 @@ const HOME_PHRASES = [
   'Autoridade não se pede emprestada. Mas às vezes se escreve em 3 minutos.',
   'Seu feed vai agradecer. A sua agenda também.',
 ];
-import { 
-  Sparkles, 
-  ArrowRight, 
-  Calendar, 
-  PenTool, 
-  CheckCircle2, 
-  Trash2, 
-  Plus, 
-  Zap, 
-  ArrowUpRight
-} from 'lucide-react';
+import { Sparkles, ArrowRight, PenTool, Zap, ArrowUpRight } from 'lucide-react';
 
 function Home() {
-  const { user, posts, agents, addPost, credits, addMessageToAgent } = useStore();
+  const { user, posts, agents, addMessageToAgent } = useStore();
   const daily = useDailyContent(user.dailyQuote, user.suggestions);
   const navigate = useNavigate();
   
@@ -95,51 +85,28 @@ function Home() {
         </button>
       </div>
 
-      {/* Suggestions and Quick Start Row */}
-      <div className="grid-two-cols">
-        {/* Suggestions Card */}
-        <div className="glass-card suggestions-card">
-          <div className="card-header-with-badge">
-            <h2 className="card-title">Sugestões de Pauta de Hoje</h2>
-            <span className="card-badge">Filtro de IA</span>
-          </div>
-          <p className="card-desc">Temas que estão rendendo conversa agora. Clique para criar algo em torno disso.</p>
-          
-          <div className="suggestions-list">
-            {daily.suggestions.map((suggestion, index) => (
-              <button 
-                key={index} 
-                className="suggestion-item-btn"
-                onClick={() => handleSuggestionClick(suggestion)}
-              >
-                <div className="suggestion-bullet">0{index + 1}</div>
-                <span className="suggestion-text">{suggestion}</span>
-                <div className="suggestion-action-arrow">
-                  <ArrowUpRight size={16} />
-                </div>
-              </button>
-            ))}
-          </div>
+      {/* Suggestions Card */}
+      <div className="glass-card suggestions-card">
+        <div className="card-header-with-badge">
+          <h2 className="card-title">Sugestões de Pauta de Hoje</h2>
+          <span className="card-badge">Filtro de IA</span>
         </div>
+        <p className="card-desc">Temas que estão rendendo conversa agora. Clique para criar algo em torno disso.</p>
 
-        {/* Create Card (Quick Agent Select) */}
-        <div className="glass-card launcher-card">
-          <h2 className="card-title">Começar Criação Imediata</h2>
-          <p className="card-desc">Jogue qualquer tema. O Linage transforma em algo que as pessoas vão querer comentar.</p>
-
-          <div className="agents-quick-grid">
+        <div className="suggestions-list">
+          {daily.suggestions.map((suggestion, index) => (
             <button
-              className="quick-agent-btn"
-              style={{
-                background: agentThemeStyles.linage,
-                borderColor: agentBorders.linage,
-              }}
-              onClick={() => navigate('/agent/linage')}
+              key={index}
+              className="suggestion-item-btn"
+              onClick={() => handleSuggestionClick(suggestion)}
             >
-              <span className="quick-agent-name">Linage</span>
-              <span className="quick-agent-desc">O Magnético</span>
+              <div className="suggestion-bullet">0{index + 1}</div>
+              <span className="suggestion-text">{suggestion}</span>
+              <div className="suggestion-action-arrow">
+                <ArrowUpRight size={16} />
+              </div>
             </button>
-          </div>
+          ))}
         </div>
       </div>
 
