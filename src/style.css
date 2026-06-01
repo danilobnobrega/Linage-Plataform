@@ -984,6 +984,11 @@ body {
   color: var(--text-primary);
 }
 
+.plan-modal .plans-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 300px));
+  justify-content: center;
+}
+
 .plan-cancel-section {
   display: flex;
   align-items: center;
