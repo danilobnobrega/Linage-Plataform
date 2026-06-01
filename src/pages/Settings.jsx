@@ -3,11 +3,7 @@ import useStore from '../store';
 import {
   Settings as SettingsIcon,
   User,
-  Plus,
-  RotateCcw,
   Check,
-  Moon,
-  Sun,
   X,
   ArrowDown,
 } from 'lucide-react';
@@ -16,7 +12,7 @@ import { PLANS } from './Credits';
 const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
 
 function Settings() {
-  const { user, theme, setTheme, credits, addCredits } = useStore();
+  const { user } = useStore();
   const [userName, setUserName] = useState(user.name);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showPlanModal, setShowPlanModal] = useState(false);
@@ -34,13 +30,6 @@ function Settings() {
     }));
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2000);
-  };
-
-  const handleResetState = () => {
-    if (confirm("Deseja redefinir todo o sistema? Isso limpará todas as conversas, posts e resetará o saldo de créditos.")) {
-      localStorage.removeItem('linage-store');
-      window.location.reload();
-    }
   };
 
   return (
@@ -172,58 +161,6 @@ function Settings() {
           </div>
         </form>
 
-        {/* System controls card */}
-        <div className="settings-system-card glass-card">
-          <h3 className="settings-section-title">Controle do Sistema</h3>
-          <p className="settings-section-desc">Ajustes globais do ambiente de demonstração local.</p>
-
-          <div className="system-setting-row">
-            <div>
-              <h4>Esquema de Cores</h4>
-              <p>Alternar entre aparência escura e clara</p>
-            </div>
-            <button
-              type="button"
-              className="system-action-btn"
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            >
-              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-              <span>{theme === 'light' ? 'Modo Escuro' : 'Modo Claro'}</span>
-            </button>
-          </div>
-
-          <div className="system-setting-row">
-            <div>
-              <h4>Créditos</h4>
-              <p>Adicionar +100 créditos para testes de geração de posts</p>
-            </div>
-            <button
-              type="button"
-              className="system-action-btn accent"
-              onClick={() => addCredits(100)}
-            >
-              <Plus size={16} />
-              <span>Recarregar +100cr</span>
-            </button>
-          </div>
-
-          <div className="divider"></div>
-
-          <div className="system-setting-row danger">
-            <div>
-              <h4>Resetar Aplicação</h4>
-              <p>Redefine o banco de dados local para o estado original</p>
-            </div>
-            <button
-              type="button"
-              className="system-action-btn danger"
-              onClick={handleResetState}
-            >
-              <RotateCcw size={16} />
-              <span>Resetar Tudo</span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
