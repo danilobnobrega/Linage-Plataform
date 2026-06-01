@@ -51,7 +51,7 @@ function CustomCursor() {
       ring.current.x += (mouse.current.x - ring.current.x) * 0.12;
       ring.current.y += (mouse.current.y - ring.current.y) * 0.12;
 
-      const targetScale = isMagnetic.current ? 1.0 : hover.current ? 0.68 : 0.4;
+      const targetScale = isMagnetic.current ? 2.5 : hover.current ? 1.7 : 1;
       scale.current += (targetScale - scale.current) * 0.15;
 
       const dot = dotRef.current;
@@ -63,7 +63,7 @@ function CustomCursor() {
       ringEl.style.opacity = opacity;
 
       dot.style.transform = `translate(${mouse.current.x - 3}px, ${mouse.current.y - 3}px)`;
-      ringEl.style.transform = `translate(${ring.current.x - 35}px, ${ring.current.y - 35}px) scale(${scale.current})`;
+      ringEl.style.transform = `translate(${ring.current.x - 14}px, ${ring.current.y - 14}px) scale(${scale.current})`;
       ringEl.style.borderColor = isMagnetic.current
         ? 'rgba(0, 255, 136, 0.8)'
         : hover.current
