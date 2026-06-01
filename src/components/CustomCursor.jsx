@@ -8,11 +8,33 @@ function CustomCursor() {
   const scale = useRef(1);
   const hover = useRef(false);
   const hidden = useRef(false);
+  const isMagnetic = useRef(false);
+  const currentMagnetic = useRef(null);
   const rafRef = useRef(null);
 
   useEffect(() => {
     const onMove = (e) => {
       mouse.current = { x: e.clientX, y: e.clientY };
+
+      const el = e.target.closest('.magnetic');
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = (e.clientX - cx) * 0.35;
+        const dy = (e.clientY - cy) * 0.35;
+        el.style.transform = `translate(${dx}px, ${dy}px)`;
+        el.style.transition = 'transform 0.2s ease';
+        currentMagnetic.current = el;
+        isMagnetic.current = true;
+      } else {
+        if (currentMagnetic.current) {
+          currentMagnetic.current.style.transform = '';
+          currentMagnetic.current.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+          currentMagnetic.current = null;
+        }
+        isMagnetic.current = false;
+      }
     };
 
     const onOver = (e) => {
@@ -23,10 +45,11 @@ function CustomCursor() {
     const animate = () => {
       rafRef.current = requestAnimationFrame(animate);
 
-      // Lerp ring position and scale
       ring.current.x += (mouse.current.x - ring.current.x) * 0.12;
       ring.current.y += (mouse.current.y - ring.current.y) * 0.12;
-      scale.current += ((hover.current ? 1.7 : 1) - scale.current) * 0.15;
+
+      const targetScale = isMagnetic.current ? 2.5 : hover.current ? 1.7 : 1;
+      scale.current += (targetScale - scale.current) * 0.15;
 
       const dot = dotRef.current;
       const ringEl = ringRef.current;
@@ -36,10 +59,13 @@ function CustomCursor() {
       dot.style.opacity = opacity;
       ringEl.style.opacity = opacity;
 
-      // Dot centered: subtract half of its 6px size
       dot.style.transform = `translate(${mouse.current.x - 3}px, ${mouse.current.y - 3}px)`;
-      // Ring centered: subtract half of its 28px size
       ringEl.style.transform = `translate(${ring.current.x - 14}px, ${ring.current.y - 14}px) scale(${scale.current})`;
+      ringEl.style.borderColor = isMagnetic.current
+        ? 'rgba(0, 255, 136, 0.8)'
+        : hover.current
+        ? 'rgba(0, 255, 136, 0.5)'
+        : 'rgba(0, 255, 136, 0.4)';
     };
 
     document.addEventListener('mousemove', onMove);

@@ -90,7 +90,7 @@ function Home() {
             <p className="quote-text">"{daily.quote}"</p>
           </div>
         </div>
-        <button className="quote-action-btn" onClick={() => navigate('/agent/linage')}>
+        <button className="quote-action-btn magnetic" onClick={() => navigate('/advisor')}>
           Explorar com Linage <ArrowRight size={16} />
         </button>
       </div>
