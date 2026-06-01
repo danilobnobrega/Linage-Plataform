@@ -7,13 +7,13 @@ const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
 export const PLANS = [
   {
     id: 'free',
-    name: 'Gratuito',
-    price: 'R$ 0',
-    period: '/mês',
-    creditsLabel: '50 créditos/mês',
+    name: 'Teste Grátis',
+    price: 'Grátis',
+    period: '',
+    creditsLabel: '50 créditos únicos',
     Icon: Star,
     features: [
-      '50 créditos mensais',
+      '50 créditos (não renovam)',
       'Acesso ao Linage',
       '5 posts salvos',
       'Suporte por e-mail',
