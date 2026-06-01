@@ -4439,7 +4439,7 @@ body {
   width: 32px;
   height: 32px;
   background: linear-gradient(135deg, var(--accent), rgba(0, 200, 100, 0.7));
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4455,6 +4455,7 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 50%;
 }
 
 .sidebar-user-name {
