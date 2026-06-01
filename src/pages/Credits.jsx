@@ -87,7 +87,7 @@ function Credits() {
             <Sparkles size={24} style={{ color: 'var(--accent)' }} />
             <div>
               <h3>Você já está no melhor plano</h3>
-              <p>Para alterar ou cancelar, acesse Configurações → Meu Plano.</p>
+              <p>Para alterar ou cancelar, acesse Configurações → Cobrança.</p>
             </div>
           </div>
         ) : (
