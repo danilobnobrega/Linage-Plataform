@@ -48,6 +48,15 @@ function Home() {
     navigate('/agent/linage');
   };
 
+  // Pre-configured custom backgrounds for agent quick launcher
+  const agentThemeStyles = {
+    linage: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%)',
+  };
+
+  const agentBorders = {
+    linage: 'rgba(245, 158, 11, 0.25)',
+  };
+
   return (
     <div className="page-container home-page animate-fade-in">
       {/* Top Greeting & Header */}
@@ -118,25 +127,18 @@ function Home() {
           <h2 className="card-title">Começar Criação Imediata</h2>
           <p className="card-desc">Jogue qualquer tema. O Linage transforma em algo que as pessoas vão querer comentar.</p>
 
-          <div
-            className="linage-agent-card"
-            onClick={() => navigate('/agent/linage')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && navigate('/agent/linage')}
-          >
-            <div className="linage-card-header">
-              <div className="linage-card-avatar">L</div>
-              <div className="linage-card-identity">
-                <h3 className="linage-card-name">Linage</h3>
-                <span className="linage-card-archetype">O Magnético</span>
-              </div>
-            </div>
-            <p className="linage-card-body">Usa humor como ferramenta estratégica. Sabe ser leve sem ser raso. Autoridade sólida — magnética, espirituosa, sem forçar.</p>
-            <div className="linage-card-cta">
-              <span>Iniciar conversa</span>
-              <ArrowRight size={14} />
-            </div>
+          <div className="agents-quick-grid">
+            <button
+              className="quick-agent-btn"
+              style={{
+                background: agentThemeStyles.linage,
+                borderColor: agentBorders.linage,
+              }}
+              onClick={() => navigate('/agent/linage')}
+            >
+              <span className="quick-agent-name">Linage</span>
+              <span className="quick-agent-desc">O Magnético</span>
+            </button>
           </div>
         </div>
       </div>
