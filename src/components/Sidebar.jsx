@@ -13,10 +13,7 @@ function Sidebar() {
   const { credits, addCredits } = useStore();
   const navigate = useNavigate();
 
-  const handleAddCredits = (e) => {
-    e.stopPropagation();
-    addCredits(100);
-  };
+  const handleAddCredits = () => navigate('/credits');
 
   return (
     <aside className="sidebar">
