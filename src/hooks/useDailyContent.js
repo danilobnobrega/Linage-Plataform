@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { anthropic, MODELS, LINAGE_SYSTEM_PROMPT } from '../lib/anthropic';
+import { anthropic, MODELS, LINAGE_SYSTEM_PROMPT, LINAGE_DAILY_PROMPT } from '../lib/anthropic';
 
 const TAVILY_KEY = import.meta.env.VITE_TAVILY_API_KEY;
 const todayKey = () => `linage_daily_${new Date().toISOString().split('T')[0]}`;
@@ -24,11 +24,11 @@ async function fetchDailyContent() {
   // Gera perspectiva do dia + sugestões de pauta com a voz e personalidade do Linage
   const response = await anthropic.messages.create({
     model: MODELS.agent,
-    max_tokens: 400,
-    system: LINAGE_SYSTEM_PROMPT,
+    max_tokens: 600,
+    system: LINAGE_DAILY_PROMPT,
     messages: [{
       role: 'user',
-      content: `Notícias do mercado financeiro de hoje:\n${headlines}\n\nCom base nisso, gere o conteúdo do dia para a plataforma:\n1. PERSPECTIVA: Uma frase sua — como você vê o posicionamento profissional no contexto de hoje. Máx 25 palavras. Com sua voz, sem fórmula.\n2. PAUTA_1: Um tema para post no LinkedIn baseado nas notícias (máx 15 palavras, formulado como pergunta ou provocação)\n3. PAUTA_2: Outro ângulo diferente (máx 15 palavras)\n4. PAUTA_3: Mais um tema diferente (máx 15 palavras)\n\nRetorne exatamente neste formato, sem mais nada:\nPERSPECTIVA: [texto]\nPAUTA_1: [texto]\nPAUTA_2: [texto]\nPAUTA_3: [texto]`
+      content: `Notícias do mercado financeiro de hoje:\n${headlines}\n\nGere 3 sugestões de pauta com energias diferentes:\n- PAUTA_1: Uma que incomoda de leve — levanta algo que o leitor vai precisar pensar. Não ataca, mas não deixa confortável.\n- PAUTA_2: Uma que diverte com substância — leve, espirituosa, mas com insight real dentro.\n- PAUTA_3: Uma que aprofunda — mais densa, conceitual, para quem quer pensar.\n\nCada sugestão: gancho (o que aconteceu) + ângulo (onde você iria). Máx 30 palavras. Com sua voz. Sem briefing, sem explicação — faísca.\n\nTambém gere uma PERSPECTIVA: como você vê o posicionamento profissional hoje. Máx 25 palavras. Com sua voz.\n\nFormato exato, sem mais nada:\nPERSPECTIVA: [texto]\nPAUTA_1: [texto]\nPAUTA_2: [texto]\nPAUTA_3: [texto]`
     }]
   });
 
