@@ -3,8 +3,6 @@ import useStore from '../store';
 import {
   Settings as SettingsIcon,
   User,
-  Sparkles,
-  Trash2,
   Plus,
   RotateCcw,
   Check,
@@ -20,11 +18,6 @@ const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
 function Settings() {
   const { user, theme, setTheme, credits, addCredits } = useStore();
   const [userName, setUserName] = useState(user.name);
-  const [dailyQuote, setDailyQuote] = useState(user.dailyQuote);
-  
-  // Custom states for local edit suggestions
-  const [suggestions, setSuggestions] = useState([...user.suggestions]);
-  const [newSuggestionText, setNewSuggestionText] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showPlanModal, setShowPlanModal] = useState(false);
 
@@ -36,35 +29,16 @@ function Settings() {
 
   const handleSaveSettings = (e) => {
     e.preventDefault();
-    
-    // Update Zustand state
-    useStore.setState(s => ({
-      user: {
-        name: userName,
-        dailyQuote: dailyQuote,
-        suggestions: suggestions
-      }
+    useStore.setState((s) => ({
+      user: { ...s.user, name: userName }
     }));
-
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2000);
   };
 
-  const handleAddSuggestion = () => {
-    if (!newSuggestionText.trim()) return;
-    setSuggestions([...suggestions, newSuggestionText.trim()]);
-    setNewSuggestionText('');
-  };
-
-  const handleRemoveSuggestion = (index) => {
-    setSuggestions(suggestions.filter((_, i) => i !== index));
-  };
-
   const handleResetState = () => {
     if (confirm("Deseja redefinir todo o sistema? Isso limpará todas as conversas, posts e resetará o saldo de créditos.")) {
-      // Clear localStorage
       localStorage.removeItem('linage-store');
-      // Reload page to reinitialize store
       window.location.reload();
     }
   };
@@ -76,9 +50,9 @@ function Settings() {
           <SettingsIcon className="settings-star-icon" size={24} />
         </div>
         <div className="header-text-container">
-          <span className="header-subtitle">Configurações Locais</span>
+          <span className="header-subtitle">Configurações</span>
           <h1 className="header-title">Configurações</h1>
-          <p className="header-desc">Personalize sua experiência Linage. Altere as sugestões de pauta diária, edite a frase do dia e redefina os créditos.</p>
+          <p className="header-desc">Gerencie seu perfil, plano e preferências da plataforma.</p>
         </div>
       </header>
 
@@ -157,7 +131,7 @@ function Settings() {
             <div className="plan-cancel-section">
               <div className="plan-cancel-info">
                 <h4>Cancelar assinatura</h4>
-                <p>Você perderá acesso ao plano {currentPlan.name} ao fim do ciclo atual.</p>
+                <p>Você mantém acesso ao plano {currentPlan.name} até o fim do ciclo atual.</p>
               </div>
               <button className="plan-cancel-btn">
                 Cancelar assinatura
@@ -168,82 +142,28 @@ function Settings() {
       )}
 
       <div className="settings-grid">
-        {/* Main Settings Form */}
+        {/* Profile Form */}
         <form onSubmit={handleSaveSettings} className="settings-form-card glass-card">
           <h3 className="settings-section-title">
-            <User size={18} style={{marginRight: 8, color: 'var(--accent)'}} />
-            Perfil & Tese
+            <User size={18} style={{ marginRight: 8, color: 'var(--accent)' }} />
+            Perfil
           </h3>
-          
+
           <div className="form-group">
-            <label className="form-label">Nome do Usuário</label>
-            <input 
-              type="text" 
-              value={userName} 
+            <label className="form-label">Nome</label>
+            <input
+              type="text"
+              value={userName}
               onChange={(e) => setUserName(e.target.value)}
               className="settings-text-input"
               placeholder="Digite seu nome..."
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Frase do Dia (Diretriz do Linage)</label>
-            <textarea 
-              value={dailyQuote} 
-              onChange={(e) => setDailyQuote(e.target.value)}
-              className="settings-textarea-input"
-              placeholder="Frase inspiradora do Linage na página Home..."
-            />
-          </div>
-
-          <div className="divider"></div>
-
-          <h3 className="settings-section-title">
-            <Sparkles size={18} style={{marginRight: 8, color: 'var(--accent)'}} />
-            Sugestões de Pauta (Home)
-          </h3>
-          <p className="settings-section-desc">
-            Estas pautas aparecem na sua página Home. Ao clicar nelas, você poderá iniciar chats com agentes direcionados.
-          </p>
-
-          <div className="settings-suggestions-edit-list">
-            {suggestions.map((suggestion, index) => (
-              <div key={index} className="suggestion-edit-row">
-                <span className="suggestion-number">0{index + 1}</span>
-                <span className="suggestion-edit-text">{suggestion}</span>
-                <button 
-                  type="button" 
-                  className="remove-suggestion-btn"
-                  onClick={() => handleRemoveSuggestion(index)}
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="add-suggestion-control-row">
-            <input 
-              type="text" 
-              placeholder="Adicionar nova pauta de demonstração..."
-              value={newSuggestionText}
-              onChange={(e) => setNewSuggestionText(e.target.value)}
-              className="add-suggestion-text-input"
-            />
-            <button 
-              type="button" 
-              className="add-suggestion-btn"
-              onClick={handleAddSuggestion}
-            >
-              <Plus size={16} />
-              <span>Adicionar</span>
-            </button>
-          </div>
-
           <div className="form-actions-footer">
             {saveSuccess && (
               <span className="save-success-msg">
-                <Check size={14} style={{marginRight: 4}} /> Salvo com sucesso!
+                <Check size={14} style={{ marginRight: 4 }} /> Salvo com sucesso!
               </span>
             )}
             <button type="submit" className="save-settings-submit-btn">
@@ -262,8 +182,8 @@ function Settings() {
               <h4>Esquema de Cores</h4>
               <p>Alternar entre aparência escura e clara</p>
             </div>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="system-action-btn"
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
             >
@@ -277,8 +197,8 @@ function Settings() {
               <h4>Créditos</h4>
               <p>Adicionar +100 créditos para testes de geração de posts</p>
             </div>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="system-action-btn accent"
               onClick={() => addCredits(100)}
             >
@@ -294,8 +214,8 @@ function Settings() {
               <h4>Resetar Aplicação</h4>
               <p>Redefine o banco de dados local para o estado original</p>
             </div>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="system-action-btn danger"
               onClick={handleResetState}
             >
