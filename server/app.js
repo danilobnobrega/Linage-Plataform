@@ -237,6 +237,16 @@ app.post('/api/stripe/webhook', async (req, res) => {
     }
   }
 
+  if (event.type === 'invoice.payment_succeeded') {
+    const invoice = event.data.object;
+    if (invoice.billing_reason === 'subscription_cycle' && invoice.subscription) {
+      const users = await sql`SELECT id, plan FROM users WHERE stripe_subscription_id = ${invoice.subscription}`;
+      if (users[0]) {
+        await updateUserCredits(users[0].id, PLAN_CREDITS[users[0].plan] ?? 2000);
+      }
+    }
+  }
+
   if (event.type === 'customer.subscription.deleted') {
     const sub = event.data.object;
     const users = await sql`SELECT id FROM users WHERE stripe_subscription_id = ${sub.id}`;
