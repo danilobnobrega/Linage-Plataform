@@ -339,9 +339,7 @@ body {
   color: var(--bg-primary);
 }
 
-.advisor-spark {
-  animation: pulse-glow 2s infinite;
-}
+.advisor-spark {}
 
 /* Agents subnav link */
 .agents-list {
