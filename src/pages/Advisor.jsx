@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import useStore from '../store';
 import { Send } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
@@ -14,7 +13,6 @@ const ADVISOR_PHRASES = [
 ];
 
 function Advisor() {
-  const navigate = useNavigate();
   const { getToken } = useAuth();
   const { advisorHistory, addAdvisorMessage } = useStore();
   const [inputText, setInputText] = useState('');

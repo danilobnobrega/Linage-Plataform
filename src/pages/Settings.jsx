@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser, useAuth, useClerk } from '@clerk/clerk-react';
 import useStore from '../store';
 import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
 import {
@@ -9,6 +9,7 @@ import {
 import { PLANS } from './Credits';
 
 const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
+const PLAN_CREDITS = { free: 2000, starter: 15000, pro: 40000 };
 
 const SECTIONS = [
   { id: 'conta',       label: 'Conta',       Icon: User },
@@ -21,6 +22,7 @@ function Settings() {
   const { user, credits, posts, advisorHistory, notifications, privacy } = useStore();
   const { user: clerkUser } = useUser();
   const { getToken } = useAuth();
+  const { signOut } = useClerk();
   const [activeSection, setActiveSection] = useState('conta');
   const [userName, setUserName] = useState(user.name);
   const [nickname, setNickname] = useState(user.nickname || '');
@@ -59,6 +61,35 @@ function Settings() {
   ];
   const { ref: instructionsRef, onFocus: instructionsFocus, onBlur: instructionsBlur } = useDecryptPlaceholder(INSTRUCTION_PHRASES);
 
+  const handleDeleteAccount = async () => {
+    if (!confirm('Tem certeza? Todos os seus posts e dados serão apagados permanentemente. Esta ação é irreversível.')) return;
+    if (!confirm('Confirme novamente: sua conta será excluída agora.')) return;
+    try {
+      const token = await getToken();
+      await fetch('/api/user', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      await signOut();
+    } catch {
+      alert('Erro ao excluir conta. Entre em contato com suporte@linage.app.');
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/posts', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `linage-posts-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Erro ao exportar dados.');
+    }
+  };
+
   const handleOpenPortal = async () => {
     try {
       const token = await getToken();
@@ -87,7 +118,8 @@ function Settings() {
     await clerkUser.setProfileImage({ file });
   };
 
-  const creditsPercent = Math.min(100, (credits / 500) * 100);
+  const planMax = PLAN_CREDITS[user.plan] || 2000;
+  const creditsPercent = Math.min(100, (credits / planMax) * 100);
   const messagesSent = advisorHistory.filter((m) => m.sender === 'user').length;
 
   const saveField = async (field, value) => {
@@ -260,7 +292,7 @@ function Settings() {
                     <h4 className="settings-action-title settings-action-title--danger">Excluir conta</h4>
                     <p className="settings-action-desc">Remove permanentemente sua conta e todos os dados associados.</p>
                   </div>
-                  <button className="plan-cancel-btn">Excluir conta</button>
+                  <button className="plan-cancel-btn" onClick={handleDeleteAccount}>Excluir conta</button>
                 </div>
 
                 {saveSuccess && (
@@ -359,7 +391,7 @@ function Settings() {
                   <h4 className="settings-action-title">Exportar dados</h4>
                   <p className="settings-action-desc">Baixe uma cópia de todos os seus posts e conversas.</p>
                 </div>
-                <button className="settings-action-btn">
+                <button className="settings-action-btn" onClick={handleExportData}>
                   Exportar <ChevronRight size={14} />
                 </button>
               </div>
@@ -397,7 +429,7 @@ function Settings() {
                   <h4 className="settings-action-title">Método de pagamento</h4>
                   <p className="settings-action-desc">Nenhum método configurado</p>
                 </div>
-                <button className="settings-action-btn">
+                <button className="settings-action-btn" onClick={handleOpenPortal}>
                   Adicionar <ChevronRight size={14} />
                 </button>
               </div>
@@ -453,7 +485,7 @@ function Settings() {
                 <div className="settings-usage-header">
                   <span className="settings-usage-label">Créditos</span>
                   <span className="settings-usage-value">
-                    {credits} <span className="settings-usage-max">/ 500</span>
+                    {credits.toLocaleString('pt-BR')} <span className="settings-usage-max">/ {planMax.toLocaleString('pt-BR')}</span>
                   </span>
                 </div>
                 <div className="credits-bar-container">

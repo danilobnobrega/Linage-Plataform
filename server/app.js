@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClerkClient } from '@clerk/backend';
-import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, getPosts, savePost, deletePost, updateUserSettings } from './db.js';
+import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, getPosts, savePost, deletePost, updateUserSettings, sql } from './db.js';
 import { LINAGE_SYSTEM_PROMPT } from './prompts.js';
 
 const app = express();
@@ -239,9 +239,7 @@ app.post('/api/stripe/webhook', async (req, res) => {
 
   if (event.type === 'customer.subscription.deleted') {
     const sub = event.data.object;
-    const users = await import('./db.js').then(m => m.sql)`
-      SELECT id FROM users WHERE stripe_subscription_id = ${sub.id}
-    `;
+    const users = await sql`SELECT id FROM users WHERE stripe_subscription_id = ${sub.id}`;
     if (users[0]) await updateUserPlan(users[0].id, 'free', sub.customer, null);
   }
 
@@ -283,6 +281,17 @@ app.post('/api/agent/generate-post', requireAuth, async (req, res) => {
       messages: [{ role: 'user', content: userContent }],
     });
     res.json({ text: response.content[0].text });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- User deletion ---
+app.delete('/api/user', requireAuth, async (req, res) => {
+  try {
+    await sql`DELETE FROM users WHERE id = ${req.userId}`;
+    await clerk.users.deleteUser(req.userId);
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
