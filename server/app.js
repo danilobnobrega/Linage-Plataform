@@ -261,6 +261,32 @@ function buildSystem(base, instructions) {
   return extra ? `${base}\n\nInstruções específicas do usuário (seguir sempre):\n${extra}` : base;
 }
 
+// --- Consensus flip ---
+app.post('/api/agent/flip', requireAuth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text?.trim()) return res.status(400).json({ error: 'Texto obrigatório' });
+    const user = await getUser(req.userId);
+    const system = buildSystem(`Você é o Linage. Recebe uma afirmação de senso comum do mercado financeiro e a transforma em uma tese contrária de alto impacto — provocadora, fundamentada e com o estilo Linage: espirituosa sem ser leviana, sólida sem ser chata.
+
+Regras absolutas:
+- Retorne apenas a tese contrária. Sem preâmbulo, sem título, sem explicação.
+- Máximo 3 parágrafos curtos.
+- Nunca use "ruído", "incomodar", "Existe um(a) [x] real", "A maioria não...".
+- Não inicie frases com "Artigo + substantivo + verbo + dois-pontos".
+- O humor é ferramenta, não enfeite. Se não agregar, corta.`, user?.instructions);
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 512,
+      system,
+      messages: [{ role: 'user', content: `Senso comum para flipar:\n"${text}"` }],
+    });
+    res.json({ text: response.content[0].text });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- Agent chat ---
 app.post('/api/agent/chat', requireAuth, async (req, res) => {
   try {

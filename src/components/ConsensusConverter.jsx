@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 
 const EXAMPLE = {
   consensus: 'A renda fixa está pagando 12% ao ano sem risco, então investir em renda variável agora é loucura.',
@@ -72,10 +73,12 @@ function ConsensusConverter() {
     };
   }, [resetTilt]);
 
+  const { getToken } = useAuth();
   const [text, setText] = useState('');
   const [isDefault, setIsDefault] = useState(true);
   const [flipped, setFlipped] = useState(false);
   const [flipping, setFlipping] = useState(false);
+  const [flippedText, setFlippedText] = useState('');
 
   const handleFocus = () => {
     textFocusedRef.current = true;
@@ -94,13 +97,27 @@ function ConsensusConverter() {
 
   const currentText = isDefault ? EXAMPLE.consensus : text;
 
-  const handleFlip = () => {
+  const handleFlip = async () => {
     if (flipped || flipping || !currentText.trim()) return;
     setFlipping(true);
-    setTimeout(() => {
-      setFlipped(true);
-      setFlipping(false);
-    }, 900);
+    if (isDefault) {
+      setTimeout(() => { setFlipped(true); setFlipping(false); }, 900);
+      return;
+    }
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/agent/flip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ text: currentText }),
+      });
+      const data = await res.json();
+      setFlippedText(data.text || 'Não foi possível gerar a tese. Tente novamente.');
+    } catch {
+      setFlippedText('Erro de conexão. Tente novamente.');
+    }
+    setFlipped(true);
+    setFlipping(false);
   };
 
   return (
@@ -151,16 +168,9 @@ function ConsensusConverter() {
           <span className="consensus-col-label consensus-col-label--outlier">ÂNGULO INUSITADO (POSICIONAMENTO)</span>
           <div className={`consensus-text-box consensus-text-box--outlier ${flipped ? 'consensus-text-box--visible' : ''}`}>
             {flipped ? (
-              isDefault ? (
-                EXAMPLE.outlier
-              ) : (
-                <div className="consensus-cta">
-                  <p>Você tem um tema próprio. Leve ele para o <strong>Linage</strong> transformar em tese de alto impacto.</p>
-                  <button className="consensus-cta-btn" onClick={() => navigate('/agent/linage')}>
-                    Abrir Linage <Zap size={13} />
-                  </button>
-                </div>
-              )
+              <span style={{ whiteSpace: 'pre-line' }}>
+                {isDefault ? EXAMPLE.outlier : flippedText}
+              </span>
             ) : (
               <span className="consensus-placeholder">Clique no raio central para flipar e desbloquear a tese contrária de alto impacto...</span>
             )}
