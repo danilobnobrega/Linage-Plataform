@@ -13,6 +13,7 @@ import SignUpPage from './pages/SignUp';
 import CustomCursor from './components/CustomCursor';
 import Credits from './pages/Credits';
 import Help from './pages/Help';
+import Terms from './pages/Terms';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -70,6 +71,7 @@ function AppContent() {
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/credits" element={<ProtectedRoute><Credits /></ProtectedRoute>} />
                 <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+                <Route path="/terms" element={<ProtectedRoute><Terms /></ProtectedRoute>} />
               </Routes>
             </main>
           </div>

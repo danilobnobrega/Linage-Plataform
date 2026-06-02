@@ -580,6 +580,52 @@ body {
   color: var(--accent);
 }
 
+.terms-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 520px;
+}
+
+.terms-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition-smooth);
+  cursor: pointer;
+}
+
+.terms-card:hover {
+  border-color: rgba(255,255,255,0.2);
+}
+
+.terms-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.terms-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.terms-card-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 .help-response-time {
   display: flex;
   align-items: center;

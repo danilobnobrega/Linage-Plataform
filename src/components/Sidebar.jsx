@@ -120,8 +120,11 @@ function Sidebar() {
                   <Zap size={14} /><span>Fazer upgrade</span>
                 </button>
               )}
-              <button className="user-dropdown-item">
-                <ExternalLink size={14} /><span>Saiba mais</span>
+              <button
+                className="user-dropdown-item"
+                onClick={() => { navigate('/terms'); setShowUserMenu(false); }}
+              >
+                <ExternalLink size={14} /><span>Termos e Privacidade</span>
               </button>
               <div className="user-dropdown-divider" />
               <button
