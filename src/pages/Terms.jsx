@@ -10,7 +10,7 @@ function Terms() {
         </div>
         <div className="header-text-container">
           <span className="header-subtitle">Legal</span>
-          <h1 className="header-title">Termos e Privacidade</h1>
+          <h1 className="header-title">Termos & Privacidade</h1>
           <p className="header-desc">
             Documentos que regem o uso da plataforma Linage.
           </p>

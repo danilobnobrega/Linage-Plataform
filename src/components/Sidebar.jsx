@@ -124,7 +124,7 @@ function Sidebar() {
                 className="user-dropdown-item"
                 onClick={() => { navigate('/terms'); setShowUserMenu(false); }}
               >
-                <ExternalLink size={14} /><span>Termos e Privacidade</span>
+                <ExternalLink size={14} /><span>Termos & Privacidade</span>
               </button>
               <div className="user-dropdown-divider" />
               <button
