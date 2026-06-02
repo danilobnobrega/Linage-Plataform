@@ -21,6 +21,11 @@ const useStore = create(persist(
       suggestions: true,
       responseComplete: false,
     },
+    // Privacy preferences
+    privacy: {
+      memoryEnabled: true,
+      improveProduct: true,
+    },
     // Theme handling
     theme: 'light',
     setTheme: (t) => set({ theme: t }),

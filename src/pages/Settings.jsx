@@ -19,7 +19,7 @@ const SECTIONS = [
 ];
 
 function Settings() {
-  const { user, credits, posts, advisorHistory, notifications } = useStore();
+  const { user, credits, posts, advisorHistory, notifications, privacy } = useStore();
   const { user: clerkUser } = useUser();
   const [activeSection, setActiveSection] = useState('conta');
   const [userName, setUserName] = useState(user.name);
@@ -29,6 +29,10 @@ function Settings() {
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [notifSuggestions, setNotifSuggestions] = useState(notifications?.suggestions ?? true);
   const [notifResponse, setNotifResponse] = useState(notifications?.responseComplete ?? false);
+  const [memoryEnabled, setMemoryEnabled] = useState(privacy?.memoryEnabled ?? true);
+  const [improveProduct, setImproveProduct] = useState(privacy?.improveProduct ?? true);
+  const [expandProtect, setExpandProtect] = useState(false);
+  const [expandUse, setExpandUse] = useState(false);
 
   const INSTRUCTION_PHRASES = [
     'ex.: Evito conteúdo sensacionalista...',
@@ -205,6 +209,16 @@ function Settings() {
                   </label>
                 </div>
 
+                <div className="settings-divider" />
+
+                <div className="settings-action-row">
+                  <div>
+                    <h4 className="settings-action-title settings-action-title--danger">Excluir conta</h4>
+                    <p className="settings-action-desc">Remove permanentemente sua conta e todos os dados associados.</p>
+                  </div>
+                  <button className="plan-cancel-btn">Excluir conta</button>
+                </div>
+
                 {saveSuccess && (
                   <span className="save-success-msg" style={{ marginTop: 12, display: 'inline-flex' }}>
                     <Check size={14} style={{ marginRight: 4 }} /> Salvo!
@@ -218,13 +232,92 @@ function Settings() {
           {activeSection === 'privacidade' && (
             <div className="settings-section-card glass-card">
               <h3 className="settings-section-heading">Privacidade</h3>
+              <p className="settings-action-desc" style={{ marginBottom: 20 }}>
+                O Linage acredita em práticas transparentes de dados. Saiba como suas informações são protegidas.
+              </p>
+
+              <div className="settings-privacy-links">
+                <button className="settings-privacy-link" onClick={() => setExpandProtect(!expandProtect)}>
+                  Como protegemos seus dados
+                  <ChevronRight size={14} style={{ transform: expandProtect ? 'rotate(90deg)' : 'none', transition: '0.2s' }} />
+                </button>
+                {expandProtect && (
+                  <div className="settings-privacy-expand">
+                    <p>Você tem controle sobre seus dados e pode alterar suas preferências a qualquer momento em Configurações → Privacidade.</p>
+                    <p>O Linage exclui seus dados quando solicitado, exceto em casos de violações de segurança ou conversas compartilhadas via feedback.</p>
+                    <p>O Linage não vende seus dados para terceiros.</p>
+                  </div>
+                )}
+
+                <button className="settings-privacy-link" onClick={() => setExpandUse(!expandUse)}>
+                  Como usamos seus dados
+                  <ChevronRight size={14} style={{ transform: expandUse ? 'rotate(90deg)' : 'none', transition: '0.2s' }} />
+                </button>
+                {expandUse && (
+                  <div className="settings-privacy-expand">
+                    <p>Com sua permissão, usaremos suas conversas para treinar e melhorar o Linage — tornando o produto mais útil e preciso para todos.</p>
+                    <p>O Linage pode usar seu e-mail para verificação de conta, cobrança e comunicações sobre novos recursos.</p>
+                    <p>O Linage pode conduzir análises agregadas e anonimizadas para entender como as pessoas usam o produto.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="settings-divider" />
+
+              <h4 className="settings-section-subheading">Preferências</h4>
+
               <div className="settings-action-row">
                 <div>
-                  <h4 className="settings-action-title settings-action-title--danger">Excluir conta</h4>
-                  <p className="settings-action-desc">Remove permanentemente sua conta e todos os dados associados.</p>
+                  <h4 className="settings-action-title">Memória ativa</h4>
+                  <p className="settings-action-desc">O Linage lembra o contexto das sessões anteriores para personalizar cada nova conversa.</p>
                 </div>
-                <button className="plan-cancel-btn">Excluir conta</button>
+                <label className="settings-toggle">
+                  <input
+                    type="checkbox"
+                    checked={memoryEnabled}
+                    onChange={(e) => {
+                      setMemoryEnabled(e.target.checked);
+                      useStore.setState((s) => ({ privacy: { ...s.privacy, memoryEnabled: e.target.checked } }));
+                    }}
+                  />
+                  <span className="settings-toggle-slider" />
+                </label>
               </div>
+
+              <div className="settings-divider" />
+
+              <div className="settings-action-row">
+                <div>
+                  <h4 className="settings-action-title">Ajudar a melhorar o Linage</h4>
+                  <p className="settings-action-desc">Permite o uso das suas conversas para treinar e melhorar o produto. Seus dados nunca são compartilhados com terceiros.</p>
+                </div>
+                <label className="settings-toggle">
+                  <input
+                    type="checkbox"
+                    checked={improveProduct}
+                    onChange={(e) => {
+                      setImproveProduct(e.target.checked);
+                      useStore.setState((s) => ({ privacy: { ...s.privacy, improveProduct: e.target.checked } }));
+                    }}
+                  />
+                  <span className="settings-toggle-slider" />
+                </label>
+              </div>
+
+              <div className="settings-divider" />
+
+              <h4 className="settings-section-subheading">Seus dados</h4>
+
+              <div className="settings-action-row">
+                <div>
+                  <h4 className="settings-action-title">Exportar dados</h4>
+                  <p className="settings-action-desc">Baixe uma cópia de todos os seus posts e conversas.</p>
+                </div>
+                <button className="settings-action-btn">
+                  Exportar <ChevronRight size={14} />
+                </button>
+              </div>
+
             </div>
           )}
 
