@@ -134,7 +134,7 @@ app.post('/api/help/contact', requireAuth, async (req, res) => {
 
     await mailer.sendMail({
       from: `"Linage Suporte" <${process.env.SMTP_USER}>`,
-      to: 'contato@blinqstudio.com.br',
+      to: 'suporte@linage.app',
       replyTo: userEmail,
       subject: `[Suporte Linage] ${subject}`,
       html: `
