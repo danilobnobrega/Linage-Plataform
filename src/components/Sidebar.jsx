@@ -106,7 +106,10 @@ function Sidebar() {
               >
                 <Settings size={14} /><span>Configurações</span>
               </button>
-              <button className="user-dropdown-item">
+              <button
+                className="user-dropdown-item"
+                onClick={() => { navigate('/help'); setShowUserMenu(false); }}
+              >
                 <HelpCircle size={14} /><span>Receber ajuda</span>
               </button>
               {!isProPlan && (

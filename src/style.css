@@ -580,6 +580,66 @@ body {
   color: var(--accent);
 }
 
+.help-response-time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.help-form {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px;
+}
+
+.help-form-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.help-error {
+  font-size: 13px;
+  color: #ef4444;
+}
+
+.help-success {
+  max-width: 600px;
+  padding: 40px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.help-success-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.help-success h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.help-success p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
 .credits-section {
   margin-bottom: 48px;
 }

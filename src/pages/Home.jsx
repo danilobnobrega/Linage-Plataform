@@ -66,7 +66,7 @@ function Home() {
             <span>Plano Pro Ativo</span>
           </div>
         ) : (
-          <button className="status-badge status-badge--clickable" onClick={() => setShowPlanModal(true)}>
+          <button className="status-badge status-badge--clickable magnetic" onClick={() => setShowPlanModal(true)}>
             <Zap size={14} className="glowing-icon" />
             <span>{user.plan === 'starter' ? 'Plano Starter Ativo' : 'Free Trial Ativo'}</span>
           </button>

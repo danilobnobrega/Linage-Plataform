@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import Stripe from 'stripe';
+import nodemailer from 'nodemailer';
 import { createClerkClient } from '@clerk/backend';
 import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, getPosts, savePost, deletePost } from './db.js';
 
@@ -9,6 +10,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 const APP_URL = process.env.APP_URL || 'http://localhost:5174';
+
+const mailer = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 const PLAN_CREDITS = { free: 2000, starter: 15000, pro: 40000 };
 const CREDIT_COSTS = { generation: 500, revision: 150 };
 
@@ -104,6 +115,36 @@ app.post('/api/posts', requireAuth, async (req, res) => {
 app.delete('/api/posts/:id', requireAuth, async (req, res) => {
   try {
     await deletePost(req.params.id, req.userId);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Help ---
+app.post('/api/help/contact', requireAuth, async (req, res) => {
+  try {
+    const { subject, message } = req.body;
+    if (!subject?.trim() || !message?.trim()) {
+      return res.status(400).json({ error: 'Assunto e mensagem são obrigatórios.' });
+    }
+    const clerkUser = await clerk.users.getUser(req.userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress || 'Não informado';
+    const userName = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Usuário';
+
+    await mailer.sendMail({
+      from: `"Linage Suporte" <${process.env.SMTP_USER}>`,
+      to: 'contato@blinqstudio.com.br',
+      replyTo: userEmail,
+      subject: `[Suporte Linage] ${subject}`,
+      html: `
+        <p><strong>Usuário:</strong> ${userName}</p>
+        <p><strong>Email:</strong> ${userEmail}</p>
+        <hr/>
+        <p>${message.replace(/\n/g, '<br/>')}</p>
+      `,
+    });
+
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
