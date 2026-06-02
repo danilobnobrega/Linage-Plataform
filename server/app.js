@@ -248,14 +248,20 @@ app.post('/api/stripe/webhook', async (req, res) => {
   res.json({ received: true });
 });
 
+function buildSystem(base, instructions) {
+  const extra = instructions?.trim();
+  return extra ? `${base}\n\nInstruções específicas do usuário (seguir sempre):\n${extra}` : base;
+}
+
 // --- Agent chat ---
 app.post('/api/agent/chat', requireAuth, async (req, res) => {
   try {
     const { messages } = req.body;
+    const user = await getUser(req.userId);
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
-      system: LINAGE_SYSTEM_PROMPT,
+      system: buildSystem(LINAGE_SYSTEM_PROMPT, user?.instructions),
       messages,
     });
     res.json({ text: response.content[0].text });
@@ -267,12 +273,13 @@ app.post('/api/agent/chat', requireAuth, async (req, res) => {
 app.post('/api/agent/generate-post', requireAuth, async (req, res) => {
   try {
     const { conversationContext, newsContext } = req.body;
-    const system = `${LINAGE_SYSTEM_PROMPT}\n\nEscreva um post completo para LinkedIn em português, com base na conversa e nas notícias recentes sobre o tema. O post deve soar como Linage — com sua voz, seu ritmo, seu estilo. Nada genérico.\n\nRetorne exatamente neste formato:\nTÍTULO: [título do post]\nCONTEÚDO:\n[corpo completo do post]`;
+    const user = await getUser(req.userId);
+    const base = `${LINAGE_SYSTEM_PROMPT}\n\nEscreva um post completo para LinkedIn em português, com base na conversa e nas notícias recentes sobre o tema. O post deve soar como Linage — com sua voz, seu ritmo, seu estilo. Nada genérico.\n\nRetorne exatamente neste formato:\nTÍTULO: [título do post]\nCONTEÚDO:\n[corpo completo do post]`;
     const userContent = `Conversa:\n${conversationContext}${newsContext ? `\n\nNotícias recentes sobre o tema:\n${newsContext}` : ''}\n\nEscreva o post agora.`;
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
-      system,
+      system: buildSystem(base, user?.instructions),
       messages: [{ role: 'user', content: userContent }],
     });
     res.json({ text: response.content[0].text });
