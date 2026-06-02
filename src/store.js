@@ -6,6 +6,8 @@ const useStore = create(persist(
     // User info
     user: {
       name: 'Alex Silva, CFP®',
+      nickname: '',
+      instructions: '',
       plan: 'pro', // 'free' | 'starter' | 'pro'
       dailyQuote: 'Posicionamento autoral não é sobre o que você vende, mas sobre a tese que você defende para atrair os clientes (leads) qualificados.',
       suggestions: [
@@ -13,6 +15,11 @@ const useStore = create(persist(
         'A tese oculta sobre fundos exclusivos que atrai grandes investidores.',
         'Por que a maioria dos assessores perde leads ao complicar demais a carteira?'
       ]
+    },
+    // Notification preferences
+    notifications: {
+      suggestions: true,
+      responseComplete: false,
     },
     // Theme handling
     theme: 'light',

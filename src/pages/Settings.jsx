@@ -1,30 +1,43 @@
 import React, { useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import useStore from '../store';
+import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
 import {
-  SlidersHorizontal, User, Shield, CreditCard, BarChart2, Zap,
-  Check, X, ArrowDown, Mail, ChevronRight, Camera,
+  User, Shield, CreditCard, BarChart2, Zap,
+  Check, X, ArrowDown, Mail, ChevronRight, Camera, Bell,
 } from 'lucide-react';
 import { PLANS } from './Credits';
 
 const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
 
 const SECTIONS = [
-  { id: 'geral',       label: 'Geral',        Icon: SlidersHorizontal },
-  { id: 'conta',       label: 'Conta',         Icon: User },
-  { id: 'privacidade', label: 'Privacidade',   Icon: Shield },
-  { id: 'cobranca',    label: 'Cobrança',      Icon: CreditCard },
-  { id: 'uso',         label: 'Uso',           Icon: BarChart2 },
-  { id: 'capacidades', label: 'Capacidades',   Icon: Zap },
+  { id: 'conta',       label: 'Conta',       Icon: User },
+  { id: 'privacidade', label: 'Privacidade', Icon: Shield },
+  { id: 'cobranca',    label: 'Cobrança',    Icon: CreditCard },
+  { id: 'uso',         label: 'Uso',         Icon: BarChart2 },
+  { id: 'capacidades', label: 'Capacidades', Icon: Zap },
 ];
 
 function Settings() {
-  const { user, credits, posts, advisorHistory } = useStore();
+  const { user, credits, posts, advisorHistory, notifications } = useStore();
   const { user: clerkUser } = useUser();
-  const [activeSection, setActiveSection] = useState('geral');
+  const [activeSection, setActiveSection] = useState('conta');
   const [userName, setUserName] = useState(user.name);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [nickname, setNickname] = useState(user.nickname || '');
+  const [instructions, setInstructions] = useState(user.instructions || '');
+  const [saveSuccess, setSaveSuccess] = useState(null); // field name that was saved
   const [showPlanModal, setShowPlanModal] = useState(false);
+  const [notifSuggestions, setNotifSuggestions] = useState(notifications?.suggestions ?? true);
+  const [notifResponse, setNotifResponse] = useState(notifications?.responseComplete ?? false);
+
+  const INSTRUCTION_PHRASES = [
+    'ex.: Evito conteúdo sensacionalista...',
+    'ex.: Prefiro tom técnico mas acessível...',
+    'ex.: Foco em clientes de alta renda...',
+    'ex.: Não uso jargão sem explicar...',
+    'ex.: Gosto de terminar posts com uma pergunta...',
+  ];
+  const { ref: instructionsRef, onFocus: instructionsFocus, onBlur: instructionsBlur } = useDecryptPlaceholder(INSTRUCTION_PHRASES);
 
   const currentPlan = PLANS.find((p) => p.id === user.plan) || PLANS[0];
   const downgradePlans = PLANS.filter(
@@ -38,14 +51,14 @@ function Settings() {
     if (!file || !clerkUser) return;
     await clerkUser.setProfileImage({ file });
   };
+
   const creditsPercent = Math.min(100, (credits / 500) * 100);
   const messagesSent = advisorHistory.filter((m) => m.sender === 'user').length;
 
-  const handleSaveName = (e) => {
-    e.preventDefault();
-    useStore.setState((s) => ({ user: { ...s.user, name: userName } }));
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2000);
+  const saveField = (field, value) => {
+    useStore.setState((s) => ({ user: { ...s.user, [field]: value } }));
+    setSaveSuccess(field);
+    setTimeout(() => setSaveSuccess(null), 2000);
   };
 
   return (
@@ -68,64 +81,135 @@ function Settings() {
 
         <div className="settings-content">
 
-          {/* GERAL */}
-          {activeSection === 'geral' && (
-            <div className="settings-section-card glass-card">
-              <h3 className="settings-section-heading">Geral</h3>
-              <form onSubmit={handleSaveName}>
-                <div className="form-group">
-                  <label className="form-label">Nome</label>
-                  <input
-                    type="text"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    className="settings-text-input"
-                    placeholder="Digite seu nome..."
-                  />
-                </div>
-                <div className="form-actions-footer">
-                  {saveSuccess && (
-                    <span className="save-success-msg">
-                      <Check size={14} style={{ marginRight: 4 }} /> Salvo!
-                    </span>
-                  )}
-                  <button type="submit" className="save-settings-submit-btn">Salvar</button>
-                </div>
-              </form>
-            </div>
-          )}
-
           {/* CONTA */}
           {activeSection === 'conta' && (
             <div className="settings-section-card glass-card">
               <h3 className="settings-section-heading">Conta</h3>
+              <div>
 
-              {/* Profile photo */}
-              <div className="settings-photo-row">
-                <div className="settings-photo-wrap">
-                  {clerkUser?.imageUrl
-                    ? <img src={clerkUser.imageUrl} alt="Foto de perfil" className="settings-photo-img" />
-                    : <div className="settings-photo-placeholder"><User size={24} /></div>
-                  }
-                  <label className="settings-photo-overlay" title="Alterar foto">
-                    <Camera size={14} />
-                    <input type="file" accept="image/*" hidden onChange={handlePhotoChange} />
+                {/* Avatar */}
+                <div className="settings-photo-row">
+                  <div className="settings-photo-wrap">
+                    {clerkUser?.imageUrl
+                      ? <img src={clerkUser.imageUrl} alt="Foto de perfil" className="settings-photo-img" />
+                      : <div className="settings-photo-placeholder"><User size={24} /></div>
+                    }
+                    <label className="settings-photo-overlay" title="Alterar foto">
+                      <Camera size={14} />
+                      <input type="file" accept="image/*" hidden onChange={handlePhotoChange} />
+                    </label>
+                  </div>
+                  <div>
+                    <h4 className="settings-action-title">Foto de perfil</h4>
+                    <p className="settings-action-desc">Sincronizada pelo LinkedIn. Clique na foto para substituir.</p>
+                  </div>
+                </div>
+
+                <div className="settings-divider" />
+
+                {/* Email */}
+                <div className="settings-info-row">
+                  <Mail size={16} className="settings-info-icon" />
+                  <div>
+                    <span className="settings-info-label">Email</span>
+                    <span className="settings-info-value">{email}</span>
+                  </div>
+                </div>
+
+                <div className="settings-divider" />
+
+                {/* Nome completo */}
+                <div className="form-group">
+                  <label className="form-label">Nome completo</label>
+                  <input
+                    type="text"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    onBlur={() => saveField('name', userName)}
+                    className="settings-text-input"
+                  />
+                </div>
+
+                {/* Apelido */}
+                <div className="form-group">
+                  <label className="form-label">Como o Linage deveria te chamar?</label>
+                  <input
+                    type="text"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    onBlur={() => saveField('nickname', nickname)}
+                    className="settings-text-input"
+                  />
+                </div>
+
+                <div className="settings-divider" />
+
+                {/* Instruções */}
+                <div className="form-group">
+                  <label className="form-label">Instruções para o Linage</label>
+                  <p className="settings-action-desc" style={{ marginBottom: 8 }}>
+                    O Linage terá isso em mente ao criar conteúdo para você.
+                  </p>
+                  <textarea
+                    ref={instructionsRef}
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    onFocus={instructionsFocus}
+                    onBlur={(e) => { instructionsBlur(e); saveField('instructions', instructions); }}
+                    className="settings-text-input"
+                    rows={4}
+                    style={{ resize: 'vertical' }}
+                  />
+                </div>
+
+                <div className="settings-divider" />
+
+                {/* Notificações */}
+                <h4 className="settings-section-subheading">Notificações</h4>
+
+                <div className="settings-action-row">
+                  <div>
+                    <h4 className="settings-action-title">Sugestões do dia</h4>
+                    <p className="settings-action-desc">Receba uma notificação push com suas sugestões de pauta diárias.</p>
+                  </div>
+                  <label className="settings-toggle">
+                    <input
+                      type="checkbox"
+                      checked={notifSuggestions}
+                      onChange={(e) => {
+                        setNotifSuggestions(e.target.checked);
+                        useStore.setState((s) => ({ notifications: { ...s.notifications, suggestions: e.target.checked } }));
+                      }}
+                    />
+                    <span className="settings-toggle-slider" />
                   </label>
                 </div>
-                <div>
-                  <h4 className="settings-action-title">Foto de perfil</h4>
-                  <p className="settings-action-desc">Sincronizada pelo LinkedIn. Clique na foto para substituir.</p>
-                </div>
-              </div>
 
-              <div className="settings-divider" />
+                <div className="settings-divider" />
 
-              <div className="settings-info-row">
-                <Mail size={16} className="settings-info-icon" />
-                <div>
-                  <span className="settings-info-label">Email</span>
-                  <span className="settings-info-value">{email}</span>
+                <div className="settings-action-row">
+                  <div>
+                    <h4 className="settings-action-title">Conclusão de resposta</h4>
+                    <p className="settings-action-desc">Receba uma notificação push quando o Linage terminar de gerar seu conteúdo.</p>
+                  </div>
+                  <label className="settings-toggle">
+                    <input
+                      type="checkbox"
+                      checked={notifResponse}
+                      onChange={(e) => {
+                        setNotifResponse(e.target.checked);
+                        useStore.setState((s) => ({ notifications: { ...s.notifications, responseComplete: e.target.checked } }));
+                      }}
+                    />
+                    <span className="settings-toggle-slider" />
+                  </label>
                 </div>
+
+                {saveSuccess && (
+                  <span className="save-success-msg" style={{ marginTop: 12, display: 'inline-flex' }}>
+                    <Check size={14} style={{ marginRight: 4 }} /> Salvo!
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -242,6 +326,7 @@ function Settings() {
               </ul>
             </div>
           )}
+
 
         </div>
       </div>

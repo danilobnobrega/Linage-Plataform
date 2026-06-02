@@ -1,13 +1,19 @@
 import { useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import useStore from '../store';
 
 export function useUserSync() {
   const { isSignedIn, getToken } = useAuth();
+  const { user: clerkUser } = useUser();
   const { setDbUser } = useStore();
 
   useEffect(() => {
-    if (!isSignedIn) return;
+    if (!isSignedIn || !clerkUser) return;
+
+    const fullName = clerkUser.fullName || clerkUser.username || '';
+    if (fullName) {
+      useStore.setState((s) => ({ user: { ...s.user, name: fullName } }));
+    }
 
     async function sync() {
       try {
@@ -23,5 +29,5 @@ export function useUserSync() {
     }
 
     sync();
-  }, [isSignedIn]);
+  }, [isSignedIn, clerkUser]);
 }
