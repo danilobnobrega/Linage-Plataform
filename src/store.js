@@ -31,7 +31,16 @@ const useStore = create(persist(
     setTheme: (t) => set({ theme: t }),
     // DB user (synced from backend after login)
     dbUser: null,
-    setDbUser: (u) => set({ dbUser: u, credits: u?.credits ?? 0 }),
+    setDbUser: (u) => set((s) => ({
+      dbUser: u,
+      credits: u?.credits ?? 0,
+      user: {
+        ...s.user,
+        plan: u?.plan ?? s.user.plan,
+        nickname: u?.nickname ?? s.user.nickname,
+        instructions: u?.instructions ?? s.user.instructions,
+      },
+    })),
     // Credit balance (local mirror of dbUser.credits)
     credits: 0,
     addCredits: (amt) => set((s) => ({ credits: s.credits + amt })),

@@ -59,6 +59,21 @@ function Settings() {
   ];
   const { ref: instructionsRef, onFocus: instructionsFocus, onBlur: instructionsBlur } = useDecryptPlaceholder(INSTRUCTION_PHRASES);
 
+  const handleOpenPortal = async () => {
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else alert('Nenhuma assinatura ativa encontrada.');
+    } catch {
+      alert('Erro ao abrir portal de cobrança.');
+    }
+  };
+
   const currentPlan = PLANS.find((p) => p.id === user.plan) || PLANS[0];
   const downgradePlans = PLANS.filter(
     (p) => PLAN_ORDER[p.id] < PLAN_ORDER[user.plan] && p.id !== 'free'
@@ -509,7 +524,7 @@ function Settings() {
                           </li>
                         ))}
                       </ul>
-                      <button className="plan-cta-btn plan-cta-btn--downgrade">
+                      <button className="plan-cta-btn plan-cta-btn--downgrade" onClick={handleOpenPortal}>
                         <ArrowDown size={14} /> Fazer downgrade
                       </button>
                     </div>
@@ -523,7 +538,7 @@ function Settings() {
                 <h4>Cancelar assinatura</h4>
                 <p>Você perderá acesso ao plano {currentPlan.name} ao fim do ciclo atual.</p>
               </div>
-              <button className="plan-cancel-btn">Cancelar assinatura</button>
+              <button className="plan-cancel-btn" onClick={handleOpenPortal}>Cancelar assinatura</button>
             </div>
           </div>
         </div>

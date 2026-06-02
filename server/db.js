@@ -31,11 +31,11 @@ export async function initDb() {
 }
 
 export async function syncUser({ id, email }) {
-  const existing = await sql`SELECT id, plan, credits FROM users WHERE id = ${id}`;
+  const existing = await sql`SELECT id, plan, credits, nickname, instructions FROM users WHERE id = ${id}`;
   if (existing.length > 0) return existing[0];
   const [user] = await sql`
     INSERT INTO users (id, email) VALUES (${id}, ${email})
-    RETURNING id, plan, credits
+    RETURNING id, plan, credits, nickname, instructions
   `;
   return user;
 }
