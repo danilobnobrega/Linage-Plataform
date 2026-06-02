@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store';
 import ConsensusConverter from '../components/ConsensusConverter';
 import DecryptText from '../components/DecryptText';
 import { useDailyContent } from '../hooks/useDailyContent';
+import { PLANS } from './Credits';
+import { Sparkles, ArrowRight, PenTool, Zap, ArrowUpRight, X, Check } from 'lucide-react';
 
 const HOME_PHRASES = [
   'Existe um post ótimo na sua cabeça. Eu só vou tirar ele de lá.',
@@ -12,10 +14,10 @@ const HOME_PHRASES = [
   'Autoridade não se pede emprestada. Mas às vezes se escreve em 3 minutos.',
   'Seu feed vai agradecer. A sua agenda também.',
 ];
-import { Sparkles, ArrowRight, PenTool, Zap, ArrowUpRight } from 'lucide-react';
 
 function Home() {
   const { user, posts, agents, addMessageToAgent } = useStore();
+  const [showPlanModal, setShowPlanModal] = useState(false);
   const daily = useDailyContent(user.dailyQuote, user.suggestions);
   const navigate = useNavigate();
   
@@ -57,15 +59,18 @@ function Home() {
           <DecryptText phrases={HOME_PHRASES} className="decrypt-subtitle" />
         </div>
         
-        {/* Quick Credit indicator */}
-        <div className="status-badge">
-          <Zap size={14} className="glowing-icon" />
-          <span>
-            { user.plan === 'pro' ? 'Plano Pro Ativo'
-            : user.plan === 'starter' ? 'Plano Starter Ativo'
-            : 'Plano Gratuito' }
-          </span>
-        </div>
+        {/* Plan badge */}
+        {user.plan === 'pro' ? (
+          <div className="status-badge">
+            <Zap size={14} className="glowing-icon" />
+            <span>Plano Pro Ativo</span>
+          </div>
+        ) : (
+          <button className="status-badge status-badge--clickable" onClick={() => setShowPlanModal(true)}>
+            <Zap size={14} className="glowing-icon" />
+            <span>{user.plan === 'starter' ? 'Plano Starter Ativo' : 'Free Trial Ativo'}</span>
+          </button>
+        )}
       </header>
 
       {/* Quote Banner */}
@@ -156,6 +161,59 @@ function Home() {
           </div>
         )}
       </section>
+
+      {/* Plan modal for non-pro users */}
+      {showPlanModal && (
+        <div className="plan-modal-overlay" onClick={() => setShowPlanModal(false)}>
+          <div className="plan-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="plan-modal-header">
+              <div>
+                <h2 className="plan-modal-title">Seu plano atual</h2>
+                <p className="plan-modal-desc">Faça upgrade para desbloquear mais recursos.</p>
+              </div>
+              <button className="plan-modal-close" onClick={() => setShowPlanModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="plans-grid">
+              {PLANS.filter((p) => p.id !== 'free').map((plan) => {
+                const { Icon } = plan;
+                const isCurrent = plan.id === user.plan;
+                return (
+                  <div key={plan.id} className={`plan-card glass-card${plan.highlight ? ' plan-card--highlight' : ''}`}>
+                    {plan.highlight && <div className="plan-badge">Mais popular</div>}
+                    <div className="plan-icon-wrap"><Icon size={20} /></div>
+                    <h3 className="plan-name">{plan.name}</h3>
+                    <div className="plan-price-row">
+                      <span className="plan-price-value">{plan.price}</span>
+                      <span className="plan-price-period">{plan.period}</span>
+                    </div>
+                    <span className="plan-credits-label">{plan.creditsLabel}</span>
+                    <ul className="plan-features">
+                      {plan.features.map((f, i) => (
+                        <li key={i} className="plan-feature-item">
+                          <Check size={13} className="plan-check-icon" />{f}
+                        </li>
+                      ))}
+                    </ul>
+                    {isCurrent ? (
+                      <div className="plan-current-label">Plano atual</div>
+                    ) : (
+                      <button
+                        className="plan-cta-btn"
+                        onClick={() => { setShowPlanModal(false); navigate('/credits'); }}
+                      >
+                        Fazer upgrade <ArrowRight size={14} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

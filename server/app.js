@@ -148,6 +148,24 @@ app.post('/api/stripe/portal', requireAuth, async (req, res) => {
   }
 });
 
+app.get('/api/stripe/invoices', requireAuth, async (req, res) => {
+  try {
+    const user = await getUser(req.userId);
+    if (!user?.stripe_customer_id) return res.json([]);
+    const invoices = await stripe.invoices.list({ customer: user.stripe_customer_id, limit: 24 });
+    const formatted = invoices.data.map((inv) => ({
+      id: inv.id,
+      date: new Date(inv.created * 1000).toLocaleDateString('pt-BR'),
+      amount: (inv.amount_paid / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+      status: inv.status,
+      pdf: inv.invoice_pdf,
+    }));
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/stripe/webhook', async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import React, { useState, useEffect } from 'react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
 import {
-  User, Shield, CreditCard, BarChart2, Zap,
+  User, Shield, CreditCard, BarChart2,
   Check, X, ArrowDown, Mail, ChevronRight, Camera, Bell,
 } from 'lucide-react';
 import { PLANS } from './Credits';
@@ -15,12 +15,12 @@ const SECTIONS = [
   { id: 'privacidade', label: 'Privacidade', Icon: Shield },
   { id: 'cobranca',    label: 'Cobrança',    Icon: CreditCard },
   { id: 'uso',         label: 'Uso',         Icon: BarChart2 },
-  { id: 'capacidades', label: 'Capacidades', Icon: Zap },
 ];
 
 function Settings() {
   const { user, credits, posts, advisorHistory, notifications, privacy } = useStore();
   const { user: clerkUser } = useUser();
+  const { getToken } = useAuth();
   const [activeSection, setActiveSection] = useState('conta');
   const [userName, setUserName] = useState(user.name);
   const [nickname, setNickname] = useState(user.nickname || '');
@@ -33,6 +33,22 @@ function Settings() {
   const [improveProduct, setImproveProduct] = useState(privacy?.improveProduct ?? true);
   const [expandProtect, setExpandProtect] = useState(false);
   const [expandUse, setExpandUse] = useState(false);
+  const [invoices, setInvoices] = useState(null);
+
+  useEffect(() => {
+    if (activeSection !== 'cobranca' || invoices !== null) return;
+    const fetchInvoices = async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch('/api/stripe/invoices', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) setInvoices(await res.json());
+        else setInvoices([]);
+      } catch { setInvoices([]); }
+    };
+    fetchInvoices();
+  }, [activeSection]);
 
   const INSTRUCTION_PHRASES = [
     'ex.: Evito conteúdo sensacionalista...',
@@ -233,7 +249,9 @@ function Settings() {
             <div className="settings-section-card glass-card">
               <h3 className="settings-section-heading">Privacidade</h3>
               <p className="settings-action-desc" style={{ marginBottom: 20 }}>
-                O Linage acredita em práticas transparentes de dados. Saiba como suas informações são protegidas.
+                O Linage acredita em práticas transparentes de dados. Saiba como suas informações são protegidas e visite nossa{' '}
+                <button className="settings-privacy-link settings-privacy-link--inline">Política de Privacidade</button>
+                {' '}para mais detalhes.
               </p>
 
               <div className="settings-privacy-links">
@@ -364,6 +382,37 @@ function Settings() {
                   <p className="settings-action-desc">—</p>
                 </div>
               </div>
+
+              <div className="settings-divider" />
+
+              <h4 className="settings-section-subheading">Faturas</h4>
+
+              {invoices === null && (
+                <p className="settings-action-desc">Carregando...</p>
+              )}
+              {invoices?.length === 0 && (
+                <div className="settings-invoices-empty">
+                  <p>Nenhuma fatura disponível.</p>
+                </div>
+              )}
+              {invoices?.length > 0 && (
+                <div className="settings-invoices-list">
+                  {invoices.map((inv) => (
+                    <div key={inv.id} className="settings-invoice-row">
+                      <span className="settings-invoice-date">{inv.date}</span>
+                      <span className="settings-invoice-amount">{inv.amount}</span>
+                      <span className={`settings-invoice-status settings-invoice-status--${inv.status}`}>
+                        {inv.status === 'paid' ? 'Pago' : inv.status}
+                      </span>
+                      {inv.pdf && (
+                        <a href={inv.pdf} target="_blank" rel="noreferrer" className="settings-invoice-download">
+                          PDF
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -404,21 +453,6 @@ function Settings() {
             </div>
           )}
 
-          {/* CAPACIDADES */}
-          {activeSection === 'capacidades' && (
-            <div className="settings-section-card glass-card">
-              <h3 className="settings-section-heading">Capacidades</h3>
-              <p className="settings-section-sub">O que está incluído no seu plano {currentPlan.name}.</p>
-              <ul className="plan-features" style={{ marginTop: 16 }}>
-                {currentPlan.features.map((f, i) => (
-                  <li key={i} className="plan-feature-item">
-                    <Check size={14} className="plan-check-icon" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
 
 
         </div>

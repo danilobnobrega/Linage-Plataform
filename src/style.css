@@ -1191,6 +1191,26 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.status-badge--clickable {
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  background: none;
+  color: inherit;
+}
+
+.status-badge--clickable:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.plan-current-label {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 10px 0 4px;
+}
+
 .glowing-icon {
   color: var(--accent);
   animation: pulse-glow 2.5s infinite;
@@ -4301,6 +4321,11 @@ body {
   opacity: 0.8;
 }
 
+.settings-privacy-link--inline {
+  display: inline;
+  font-size: inherit;
+}
+
 .settings-privacy-link {
   background: none;
   border: none;
@@ -4323,6 +4348,58 @@ body {
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
+}
+
+.settings-invoices-empty {
+  padding: 20px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.settings-invoices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.settings-invoice-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 13px;
+}
+
+.settings-invoice-date {
+  color: var(--text-secondary);
+  min-width: 90px;
+}
+
+.settings-invoice-amount {
+  color: var(--text-primary);
+  font-weight: 600;
+  flex: 1;
+}
+
+.settings-invoice-status--paid {
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.settings-invoice-download {
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-decoration: none;
+  padding: 3px 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+}
+
+.settings-invoice-download:hover {
+  border-color: rgba(255,255,255,0.3);
+  color: var(--text-primary);
 }
 
 .settings-photo-row {
