@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import { Check, Zap, Crown, Star, ArrowRight, Coins, Sparkles } from 'lucide-react';
 
@@ -52,17 +53,55 @@ export const PLANS = [
 ];
 
 const CREDIT_PACKS = [
-  { amount: 100, price: 'R$ 19', perUnit: 'R$ 0,19 por crédito' },
-  { amount: 500, price: 'R$ 79', perUnit: 'R$ 0,15 por crédito', popular: true },
-  { amount: 1000, price: 'R$ 139', perUnit: 'R$ 0,13 por crédito' },
+  { amount: 100, price: 'R$ 19', perUnit: 'R$ 0,19 por crédito', unitAmount: 1900 },
+  { amount: 500, price: 'R$ 79', perUnit: 'R$ 0,15 por crédito', popular: true, unitAmount: 7900 },
+  { amount: 1000, price: 'R$ 139', perUnit: 'R$ 0,13 por crédito', unitAmount: 13900 },
 ];
 
 function Credits() {
   const { user, credits } = useStore();
+  const { getToken } = useAuth();
+  const [loading, setLoading] = useState(null);
 
   const upgradePlans = PLANS.filter(
     (p) => PLAN_ORDER[p.id] > PLAN_ORDER[user.plan]
   );
+
+  const handleUpgrade = async (planId) => {
+    setLoading(planId);
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ plan: planId }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch {
+      alert('Erro ao iniciar checkout. Tente novamente.');
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleBuyPack = async (amount, unitAmount) => {
+    setLoading(`pack-${amount}`);
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/stripe/credits-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ amount, unitAmount }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch {
+      alert('Erro ao iniciar checkout. Tente novamente.');
+    } finally {
+      setLoading(null);
+    }
+  };
 
   return (
     <div className="page-container credits-page animate-fade-in">
@@ -117,8 +156,12 @@ function Credits() {
                       </li>
                     ))}
                   </ul>
-                  <button className="plan-cta-btn">
-                    Fazer upgrade <ArrowRight size={14} />
+                  <button
+                    className="plan-cta-btn"
+                    onClick={() => handleUpgrade(plan.id)}
+                    disabled={loading === plan.id}
+                  >
+                    {loading === plan.id ? 'Aguarde...' : <><span>Fazer upgrade</span> <ArrowRight size={14} /></>}
                   </button>
                 </div>
               );
@@ -145,8 +188,12 @@ function Credits() {
               </div>
               <div className="pack-price">{pack.price}</div>
               <div className="pack-per-unit">{pack.perUnit}</div>
-              <button className="pack-buy-btn">
-                Comprar <ArrowRight size={14} />
+              <button
+                className="pack-buy-btn"
+                onClick={() => handleBuyPack(pack.amount, pack.unitAmount)}
+                disabled={loading === `pack-${pack.amount}`}
+              >
+                {loading === `pack-${pack.amount}` ? 'Aguarde...' : <><span>Comprar</span> <ArrowRight size={14} /></>}
               </button>
             </div>
           ))}

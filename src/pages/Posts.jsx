@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import { 
   FileText, 
@@ -14,24 +15,49 @@ import {
 } from 'lucide-react';
 
 function Posts() {
-  const { posts, agents, updatePost, user } = useStore();
-  const [activeTab, setActiveTab] = useState('all'); // all, drafts, published
+  const { posts, agents, updatePost, setPosts, user } = useStore();
+  const { getToken } = useAuth();
+  const [activeTab, setActiveTab] = useState('all');
   const [selectedPost, setSelectedPost] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const [copyId, setCopyId] = useState('');
 
-  // Delete post from state
-  const handleDeletePost = (id, e) => {
+  useEffect(() => {
+    async function loadFromDb() {
+      try {
+        const token = await getToken();
+        const res = await fetch('/api/posts', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const dbPosts = await res.json();
+        setPosts(dbPosts.map(p => ({
+          id: p.id,
+          title: p.title,
+          content: p.content,
+          draft: p.status === 'draft',
+          agentId: p.agent_id,
+          createdAt: new Date(p.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }),
+        })));
+      } catch {}
+    }
+    loadFromDb();
+  }, []);
+
+  const handleDeletePost = async (id, e) => {
     e.stopPropagation();
     if (confirm("Tem certeza que deseja deletar este post?")) {
-      useStore.setState(s => ({
-        posts: s.posts.filter(p => p.id !== id)
-      }));
-      if (selectedPost?.id === id) {
-        setSelectedPost(null);
-      }
+      setPosts(posts.filter(p => p.id !== id));
+      if (selectedPost?.id === id) setSelectedPost(null);
+      try {
+        const token = await getToken();
+        await fetch(`/api/posts/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch {}
     }
   };
 

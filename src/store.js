@@ -47,6 +47,7 @@ const useStore = create(persist(
     // Posts collection
     posts: [], // {id, title, draft:true/false, agentId, createdAt}
     addPost: (post) => set((s) => ({ posts: [...s.posts, post] })),
+    setPosts: (posts) => set({ posts }),
     updatePost: (id, updates) =>
       set((s) => ({
         posts: s.posts.map((p) => (p.id === id ? { ...p, ...updates } : p))

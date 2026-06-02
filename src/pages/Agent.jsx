@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import {
   Send,
@@ -31,6 +32,7 @@ const CHAT_PHRASES = [
 function Agent() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { getToken } = useAuth();
   const { agents, posts, addPost, credits, addMessageToAgent, user } = useStore();
 
   const headlines = {
@@ -118,8 +120,8 @@ function Agent() {
   };
 
   const handleTriggerGenerator = async () => {
-    if (credits < 10) {
-      alert("Saldo insuficiente! A geração de post consome 10 créditos. Recarregue no botão '+' da barra lateral!");
+    if (credits < 500) {
+      alert("Saldo insuficiente! A geração de post consome 500 créditos. Recarregue em Planos & Créditos.");
       return;
     }
 
@@ -131,9 +133,9 @@ function Agent() {
         .map(m => `${m.sender === 'user' ? 'Usuário' : agent.name}: ${m.text}`)
         .join('\n');
 
-      // Extrai o tema principal da conversa para buscar notícias relevantes
       const topicMsg = [...(agent.history || [])].reverse().find(m => m.sender === 'user')?.text || '';
-      const newsContext = await fetchNewsForTopic(topicMsg);
+      const token = await getToken();
+      const newsContext = await fetchNewsForTopic(topicMsg, token);
 
       const systemPrompt = `${LINAGE_SYSTEM_PROMPT}\n\nEscreva um post completo para LinkedIn em português, com base na conversa e nas notícias recentes sobre o tema. O post deve soar como Linage — com sua voz, seu ritmo, seu estilo. Nada genérico.\n\nRetorne exatamente neste formato:\nTÍTULO: [título do post]\nCONTEÚDO:\n[corpo completo do post]`;
 
@@ -159,8 +161,7 @@ function Agent() {
     }
   };
 
-  const handleSavePost = (status) => {
-    // Add to Zustand posts database
+  const handleSavePost = async (status) => {
     const newPost = {
       id: 'post_' + Date.now(),
       title: generatedPostTitle,
@@ -171,9 +172,30 @@ function Agent() {
     };
 
     addPost(newPost);
-    
-    // Deduct credits in state
-    useStore.getState().addCredits(-10);
+
+    const token = await getToken();
+
+    fetch('/api/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        id: newPost.id,
+        title: newPost.title,
+        content: newPost.content,
+        agentId: newPost.agentId,
+        status: status === 'draft' ? 'draft' : 'published',
+      }),
+    });
+
+    fetch('/api/credits/deduct', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'generation' }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.credits !== undefined) useStore.setState({ credits: data.credits });
+      });
 
     setShowPostGenerator(false);
     navigate('/posts');
@@ -220,7 +242,7 @@ function Agent() {
               disabled={isGenerating}
             >
               <Sparkles size={16} />
-              <span>Transformar em Post (-10cr)</span>
+              <span>Transformar em Post (-500 cr)</span>
             </button>
           </div>
 
@@ -433,7 +455,7 @@ function Agent() {
                       Salvar como Rascunho
                     </button>
                     <button className="btn-primary" style={{ backgroundColor: config.color }} onClick={() => handleSavePost('publish')}>
-                      Publicar Post (-10cr)
+                      Publicar Post (-500 cr)
                     </button>
                   </div>
                 </footer>

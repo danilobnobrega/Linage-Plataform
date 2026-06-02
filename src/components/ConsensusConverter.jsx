@@ -155,9 +155,9 @@ function ConsensusConverter() {
                 EXAMPLE.outlier
               ) : (
                 <div className="consensus-cta">
-                  <p>Você tem um tema próprio. Leve ele para o <strong>Jace</strong> transformar em tese de alto impacto.</p>
-                  <button className="consensus-cta-btn" onClick={() => navigate('/agent/jace')}>
-                    Abrir Jace <Zap size={13} />
+                  <p>Você tem um tema próprio. Leve ele para o <strong>Linage</strong> transformar em tese de alto impacto.</p>
+                  <button className="consensus-cta-btn" onClick={() => navigate('/agent/linage')}>
+                    Abrir Linage <Zap size={13} />
                   </button>
                 </div>
               )

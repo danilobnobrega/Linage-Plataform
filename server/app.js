@@ -222,10 +222,18 @@ app.post('/api/stripe/webhook', async (req, res) => {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const userId = session.client_reference_id;
-    const subscription = await stripe.subscriptions.retrieve(session.subscription);
-    const priceId = subscription.items.data[0].price.id;
-    const plan = priceId === process.env.STRIPE_PRICE_ID_PRO_MONTHLY ? 'pro' : 'starter';
-    await updateUserPlan(userId, plan, session.customer, session.subscription);
+    if (session.mode === 'subscription') {
+      const subscription = await stripe.subscriptions.retrieve(session.subscription);
+      const priceId = subscription.items.data[0].price.id;
+      const plan = priceId === process.env.STRIPE_PRICE_ID_PRO_MONTHLY ? 'pro' : 'starter';
+      await updateUserPlan(userId, plan, session.customer, session.subscription);
+    } else if (session.mode === 'payment') {
+      const creditsToAdd = parseInt(session.metadata?.credits || '0');
+      if (creditsToAdd > 0) {
+        const user = await getUser(userId);
+        if (user) await updateUserCredits(userId, user.credits + creditsToAdd);
+      }
+    }
   }
 
   if (event.type === 'customer.subscription.deleted') {
@@ -237,6 +245,61 @@ app.post('/api/stripe/webhook', async (req, res) => {
   }
 
   res.json({ received: true });
+});
+
+// --- News proxy ---
+app.get('/api/news', requireAuth, async (req, res) => {
+  try {
+    const { topic } = req.query;
+    if (!topic) return res.json({ headlines: '' });
+    const tavilyRes = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: TAVILY_KEY,
+        query: `${topic} mercado financeiro`,
+        search_depth: 'basic',
+        max_results: 5,
+        include_answer: false,
+      }),
+    });
+    const data = await tavilyRes.json();
+    const headlines = data.results
+      ?.map(r => `• ${r.title}: ${r.content?.slice(0, 250)}`)
+      .join('\n') || '';
+    res.json({ headlines });
+  } catch {
+    res.json({ headlines: '' });
+  }
+});
+
+// --- Stripe credit packs (one-time payment) ---
+app.post('/api/stripe/credits-checkout', requireAuth, async (req, res) => {
+  try {
+    const { amount, unitAmount } = req.body;
+    if (!amount || !unitAmount) return res.status(400).json({ error: 'Invalid pack' });
+    const user = await getUser(req.userId);
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'brl',
+          unit_amount: unitAmount,
+          product_data: { name: `${amount} Créditos Linage` },
+        },
+        quantity: 1,
+      }],
+      customer: user?.stripe_customer_id || undefined,
+      client_reference_id: req.userId,
+      metadata: { credits: String(amount) },
+      success_url: `${APP_URL}/home?credits=success`,
+      cancel_url: `${APP_URL}/credits`,
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --- Daily Content ---
