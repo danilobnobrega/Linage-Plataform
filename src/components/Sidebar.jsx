@@ -29,6 +29,8 @@ function Sidebar() {
 
   const firstName = user.name.replace(/,.*$/, '').trim().split(' ')[0];
   const isProPlan = user.plan === 'pro';
+  const PLAN_CREDITS = { free: 2000, starter: 15000, pro: 40000 };
+  const planMax = PLAN_CREDITS[user.plan] || 2000;
 
   useEffect(() => {
     const handler = (e) => {
@@ -88,7 +90,7 @@ function Sidebar() {
           <div className="credits-bar-container">
             <div
               className="credits-bar"
-              style={{ width: `${Math.min(100, (credits / 500) * 100)}%` }}
+              style={{ width: `${Math.min(100, (credits / planMax) * 100)}%` }}
             />
           </div>
           <button className="credits-recharge-link" onClick={() => navigate('/credits')}>

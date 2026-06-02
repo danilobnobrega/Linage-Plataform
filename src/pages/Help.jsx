@@ -60,7 +60,7 @@ function Help() {
             <Check size={28} />
           </div>
           <h3>Mensagem enviada!</h3>
-          <p>Recebemos sua mensagem e responderemos em até 1 dia útil no seu email.</p>
+          <p>Recebemos sua mensagem e responderemos em até 5 dias úteis no seu email.</p>
         </div>
       ) : (
         <form className="help-form glass-card" onSubmit={handleSubmit}>
