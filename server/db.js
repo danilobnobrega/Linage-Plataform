@@ -15,6 +15,8 @@ export async function initDb() {
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname TEXT NOT NULL DEFAULT ''`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS instructions TEXT NOT NULL DEFAULT ''`;
   await sql`
     CREATE TABLE IF NOT EXISTS posts (
       id TEXT PRIMARY KEY,
@@ -76,6 +78,10 @@ export async function savePost({ id, userId, title, content, agentId, status }) 
 
 export async function deletePost(id, userId) {
   await sql`DELETE FROM posts WHERE id = ${id} AND user_id = ${userId}`;
+}
+
+export async function updateUserSettings(id, { nickname, instructions }) {
+  await sql`UPDATE users SET nickname = ${nickname}, instructions = ${instructions} WHERE id = ${id}`;
 }
 
 export { sql };

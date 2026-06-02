@@ -62,13 +62,19 @@ function Posts() {
   };
 
   // Toggle draft/publish status
-  const handleTogglePublish = (post, e) => {
+  const handleTogglePublish = async (post, e) => {
     e.stopPropagation();
-    const newStatus = !post.draft;
-    updatePost(post.id, { draft: newStatus });
-    if (selectedPost?.id === post.id) {
-      setSelectedPost({ ...selectedPost, draft: newStatus });
-    }
+    const newDraft = !post.draft;
+    updatePost(post.id, { draft: newDraft });
+    if (selectedPost?.id === post.id) setSelectedPost({ ...selectedPost, draft: newDraft });
+    try {
+      const token = await getToken();
+      fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: post.id, title: post.title, content: post.content, agentId: post.agentId, status: newDraft ? 'draft' : 'published' }),
+      });
+    } catch {}
   };
 
   const handleCopyText = (post, e) => {
@@ -85,17 +91,18 @@ function Posts() {
     setEditContent(post.content);
   };
 
-  const saveEditedPost = () => {
-    updatePost(selectedPost.id, {
-      title: editTitle,
-      content: editContent
-    });
-    setSelectedPost({
-      ...selectedPost,
-      title: editTitle,
-      content: editContent
-    });
+  const saveEditedPost = async () => {
+    updatePost(selectedPost.id, { title: editTitle, content: editContent });
+    setSelectedPost({ ...selectedPost, title: editTitle, content: editContent });
     setIsEditing(false);
+    try {
+      const token = await getToken();
+      fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: selectedPost.id, title: editTitle, content: editContent, agentId: selectedPost.agentId, status: selectedPost.draft ? 'draft' : 'published' }),
+      });
+    } catch {}
   };
 
   const filteredPosts = posts.filter(post => {

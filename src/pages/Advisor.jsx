@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store';
 import { Send } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
-import { anthropic, MODELS, LINAGE_SYSTEM_PROMPT } from '../lib/anthropic';
 
 const ADVISOR_PHRASES = [
   'Qual é a sua dúvida estratégica?',
@@ -15,6 +15,7 @@ const ADVISOR_PHRASES = [
 
 function Advisor() {
   const navigate = useNavigate();
+  const { getToken } = useAuth();
   const { advisorHistory, addAdvisorMessage } = useStore();
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -48,16 +49,17 @@ function Advisor() {
         content: msg.text,
       }));
 
-      const response = await anthropic.messages.create({
-        model: MODELS.agent,
-        max_tokens: 1024,
-        system: LINAGE_SYSTEM_PROMPT,
-        messages,
+      const token = await getToken();
+      const res = await fetch('/api/agent/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ messages }),
       });
+      const data = await res.json();
 
       addAdvisorMessage({
         sender: 'advisor',
-        text: response.content[0].text,
+        text: data.text || 'Algo deu errado na conexão. Tente novamente.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
     } catch (err) {

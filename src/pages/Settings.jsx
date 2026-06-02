@@ -75,10 +75,23 @@ function Settings() {
   const creditsPercent = Math.min(100, (credits / 500) * 100);
   const messagesSent = advisorHistory.filter((m) => m.sender === 'user').length;
 
-  const saveField = (field, value) => {
+  const saveField = async (field, value) => {
     useStore.setState((s) => ({ user: { ...s.user, [field]: value } }));
     setSaveSuccess(field);
     setTimeout(() => setSaveSuccess(null), 2000);
+
+    if (field === 'nickname' || field === 'instructions') {
+      const store = useStore.getState();
+      const token = await getToken();
+      fetch('/api/user/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          nickname: field === 'nickname' ? value : (store.user.nickname || ''),
+          instructions: field === 'instructions' ? value : (store.user.instructions || ''),
+        }),
+      });
+    }
   };
 
   return (

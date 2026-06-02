@@ -4,7 +4,8 @@ import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClerkClient } from '@clerk/backend';
-import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, getPosts, savePost, deletePost } from './db.js';
+import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, getPosts, savePost, deletePost, updateUserSettings } from './db.js';
+import { LINAGE_SYSTEM_PROMPT } from './prompts.js';
 
 const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -245,6 +246,50 @@ app.post('/api/stripe/webhook', async (req, res) => {
   }
 
   res.json({ received: true });
+});
+
+// --- Agent chat ---
+app.post('/api/agent/chat', requireAuth, async (req, res) => {
+  try {
+    const { messages } = req.body;
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: LINAGE_SYSTEM_PROMPT,
+      messages,
+    });
+    res.json({ text: response.content[0].text });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/agent/generate-post', requireAuth, async (req, res) => {
+  try {
+    const { conversationContext, newsContext } = req.body;
+    const system = `${LINAGE_SYSTEM_PROMPT}\n\nEscreva um post completo para LinkedIn em português, com base na conversa e nas notícias recentes sobre o tema. O post deve soar como Linage — com sua voz, seu ritmo, seu estilo. Nada genérico.\n\nRetorne exatamente neste formato:\nTÍTULO: [título do post]\nCONTEÚDO:\n[corpo completo do post]`;
+    const userContent = `Conversa:\n${conversationContext}${newsContext ? `\n\nNotícias recentes sobre o tema:\n${newsContext}` : ''}\n\nEscreva o post agora.`;
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system,
+      messages: [{ role: 'user', content: userContent }],
+    });
+    res.json({ text: response.content[0].text });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- User settings ---
+app.patch('/api/user/settings', requireAuth, async (req, res) => {
+  try {
+    const { nickname = '', instructions = '' } = req.body;
+    await updateUserSettings(req.userId, { nickname, instructions });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --- News proxy ---

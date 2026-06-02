@@ -18,7 +18,6 @@ import {
   Award
 } from 'lucide-react';
 import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
-import { anthropic, MODELS, LINAGE_SYSTEM_PROMPT } from '../lib/anthropic';
 import { fetchNewsForTopic } from '../lib/news';
 
 const CHAT_PHRASES = [
@@ -94,18 +93,17 @@ function Agent() {
         content: msg.text,
       }));
 
-      const systemPrompt = LINAGE_SYSTEM_PROMPT;
-
-      const response = await anthropic.messages.create({
-        model: MODELS.agent,
-        max_tokens: 512,
-        system: systemPrompt,
-        messages,
+      const token = await getToken();
+      const res = await fetch('/api/agent/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ messages }),
       });
+      const data = await res.json();
 
       addMessageToAgent(id, {
         sender: 'agent',
-        text: response.content[0].text,
+        text: data.text || 'Algo deu errado. Tente novamente.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
     } catch (err) {
@@ -137,18 +135,13 @@ function Agent() {
       const token = await getToken();
       const newsContext = await fetchNewsForTopic(topicMsg, token);
 
-      const systemPrompt = `${LINAGE_SYSTEM_PROMPT}\n\nEscreva um post completo para LinkedIn em português, com base na conversa e nas notícias recentes sobre o tema. O post deve soar como Linage — com sua voz, seu ritmo, seu estilo. Nada genérico.\n\nRetorne exatamente neste formato:\nTÍTULO: [título do post]\nCONTEÚDO:\n[corpo completo do post]`;
-
-      const userContent = `Conversa:\n${conversationContext}${newsContext ? `\n\nNotícias recentes sobre o tema:\n${newsContext}` : ''}\n\nEscreva o post agora.`;
-
-      const response = await anthropic.messages.create({
-        model: MODELS.agent,
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userContent }],
+      const res = await fetch('/api/agent/generate-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ conversationContext, newsContext }),
       });
-
-      const raw = response.content[0].text;
+      const data = await res.json();
+      const raw = data.text || '';
       const titleMatch = raw.match(/TÍTULO:\s*(.+)/);
       const contentMatch = raw.match(/CONTEÚDO:\s*([\s\S]+)/);
 
