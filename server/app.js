@@ -2,12 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
+import Anthropic from '@anthropic-ai/sdk';
 import { createClerkClient } from '@clerk/backend';
 import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, getPosts, savePost, deletePost } from './db.js';
 
 const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+const anthropic = new Anthropic({ apiKey: process.env.VITE_ANTHROPIC_API_KEY });
+const TAVILY_KEY = process.env.VITE_TAVILY_API_KEY;
 
 const APP_URL = process.env.APP_URL || 'http://localhost:5174';
 
@@ -234,6 +237,77 @@ app.post('/api/stripe/webhook', async (req, res) => {
   }
 
   res.json({ received: true });
+});
+
+// --- Daily Content ---
+const LINAGE_DAILY_PROMPT = `Você é o Linage — um redator estratégico para o mercado financeiro que pensa em voz alta sobre o que merece virar post.
+
+Seu papel aqui não é gerar posts. É encontrar o ângulo nas notícias do dia e apresentar como uma faísca: o suficiente para o usuário pensar "é isso, quero esse."
+
+Filtro: a pergunta que você faz para cada notícia é "isso tem potencial pra virar algo que a pessoa vai querer contar pra alguém?" Se não, descarta.
+
+Você procura:
+- A contradição escondida — quando o mercado faz uma coisa e diz outra
+- A história por trás do dado — o número tem uma história humana dentro
+- O universal no específico — um evento particular que revela algo sobre comportamento humano com dinheiro
+- O absurdo normalizado — o que todo mundo faz sem questionar, mas que não faz sentido
+
+Regras absolutas:
+- Nunca fala mal de ninguém
+- Nunca sugere algo só porque é polêmico
+- Nunca sugere o óbvio sem transformar
+- Nunca é didático — mostra, não explica
+- Humor como ferramenta, não como muleta
+
+Sua autoridade é tão sólida que você pode brincar sem que ninguém questione sua competência. Você escreve como quem conversa num jantar com gente inteligente: tem graça, tem ritmo, tem conteúdo. Você é genuinamente descontraído, não performaticamente.
+
+O QUE VOCÊ NUNCA FAZ:
+- Usar o termo "ruído" ou o verbo "incomodar"
+- Usar a construção "Existe um(a) [substantivo] real"
+- Usar a estrutura "A maioria não..."
+- Iniciar frases com o padrão "Artigo + substantivo + verbo + dois-pontos"`;
+
+app.get('/api/daily-content', requireAuth, async (req, res) => {
+  try {
+    let headlines = '';
+    try {
+      const tavilyRes = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          api_key: TAVILY_KEY,
+          query: 'mercado financeiro investimentos Brasil',
+          search_depth: 'basic',
+          max_results: 5,
+          include_answer: false,
+        }),
+      });
+      const tavilyData = await tavilyRes.json();
+      headlines = tavilyData.results?.map(r => r.title).join('\n') || '';
+    } catch {}
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 600,
+      system: LINAGE_DAILY_PROMPT,
+      messages: [{
+        role: 'user',
+        content: `Notícias do mercado financeiro de hoje:\n${headlines || '(sem notícias disponíveis)'}\n\nGere 3 sugestões de pauta com energias diferentes:\n- PAUTA_1: Uma que incomoda de leve — levanta algo que o leitor vai precisar pensar. Não ataca, mas não deixa confortável.\n- PAUTA_2: Uma que diverte com substância — leve, espirituosa, mas com insight real dentro.\n- PAUTA_3: Uma que aprofunda — mais densa, conceitual, para quem quer pensar.\n\nCada sugestão: gancho (o que aconteceu) + ângulo (onde você iria). Máx 30 palavras. Com sua voz. Sem briefing, sem explicação — faísca.\n\nTambém gere uma PERSPECTIVA: como você vê o posicionamento profissional hoje. Máx 25 palavras. Com sua voz.\n\nFormato exato, sem mais nada:\nPERSPECTIVA: [texto]\nPAUTA_1: [texto]\nPAUTA_2: [texto]\nPAUTA_3: [texto]`,
+      }],
+    });
+
+    const text = response.content[0].text;
+    const get = (label) => text.match(new RegExp(`${label}:\\s*(.+)`))?.[1]?.trim() || '';
+
+    const quote = get('PERSPECTIVA');
+    const suggestions = [get('PAUTA_1'), get('PAUTA_2'), get('PAUTA_3')];
+
+    if (!quote) return res.status(500).json({ error: 'Unexpected response format' });
+
+    res.json({ quote, suggestions });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default app;
