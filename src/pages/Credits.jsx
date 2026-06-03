@@ -11,10 +11,10 @@ export const PLANS = [
     name: 'Teste Grátis',
     price: 'Grátis',
     period: '',
-    creditsLabel: '50 créditos únicos',
+    creditsLabel: '1.350 créditos únicos',
     Icon: Star,
     features: [
-      '50 créditos (não renovam)',
+      '1.350 créditos (não renovam)',
       'Acesso ao Linage',
       '5 posts salvos',
       'Suporte por e-mail',
@@ -23,12 +23,14 @@ export const PLANS = [
   {
     id: 'starter',
     name: 'Starter',
-    price: 'R$ 97',
+    price: 'R$ 197',
+    priceAnnual: 'R$ 157',
+    annualTotal: 'R$ 1.890/ano',
     period: '/mês',
-    creditsLabel: '300 créditos/mês',
+    creditsLabel: '4.500 créditos/mês',
     Icon: Zap,
     features: [
-      '300 créditos mensais',
+      '4.500 créditos mensais',
       'Acesso ao Linage',
       'Posts ilimitados',
       'Suporte prioritário',
@@ -37,13 +39,15 @@ export const PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 'R$ 197',
+    price: 'R$ 297',
+    priceAnnual: 'R$ 237',
+    annualTotal: 'R$ 2.850/ano',
     period: '/mês',
-    creditsLabel: '1.000 créditos/mês',
+    creditsLabel: '9.000 créditos/mês',
     Icon: Crown,
     highlight: true,
     features: [
-      '1.000 créditos mensais',
+      '9.000 créditos mensais',
       'Acesso ao Linage',
       'Posts ilimitados',
       'Suporte VIP',
@@ -53,15 +57,16 @@ export const PLANS = [
 ];
 
 const CREDIT_PACKS = [
-  { amount: 100, price: 'R$ 19', perUnit: 'R$ 0,19 por crédito', unitAmount: 1900 },
-  { amount: 500, price: 'R$ 79', perUnit: 'R$ 0,15 por crédito', popular: true, unitAmount: 7900 },
-  { amount: 1000, price: 'R$ 139', perUnit: 'R$ 0,13 por crédito', unitAmount: 13900 },
+  { amount: 900,  price: 'R$ 19',  perUnit: '2 gerações', unitAmount: 1900 },
+  { amount: 2250, price: 'R$ 47',  perUnit: '5 gerações', popular: true, unitAmount: 4700 },
+  { amount: 4500, price: 'R$ 87',  perUnit: '10 gerações', unitAmount: 8700 },
 ];
 
 function Credits() {
   const { user, credits } = useStore();
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(null);
+  const [billing, setBilling] = useState('monthly');
 
   const upgradePlans = PLANS.filter(
     (p) => PLAN_ORDER[p.id] > PLAN_ORDER[user.plan]
@@ -74,7 +79,7 @@ function Credits() {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ plan: planId }),
+        body: JSON.stringify({ plan: planId, billing }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -120,7 +125,26 @@ function Credits() {
       </header>
 
       <section className="credits-section">
-        <h2 className="credits-section-title">Upgrade de Plano</h2>
+        <div className="credits-section-header">
+          <h2 className="credits-section-title">Upgrade de Plano</h2>
+          {upgradePlans.some(p => p.priceAnnual) && (
+            <div className="billing-toggle">
+              <button
+                className={`billing-toggle-btn${billing === 'monthly' ? ' active' : ''}`}
+                onClick={() => setBilling('monthly')}
+              >
+                Mensal
+              </button>
+              <button
+                className={`billing-toggle-btn${billing === 'annual' ? ' active' : ''}`}
+                onClick={() => setBilling('annual')}
+              >
+                Anual <span className="billing-discount">-20%</span>
+              </button>
+            </div>
+          )}
+        </div>
+
         {upgradePlans.length === 0 ? (
           <div className="credits-best-plan glass-card">
             <Sparkles size={24} style={{ color: 'var(--accent)' }} />
@@ -133,6 +157,7 @@ function Credits() {
           <div className="plans-grid">
             {upgradePlans.map((plan) => {
               const { Icon } = plan;
+              const displayPrice = billing === 'annual' && plan.priceAnnual ? plan.priceAnnual : plan.price;
               return (
                 <div
                   key={plan.id}
@@ -144,9 +169,12 @@ function Credits() {
                   </div>
                   <h3 className="plan-name">{plan.name}</h3>
                   <div className="plan-price-row">
-                    <span className="plan-price-value">{plan.price}</span>
+                    <span className="plan-price-value">{displayPrice}</span>
                     <span className="plan-price-period">{plan.period}</span>
                   </div>
+                  {billing === 'annual' && plan.annualTotal && (
+                    <span className="plan-annual-total">{plan.annualTotal}</span>
+                  )}
                   <span className="plan-credits-label">{plan.creditsLabel}</span>
                   <ul className="plan-features">
                     {plan.features.map((f, i) => (

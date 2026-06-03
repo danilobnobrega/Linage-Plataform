@@ -24,8 +24,8 @@ const mailer = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 });
-const PLAN_CREDITS = { free: 2000, starter: 15000, pro: 40000 };
-const CREDIT_COSTS = { generation: 500, revision: 150 };
+const PLAN_CREDITS = { free: 1350, starter: 4500, pro: 9000 };
+const CREDIT_COSTS = { generation: 450, revision: 150 };
 
 // Initialize DB once at module load (works for both local and serverless)
 const dbReady = initDb();
@@ -159,9 +159,12 @@ app.post('/api/help/contact', requireAuth, async (req, res) => {
 app.post('/api/stripe/checkout', requireAuth, async (req, res) => {
   try {
     const { plan } = req.body;
-    const priceId = plan === 'starter'
-      ? process.env.STRIPE_PRICE_ID_STARTER_MONTHLY
-      : process.env.STRIPE_PRICE_ID_PRO_MONTHLY;
+    const { billing = 'monthly' } = req.body;
+    const priceIds = {
+      starter: { monthly: process.env.STRIPE_PRICE_ID_STARTER_MONTHLY, annual: process.env.STRIPE_PRICE_ID_STARTER_ANNUAL },
+      pro:     { monthly: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,     annual: process.env.STRIPE_PRICE_ID_PRO_ANNUAL },
+    };
+    const priceId = priceIds[plan]?.[billing];
 
     const user = await getUser(req.userId);
     const session = await stripe.checkout.sessions.create({

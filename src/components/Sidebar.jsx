@@ -29,7 +29,7 @@ function Sidebar() {
 
   const firstName = user.name.replace(/,.*$/, '').trim().split(' ')[0];
   const isProPlan = user.plan === 'pro';
-  const PLAN_CREDITS = { free: 2000, starter: 15000, pro: 40000 };
+  const PLAN_CREDITS = { free: 1350, starter: 4500, pro: 9000 };
   const planMax = PLAN_CREDITS[user.plan] || 2000;
 
   useEffect(() => {

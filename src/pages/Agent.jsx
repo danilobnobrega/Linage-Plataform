@@ -118,8 +118,8 @@ function Agent() {
   };
 
   const handleTriggerGenerator = async () => {
-    if (credits < 500) {
-      alert("Saldo insuficiente! A geração de post consome 500 créditos. Recarregue em Planos & Créditos.");
+    if (credits < 450) {
+      alert("Saldo insuficiente! A geração de post consome 450 créditos. Recarregue em Planos & Créditos.");
       return;
     }
 
@@ -234,7 +234,7 @@ function Agent() {
               disabled={isGenerating}
             >
               <Sparkles size={16} />
-              <span>Transformar em Post (-500 cr)</span>
+              <span>Transformar em Post (-450 cr)</span>
             </button>
           </div>
 

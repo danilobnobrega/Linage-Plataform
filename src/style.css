@@ -688,11 +688,70 @@ body {
   margin-bottom: 48px;
 }
 
+.credits-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
 .credits-section-title {
   font-size: 17px;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 6px;
+  margin-bottom: 0;
+}
+
+.billing-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.billing-toggle-btn {
+  padding: 6px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.billing-toggle-btn.active {
+  background: var(--accent);
+  color: #000;
+}
+
+.billing-discount {
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(0,255,136,0.15);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.billing-toggle-btn.active .billing-discount {
+  background: rgba(0,0,0,0.2);
+  color: #000;
+}
+
+.plan-annual-total {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  display: block;
 }
 
 .credits-section-desc {

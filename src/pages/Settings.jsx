@@ -9,7 +9,7 @@ import {
 import { PLANS } from './Credits';
 
 const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
-const PLAN_CREDITS = { free: 2000, starter: 15000, pro: 40000 };
+const PLAN_CREDITS = { free: 1350, starter: 4500, pro: 9000 };
 
 const SECTIONS = [
   { id: 'conta',       label: 'Conta',       Icon: User },
