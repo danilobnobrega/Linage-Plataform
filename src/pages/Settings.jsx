@@ -38,6 +38,7 @@ function Settings() {
   const [expandUse, setExpandUse] = useState(false);
   const [invoices, setInvoices] = useState(null);
   const [nextBilling, setNextBilling] = useState(null);
+  const [currentInterval, setCurrentInterval] = useState(null);
 
   useEffect(() => {
     if (activeSection !== 'cobranca') return;
@@ -52,6 +53,7 @@ function Settings() {
         if (subRes.ok) {
           const sub = await subRes.json();
           setNextBilling(sub?.currentPeriodEnd || '—');
+          if (sub?.interval) setCurrentInterval(sub.interval);
         }
       } catch { if (invoices === null) setInvoices([]); }
     };
@@ -598,15 +600,24 @@ function Settings() {
                           </li>
                         ))}
                       </ul>
-                      {selectedBilling === 'annual' ? (
-                        <button className="plan-cta-btn" onClick={() => handleSwitchToAnnual(plan.id)}>
-                          <ArrowRight size={14} /> Assinar Anual
-                        </button>
-                      ) : (
-                        <button className="plan-cta-btn plan-cta-btn--disabled" disabled>
-                          {isCurrentPlan ? 'Plano atual' : 'Gerenciar via portal'}
-                        </button>
-                      )}
+                      {(() => {
+                        const isCurrent = isCurrentPlan && selectedBilling === (currentInterval || 'monthly');
+                        if (isCurrent) {
+                          return <button className="plan-cta-btn plan-cta-btn--disabled" disabled>Plano atual</button>;
+                        }
+                        if (selectedBilling === 'annual') {
+                          return (
+                            <button className="plan-cta-btn" onClick={() => handleSwitchToAnnual(plan.id)}>
+                              <ArrowRight size={14} /> Assinar Anual
+                            </button>
+                          );
+                        }
+                        return (
+                          <button className="plan-cta-btn plan-cta-btn--downgrade" onClick={handleOpenPortal}>
+                            <ArrowDown size={14} /> {PLAN_ORDER[plan.id] < PLAN_ORDER[user.plan] ? 'Fazer downgrade' : 'Assinar Mensal'}
+                          </button>
+                        );
+                      })()}
                     </div>
                   );
                 })}

@@ -203,6 +203,7 @@ app.get('/api/stripe/subscription', requireAuth, async (req, res) => {
     const sub = await stripe.subscriptions.retrieve(user.stripe_subscription_id);
     res.json({
       currentPeriodEnd: new Date(sub.current_period_end * 1000).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }),
+      interval: sub.items.data[0]?.price?.recurring?.interval === 'year' ? 'annual' : 'monthly',
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
