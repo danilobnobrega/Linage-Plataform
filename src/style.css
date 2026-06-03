@@ -754,6 +754,39 @@ body {
   display: block;
 }
 
+.plan-card-billing-toggle {
+  display: flex;
+  gap: 3px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 3px;
+  margin-bottom: 16px;
+}
+
+.plan-card-billing-btn {
+  flex: 1;
+  padding: 5px 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.plan-card-billing-btn.active {
+  background: var(--accent);
+  color: #000;
+}
+
+.plan-cta-btn--disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .credits-section-desc {
   font-size: 13px;
   color: var(--text-secondary);

@@ -4,7 +4,7 @@ import useStore from '../store';
 import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
 import {
   User, Shield, CreditCard, BarChart2,
-  Check, X, ArrowDown, Mail, ChevronRight, Camera, Bell,
+  Check, X, ArrowDown, ArrowRight, Mail, ChevronRight, Camera, Bell,
 } from 'lucide-react';
 import { PLANS } from './Credits';
 
@@ -29,6 +29,7 @@ function Settings() {
   const [instructions, setInstructions] = useState(user.instructions || '');
   const [saveSuccess, setSaveSuccess] = useState(null); // field name that was saved
   const [showPlanModal, setShowPlanModal] = useState(false);
+  const [modalBilling, setModalBilling] = useState({ starter: 'monthly', pro: 'monthly' });
   const [notifSuggestions, setNotifSuggestions] = useState(notifications?.suggestions ?? true);
   const [notifResponse, setNotifResponse] = useState(notifications?.responseComplete ?? false);
   const [memoryEnabled, setMemoryEnabled] = useState(privacy?.memoryEnabled ?? true);
@@ -92,6 +93,22 @@ function Settings() {
       URL.revokeObjectURL(url);
     } catch {
       alert('Erro ao exportar dados.');
+    }
+  };
+
+  const handleSwitchToAnnual = async (planId) => {
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ plan: planId, billing: 'annual' }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else alert('Erro ao iniciar checkout.');
+    } catch {
+      alert('Erro ao iniciar checkout.');
     }
   };
 
@@ -541,18 +558,38 @@ function Settings() {
               </button>
             </div>
 
-            {downgradePlans.length > 0 && (
-              <div className="plans-grid" style={{ marginBottom: 24 }}>
-                {downgradePlans.map((plan) => {
+                    <div className="plans-grid" style={{ marginBottom: 24 }}>
+                {PLANS.filter(p => p.id !== 'free').map((plan) => {
                   const { Icon } = plan;
+                  const selectedBilling = modalBilling[plan.id] || 'monthly';
+                  const isCurrentPlan = plan.id === user.plan;
+                  const displayPrice = selectedBilling === 'annual' ? plan.priceAnnual : plan.price;
                   return (
-                    <div key={plan.id} className="plan-card glass-card">
+                    <div key={plan.id} className={`plan-card glass-card${plan.highlight ? ' plan-card--highlight' : ''}`}>
+                      {/* Per-card billing toggle */}
+                      <div className="plan-card-billing-toggle">
+                        <button
+                          className={`plan-card-billing-btn${selectedBilling === 'monthly' ? ' active' : ''}`}
+                          onClick={() => setModalBilling(s => ({ ...s, [plan.id]: 'monthly' }))}
+                        >
+                          Mensal
+                        </button>
+                        <button
+                          className={`plan-card-billing-btn${selectedBilling === 'annual' ? ' active' : ''}`}
+                          onClick={() => setModalBilling(s => ({ ...s, [plan.id]: 'annual' }))}
+                        >
+                          Anual
+                        </button>
+                      </div>
                       <div className="plan-icon-wrap"><Icon size={20} /></div>
                       <h3 className="plan-name">{plan.name}</h3>
                       <div className="plan-price-row">
-                        <span className="plan-price-value">{plan.price}</span>
+                        <span className="plan-price-value">{displayPrice}</span>
                         <span className="plan-price-period">{plan.period}</span>
                       </div>
+                      {selectedBilling === 'annual' && plan.annualTotal && (
+                        <span className="plan-annual-total">{plan.annualTotal}</span>
+                      )}
                       <span className="plan-credits-label">{plan.creditsLabel}</span>
                       <ul className="plan-features">
                         {plan.features.map((f, i) => (
@@ -561,14 +598,19 @@ function Settings() {
                           </li>
                         ))}
                       </ul>
-                      <button className="plan-cta-btn plan-cta-btn--downgrade" onClick={handleOpenPortal}>
-                        <ArrowDown size={14} /> Fazer downgrade
-                      </button>
+                      {selectedBilling === 'annual' ? (
+                        <button className="plan-cta-btn" onClick={() => handleSwitchToAnnual(plan.id)}>
+                          <ArrowRight size={14} /> Assinar Anual
+                        </button>
+                      ) : (
+                        <button className="plan-cta-btn plan-cta-btn--disabled" disabled>
+                          {isCurrentPlan ? 'Plano atual' : 'Gerenciar via portal'}
+                        </button>
+                      )}
                     </div>
                   );
                 })}
               </div>
-            )}
 
             <div className="plan-cancel-section">
               <div className="plan-cancel-info">
