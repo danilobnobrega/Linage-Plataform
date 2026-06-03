@@ -68,6 +68,12 @@ const useStore = create(persist(
           a.id === agentId ? { ...a, history: [...a.history, message] } : a
         )
       })),
+    resetAgentHistory: (agentId) =>
+      set((s) => ({
+        agents: s.agents.map((a) =>
+          a.id === agentId ? { ...a, history: [] } : a
+        )
+      })),
     // Advisor messages (store separate array)
     advisorHistory: [],
     addAdvisorMessage: (msg) =>

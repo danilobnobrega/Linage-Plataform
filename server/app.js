@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClerkClient } from '@clerk/backend';
 import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, getPosts, savePost, deletePost, updateUserSettings, sql } from './db.js';
-import { LINAGE_SYSTEM_PROMPT } from './prompts.js';
+import { LINAGE_SYSTEM_PROMPT, LINAGE_CHAT_GUARD, linagePostReviewPrompt } from './prompts.js';
 
 const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -109,8 +109,13 @@ app.get('/api/posts', requireAuth, async (req, res) => {
 app.post('/api/posts', requireAuth, async (req, res) => {
   try {
     const { id, title, content, agentId, status } = req.body;
+    const user = await getUser(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.credits < 450) return res.status(402).json({ error: 'Insufficient credits' });
+    const newCredits = user.credits - 450;
+    await updateUserCredits(req.userId, newCredits);
     const post = await savePost({ id, userId: req.userId, title, content, agentId, status });
-    res.json(post);
+    res.json({ ...post, credits: newCredits });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -312,10 +317,32 @@ app.post('/api/agent/chat', requireAuth, async (req, res) => {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
-      system: buildSystem(LINAGE_SYSTEM_PROMPT, user?.instructions),
+      system: buildSystem(LINAGE_SYSTEM_PROMPT + LINAGE_CHAT_GUARD, user?.instructions),
       messages,
     });
     res.json({ text: response.content[0].text });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Post review (post-generation refinement chat) ---
+app.post('/api/agent/post-review', requireAuth, async (req, res) => {
+  try {
+    const { messages, postContent } = req.body;
+    if (!messages?.length || !postContent) return res.status(400).json({ error: 'messages e postContent são obrigatórios' });
+    const user = await getUser(req.userId);
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: buildSystem(linagePostReviewPrompt(postContent), user?.instructions),
+      messages,
+    });
+    const text = response.content[0].text;
+    const revisedMatch = text.match(/\[POST_REVISADO_INICIO\]([\s\S]*?)\[POST_REVISADO_FIM\]/);
+    const revisedPost = revisedMatch ? revisedMatch[1].trim() : null;
+    const cleanText = text.replace(/\[POST_REVISADO_INICIO\][\s\S]*?\[POST_REVISADO_FIM\]/g, '').trim();
+    res.json({ text: cleanText, revisedPost });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
