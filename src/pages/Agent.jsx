@@ -443,8 +443,11 @@ function Agent() {
                     </button>
                   </div>
                   <div className="generator-actions">
-                    <button className="btn-primary" style={{ backgroundColor: config.color }} onClick={() => handleSavePost('draft')}>
+                    <button className="btn-secondary" onClick={() => handleSavePost('draft')}>
                       Salvar Rascunho
+                    </button>
+                    <button className="btn-primary" style={{ backgroundColor: config.color }} onClick={() => handleSavePost('publish')}>
+                      Post Concluído
                     </button>
                   </div>
                 </footer>
