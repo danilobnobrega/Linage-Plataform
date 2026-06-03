@@ -69,14 +69,6 @@ app.post('/api/auth/sync', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/api/auth/me', requireAuth, async (req, res) => {
-  try {
-    const user = await getUser(req.userId);
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // --- Posts ---
 app.get('/api/posts', requireAuth, async (req, res) => {

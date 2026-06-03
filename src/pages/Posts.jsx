@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
-import { 
-  FileText, 
-  Trash2, 
-  Copy, 
-  Check, 
-  Share2, 
-  Edit3, 
-  Eye, 
-  ExternalLink,
+import {
+  FileText,
+  Trash2,
+  Copy,
+  Check,
+  Edit3,
+  Eye,
   PenTool,
-  BookmarkCheck
 } from 'lucide-react';
 
 function Posts() {
