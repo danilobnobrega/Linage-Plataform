@@ -150,11 +150,11 @@ function Posts() {
           >
             Rascunhos ({posts.filter(p => p.draft).length})
           </button>
-          <button 
+          <button
             className={`tab-filter-btn ${activeTab === 'published' ? 'active' : ''}`}
             onClick={() => setActiveTab('published')}
           >
-            Publicados ({posts.filter(p => !p.draft).length})
+            Concluídos ({posts.filter(p => !p.draft).length})
           </button>
         </div>
       </div>
@@ -201,7 +201,7 @@ function Posts() {
                     </p>
                     <div className="post-selector-actions">
                       <span className={`badge-indicator ${post.draft ? 'draft' : 'published'}`}>
-                        {post.draft ? 'Rascunho' : 'Publicado'}
+                        {post.draft ? 'Rascunho' : 'Concluído'}
                       </span>
                       <div className="selector-btn-group">
                         <button 
@@ -234,10 +234,10 @@ function Posts() {
               <header className="workspace-header-actions">
                 <div className="workspace-badge-and-info">
                   <span className={`status-pill ${selectedPost.draft ? 'draft' : 'published'}`}>
-                    {selectedPost.draft ? 'Rascunho Pendente' : 'Publicado'}
+                    {selectedPost.draft ? 'Rascunho Pendente' : 'Concluído'}
                   </span>
                   <button className="status-toggle-link" onClick={(e) => handleTogglePublish(selectedPost, e)}>
-                    {selectedPost.draft ? 'Marcar como Publicado' : 'Voltar para Rascunho'}
+                    {selectedPost.draft ? 'Marcar como Concluído' : 'Voltar para Rascunho'}
                   </button>
                 </div>
                 
