@@ -25,9 +25,11 @@ export async function initDb() {
       content TEXT NOT NULL DEFAULT '',
       agent_id TEXT NOT NULL DEFAULT 'linage',
       status TEXT NOT NULL DEFAULT 'draft',
-      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()`;
 }
 
 export async function syncUser({ id, email }) {
@@ -63,14 +65,14 @@ export async function updateUserPlan(id, plan, stripeCustomerId, stripeSubscript
 }
 
 export async function getPosts(userId) {
-  return sql`SELECT * FROM posts WHERE user_id = ${userId} ORDER BY created_at DESC`;
+  return sql`SELECT * FROM posts WHERE user_id = ${userId} ORDER BY updated_at DESC`;
 }
 
 export async function savePost({ id, userId, title, content, agentId, status }) {
   const [post] = await sql`
     INSERT INTO posts (id, user_id, title, content, agent_id, status)
     VALUES (${id}, ${userId}, ${title}, ${content}, ${agentId}, ${status})
-    ON CONFLICT (id) DO UPDATE SET title = ${title}, content = ${content}, status = ${status}
+    ON CONFLICT (id) DO UPDATE SET title = ${title}, content = ${content}, status = ${status}, updated_at = NOW()
     RETURNING *
   `;
   return post;
