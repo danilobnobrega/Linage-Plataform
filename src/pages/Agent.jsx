@@ -147,6 +147,15 @@ function Agent() {
 
       setGeneratedPostTitle(titleMatch ? titleMatch[1].trim() : 'Post gerado por ' + agent.name);
       setGeneratedPostContent(contentMatch ? contentMatch[1].trim() : raw);
+
+      // Deduct credits on successful generation
+      fetch('/api/credits/deduct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: 'generation' }),
+      })
+        .then(r => r.json())
+        .then(d => { if (d.credits !== undefined) useStore.setState({ credits: d.credits }); });
     } catch (err) {
       setGeneratedPostContent('Erro ao gerar o post. Tente novamente.');
     } finally {
@@ -179,16 +188,6 @@ function Agent() {
         status: status === 'draft' ? 'draft' : 'published',
       }),
     });
-
-    fetch('/api/credits/deduct', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ action: 'generation' }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.credits !== undefined) useStore.setState({ credits: data.credits });
-      });
 
     setShowPostGenerator(false);
     navigate('/posts');
@@ -448,7 +447,7 @@ function Agent() {
                       Salvar como Rascunho
                     </button>
                     <button className="btn-primary" style={{ backgroundColor: config.color }} onClick={() => handleSavePost('publish')}>
-                      Publicar Post (-500 cr)
+                      Publicar Post
                     </button>
                   </div>
                 </footer>

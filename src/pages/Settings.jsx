@@ -36,20 +36,25 @@ function Settings() {
   const [expandProtect, setExpandProtect] = useState(false);
   const [expandUse, setExpandUse] = useState(false);
   const [invoices, setInvoices] = useState(null);
+  const [nextBilling, setNextBilling] = useState(null);
 
   useEffect(() => {
-    if (activeSection !== 'cobranca' || invoices !== null) return;
-    const fetchInvoices = async () => {
+    if (activeSection !== 'cobranca') return;
+    const fetchBilling = async () => {
       try {
         const token = await getToken();
-        const res = await fetch('/api/stripe/invoices', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) setInvoices(await res.json());
-        else setInvoices([]);
-      } catch { setInvoices([]); }
+        const [invRes, subRes] = await Promise.all([
+          invoices === null ? fetch('/api/stripe/invoices', { headers: { Authorization: `Bearer ${token}` } }) : Promise.resolve(null),
+          fetch('/api/stripe/subscription', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        if (invRes) setInvoices(invRes.ok ? await invRes.json() : []);
+        if (subRes.ok) {
+          const sub = await subRes.json();
+          setNextBilling(sub?.currentPeriodEnd || '—');
+        }
+      } catch { if (invoices === null) setInvoices([]); }
     };
-    fetchInvoices();
+    fetchBilling();
   }, [activeSection]);
 
   const INSTRUCTION_PHRASES = [
@@ -439,7 +444,7 @@ function Settings() {
               <div className="settings-action-row">
                 <div>
                   <h4 className="settings-action-title">Próxima cobrança</h4>
-                  <p className="settings-action-desc">—</p>
+                  <p className="settings-action-desc">{nextBilling || '—'}</p>
                 </div>
               </div>
 
