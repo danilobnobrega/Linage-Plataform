@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import useStore from '../store';
 import { HelpCircle, Send, Check, Clock } from 'lucide-react';
 
 function Help() {
   const { getToken } = useAuth();
+  const { user } = useStore();
+  const responseTime = user.plan === 'pro' ? '3' : '5';
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
@@ -51,7 +54,7 @@ function Help() {
 
       <div className="help-response-time">
         <Clock size={14} />
-        <span>Respondemos em até <strong>5 dias úteis</strong></span>
+        <span>Respondemos em até <strong>{responseTime} dias úteis</strong></span>
       </div>
 
       {status === 'success' ? (
@@ -60,7 +63,7 @@ function Help() {
             <Check size={28} />
           </div>
           <h3>Mensagem enviada!</h3>
-          <p>Recebemos sua mensagem e responderemos em até 5 dias úteis no seu email.</p>
+          <p>Recebemos sua mensagem e responderemos em até {responseTime} dias úteis no seu email.</p>
         </div>
       ) : (
         <form className="help-form glass-card" onSubmit={handleSubmit}>

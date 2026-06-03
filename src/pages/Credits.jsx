@@ -13,12 +13,7 @@ export const PLANS = [
     period: '',
     creditsLabel: '1.350 créditos únicos',
     Icon: Star,
-    features: [
-      '1.350 créditos (3 posts)',
-      'Pesquisa em tempo real',
-      'Refinamento ilimitado por post',
-      'Suporte por e-mail',
-    ],
+    features: [],
   },
   {
     id: 'starter',
@@ -31,9 +26,9 @@ export const PLANS = [
     Icon: Zap,
     features: [
       '4.500 créditos mensais (10 posts)',
-      'Acesso ao Linage',
-      'Posts ilimitados',
-      'Suporte prioritário',
+      'Pesquisa em tempo real',
+      'Refinamento ilimitado por post',
+      'Conversor de Senso Comum',
     ],
   },
   {
@@ -48,9 +43,10 @@ export const PLANS = [
     highlight: true,
     features: [
       '9.000 créditos mensais (20 posts)',
-      'Acesso ao Linage',
-      'Posts ilimitados',
-      'Suporte VIP',
+      'Pesquisa em tempo real',
+      'Refinamento ilimitado por post',
+      'Conversor de Senso Comum',
+      'Suporte prioritário',
       'Acesso antecipado a novos recursos',
     ],
   },
