@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
+import useStore from '../store';
 
 const EXAMPLE = {
   consensus: 'A renda fixa está pagando 12% ao ano sem risco, então investir em renda variável agora é loucura.',
@@ -74,6 +75,7 @@ function ConsensusConverter() {
   }, [resetTilt]);
 
   const { getToken } = useAuth();
+  const { credits } = useStore();
   const [text, setText] = useState('');
   const [isDefault, setIsDefault] = useState(true);
   const [flipped, setFlipped] = useState(false);
@@ -98,6 +100,10 @@ function ConsensusConverter() {
   const currentText = isDefault ? EXAMPLE.consensus : text;
 
   const handleFlip = async () => {
+    if (credits < 450) {
+      alert('Saldo insuficiente. Você precisa de pelo menos 450 créditos para usar o Conversor de Senso Comum. Recarregue em Planos & Créditos.');
+      return;
+    }
     if (flipped || flipping || !currentText.trim()) return;
     setFlipping(true);
     if (isDefault) {
