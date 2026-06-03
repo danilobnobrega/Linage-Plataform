@@ -29,7 +29,7 @@ function Settings() {
   const [instructions, setInstructions] = useState(user.instructions || '');
   const [saveSuccess, setSaveSuccess] = useState(null); // field name that was saved
   const [showPlanModal, setShowPlanModal] = useState(false);
-  const [modalBilling, setModalBilling] = useState({ starter: 'monthly', pro: 'monthly' });
+  const [modalBilling, setModalBilling] = useState({ starter: 'annual', pro: 'annual' });
   const [notifSuggestions, setNotifSuggestions] = useState(notifications?.suggestions ?? true);
   const [notifResponse, setNotifResponse] = useState(notifications?.responseComplete ?? false);
   const [memoryEnabled, setMemoryEnabled] = useState(privacy?.memoryEnabled ?? true);
@@ -440,7 +440,7 @@ function Settings() {
                   </div>
                 </div>
                 {isPaidPlan && (
-                  <button className="settings-change-plan-btn" onClick={() => setShowPlanModal(true)}>
+                  <button className="settings-change-plan-btn" onClick={() => { setModalBilling({ starter: 'annual', pro: 'annual' }); setShowPlanModal(true); }}>
                     Mudar de plano
                   </button>
                 )}
