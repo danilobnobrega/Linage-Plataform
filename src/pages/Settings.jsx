@@ -549,11 +549,7 @@ function Settings() {
             <div className="plan-modal-header">
               <div>
                 <h2 className="plan-modal-title">Alterar Plano</h2>
-                <p className="plan-modal-desc">
-                  {downgradePlans.length > 0
-                    ? 'Faça downgrade para um plano menor ou cancele sua assinatura.'
-                    : 'Cancele sua assinatura a qualquer momento.'}
-                </p>
+                <p className="plan-modal-desc">Altere seu plano ou período de cobrança.</p>
               </div>
               <button className="plan-modal-close" onClick={() => setShowPlanModal(false)}>
                 <X size={18} />
@@ -605,16 +601,22 @@ function Settings() {
                         if (isCurrent) {
                           return <button className="plan-cta-btn plan-cta-btn--disabled" disabled>Plano atual</button>;
                         }
-                        if (selectedBilling === 'annual') {
+                        if (isCurrentPlan) {
+                          const label = selectedBilling === 'annual' ? 'Assinar Anual' : 'Assinar Mensal';
                           return (
-                            <button className="plan-cta-btn" onClick={() => handleSwitchToAnnual(plan.id)}>
-                              <ArrowRight size={14} /> Assinar Anual
+                            <button className="plan-cta-btn" onClick={() => selectedBilling === 'annual' ? handleSwitchToAnnual(plan.id) : handleOpenPortal()}>
+                              <ArrowRight size={14} /> {label}
                             </button>
                           );
                         }
+                        const isUpgrade = PLAN_ORDER[plan.id] > PLAN_ORDER[user.plan];
                         return (
-                          <button className="plan-cta-btn plan-cta-btn--downgrade" onClick={handleOpenPortal}>
-                            <ArrowDown size={14} /> {PLAN_ORDER[plan.id] < PLAN_ORDER[user.plan] ? 'Fazer downgrade' : 'Assinar Mensal'}
+                          <button
+                            className={`plan-cta-btn${isUpgrade ? '' : ' plan-cta-btn--downgrade'}`}
+                            onClick={() => selectedBilling === 'annual' ? handleSwitchToAnnual(plan.id) : handleOpenPortal()}
+                          >
+                            {isUpgrade ? <ArrowRight size={14} /> : <ArrowDown size={14} />}
+                            {isUpgrade ? 'Fazer upgrade' : 'Fazer downgrade'}
                           </button>
                         );
                       })()}
