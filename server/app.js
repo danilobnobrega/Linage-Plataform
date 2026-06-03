@@ -25,7 +25,6 @@ const mailer = nodemailer.createTransport({
   },
 });
 const PLAN_CREDITS = { free: 1350, starter: 4500, pro: 9000 };
-const CREDIT_COSTS = { generation: 450, revision: 150 };
 
 // Initialize DB once at module load (works for both local and serverless)
 const dbReady = initDb();
@@ -74,23 +73,6 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
   try {
     const user = await getUser(req.userId);
     res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// --- Credits ---
-app.post('/api/credits/deduct', requireAuth, async (req, res) => {
-  try {
-    const { action } = req.body;
-    const cost = CREDIT_COSTS[action];
-    if (!cost) return res.status(400).json({ error: 'Invalid action' });
-    const user = await getUser(req.userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    if (user.credits < cost) return res.status(402).json({ error: 'Insufficient credits' });
-    const newCredits = user.credits - cost;
-    await updateUserCredits(req.userId, newCredits);
-    res.json({ credits: newCredits });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
