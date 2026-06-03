@@ -167,6 +167,7 @@ function Agent() {
         body: JSON.stringify({ conversationContext, newsContext }),
       });
       const data = await res.json();
+      if (data.credits !== undefined) useStore.setState({ credits: data.credits });
       const raw = data.text || '';
       const titleMatch = raw.match(/TÍTULO:\s*(.+)/);
       const contentMatch = raw.match(/CONTEÚDO:\s*([\s\S]+)/);
@@ -200,7 +201,7 @@ function Agent() {
     };
 
     try {
-      const res = await fetch('/api/posts', {
+      await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -211,12 +212,6 @@ function Agent() {
           status: status === 'draft' ? 'draft' : 'published',
         }),
       });
-      if (res.status === 402) {
-        alert('Saldo insuficiente. Você precisa de 450 créditos para salvar um post. Recarregue em Planos & Créditos.');
-        return;
-      }
-      const data = await res.json();
-      if (data.credits !== undefined) useStore.setState({ credits: data.credits });
       addPost(newPost);
     } catch {
       alert('Erro ao salvar o post. Tente novamente.');

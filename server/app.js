@@ -83,13 +83,8 @@ app.get('/api/posts', requireAuth, async (req, res) => {
 app.post('/api/posts', requireAuth, async (req, res) => {
   try {
     const { id, title, content, agentId, status } = req.body;
-    const user = await getUser(req.userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    if (user.credits < 450) return res.status(402).json({ error: 'Insufficient credits' });
-    const newCredits = user.credits - 450;
-    await updateUserCredits(req.userId, newCredits);
     const post = await savePost({ id, userId: req.userId, title, content, agentId, status });
-    res.json({ ...post, credits: newCredits });
+    res.json(post);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -326,6 +321,8 @@ app.post('/api/agent/generate-post', requireAuth, async (req, res) => {
   try {
     const { conversationContext, newsContext } = req.body;
     const user = await getUser(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.credits < 450) return res.status(402).json({ error: 'Insufficient credits' });
     const base = `${LINAGE_SYSTEM_PROMPT}\n\nEscreva um post completo para LinkedIn em português, com base na conversa e nas notícias recentes sobre o tema. O post deve soar como Linage — com sua voz, seu ritmo, seu estilo. Nada genérico.\n\nRetorne exatamente neste formato:\nTÍTULO: [título do post]\nCONTEÚDO:\n[corpo completo do post]`;
     const userContent = `Conversa:\n${conversationContext}${newsContext ? `\n\nNotícias recentes sobre o tema:\n${newsContext}` : ''}\n\nEscreva o post agora.`;
     const response = await anthropic.messages.create({
@@ -334,7 +331,9 @@ app.post('/api/agent/generate-post', requireAuth, async (req, res) => {
       system: buildSystem(base, user?.instructions),
       messages: [{ role: 'user', content: userContent }],
     });
-    res.json({ text: response.content[0].text });
+    const newCredits = user.credits - 450;
+    await updateUserCredits(req.userId, newCredits);
+    res.json({ text: response.content[0].text, credits: newCredits });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -14,9 +14,9 @@ export const PLANS = [
     creditsLabel: '1.350 créditos únicos',
     Icon: Star,
     features: [
-      '1.350 créditos (não renovam)',
-      'Acesso ao Linage',
-      '5 posts salvos',
+      '1.350 créditos (3 posts)',
+      'Pesquisa em tempo real',
+      'Refinamento ilimitado por post',
       'Suporte por e-mail',
     ],
   },
