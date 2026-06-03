@@ -57,9 +57,9 @@ export const PLANS = [
 ];
 
 const CREDIT_PACKS = [
-  { amount: 900,  price: 'R$ 49',  perUnit: '2 posts', unitAmount: 4900 },
-  { amount: 1800, price: 'R$ 99',  perUnit: '4 posts', popular: true, unitAmount: 9900 },
-  { amount: 2700, price: 'R$ 139', perUnit: '6 posts', unitAmount: 13900 },
+  { amount: 900,  price: 'R$ 49',  unitAmount: 4900 },
+  { amount: 1800, price: 'R$ 99',  unitAmount: 9900 },
+  { amount: 2700, price: 'R$ 139', unitAmount: 13900 },
 ];
 
 function Credits() {
@@ -215,7 +215,6 @@ function Credits() {
                 <span className="pack-unit">créditos</span>
               </div>
               <div className="pack-price">{pack.price}</div>
-              <div className="pack-per-unit">{pack.perUnit}</div>
               <button
                 className="pack-buy-btn"
                 onClick={() => handleBuyPack(pack.amount, pack.unitAmount)}
