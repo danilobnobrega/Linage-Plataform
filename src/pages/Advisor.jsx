@@ -361,7 +361,6 @@ function Advisor() {
         <div className="header-text-container">
           <span className="header-subtitle">Advisor Estratégico</span>
           <h1 className="header-title">Fale com Linage</h1>
-          <p className="header-desc">E aí! Pode jogar qualquer tema — eu transformo em algo que as pessoas vão querer comentar. Do que vamos falar hoje?</p>
         </div>
       </header>
 
