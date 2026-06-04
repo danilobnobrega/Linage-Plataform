@@ -40,7 +40,8 @@ app.use(async (req, res, next) => {
     await dbReady;
     next();
   } catch (err) {
-    res.status(500).json({ error: 'Database initialization failed' });
+    console.error('[initDb] falhou:', err.message);
+    res.status(500).json({ error: 'Database initialization failed', detail: err.message });
   }
 });
 
