@@ -275,32 +275,9 @@ function Posts() {
                     />
                   </div>
                 ) : (
-                  <div className="linkedin-render-preview">
-                    <div className="mock-render-card">
-                      <div className="mock-render-header">
-                        <div 
-                          className="mock-render-avatar"
-                          style={{ backgroundColor: getAgentColor(selectedPost.agentId) }}
-                        >
-                          {agents.find(a => a.id === selectedPost.agentId)?.name[0] || 'L'}
-                        </div>
-                        <div>
-                          <h4 className="mock-render-name">{user.name || 'Especialista Financeiro'}</h4>
-                          <span className="mock-render-headline">
-                            Especialista Financeiro | Focado em Captação de Leads
-                          </span>
-                          <span className="mock-render-time">1h • editado • 🌐 • Redigido por {agents.find(a => a.id === selectedPost.agentId)?.name || 'Linage'}</span>
-                        </div>
-                      </div>
-                      <div className="mock-render-content">
-                        <h3 className="render-title-h">{selectedPost.title}</h3>
-                        <p style={{ whiteSpace: 'pre-line' }}>{selectedPost.content}</p>
-                      </div>
-                      <div className="mock-render-engagement">
-                        <span className="reactions">👍 ❤️ 💡 64</span>
-                        <span className="comments">18 comentários • 4 compartilhamentos</span>
-                      </div>
-                    </div>
+                  <div className="workspace-editor-form">
+                    <div className="post-view-title">{selectedPost.title}</div>
+                    <div className="post-view-content" style={{ whiteSpace: 'pre-line' }}>{selectedPost.content}</div>
                   </div>
                 )}
               </div>
@@ -308,8 +285,8 @@ function Posts() {
           ) : (
             <div className="glass-card preview-workspace-card empty">
               <Eye size={40} style={{opacity: 0.3, marginBottom: 12}} />
-              <h3>Visualizador de Feed</h3>
-              <p>Selecione um post da lista lateral para visualizar a formatação completa, fazer edições cirúrgicas ou copiar o texto finalizado.</p>
+              <h3>Nenhum post selecionado</h3>
+              <p>Selecione um post da lista para visualizar o conteúdo, editar ou copiar o texto.</p>
             </div>
           )}
         </div>

@@ -2886,6 +2886,23 @@ body {
   height: 100%;
 }
 
+.post-view-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.post-view-content {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  overflow-y: auto;
+  flex: 1;
+}
+
 .edit-title-input {
   border: 1px solid var(--border-secondary);
   background-color: var(--bg-primary);
