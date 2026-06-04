@@ -24,7 +24,11 @@ export function useDailyContent(fallbackQuote, fallbackSuggestions) {
 
     if (localStorage.getItem(key)) return;
 
-    async function fetchContent() {
+    let cancelled = false;
+    let retryTimer = null;
+
+    async function fetchContent(attempt = 1) {
+      if (cancelled) return;
       try {
         const token = await getToken();
         const res = await fetch('/api/daily-content', {
@@ -33,6 +37,7 @@ export function useDailyContent(fallbackQuote, fallbackSuggestions) {
         if (!res.ok) {
           const errText = await res.text();
           console.error('[daily-content] erro na API:', res.status, errText);
+          scheduleRetry(attempt);
           return;
         }
         const data = await res.json();
@@ -40,13 +45,27 @@ export function useDailyContent(fallbackQuote, fallbackSuggestions) {
           localStorage.setItem(key, JSON.stringify(data));
           setContent(data);
           setDailyContent(data.quote, data.suggestions);
+        } else {
+          scheduleRetry(attempt);
         }
       } catch (err) {
         console.error('[daily-content] falha na requisição:', err);
+        scheduleRetry(attempt);
       }
     }
 
+    function scheduleRetry(attempt) {
+      if (cancelled) return;
+      const delay = Math.min(5000 * attempt, 60000);
+      retryTimer = setTimeout(() => fetchContent(attempt + 1), delay);
+    }
+
     fetchContent();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+    };
   }, [key]);
 
   return content;
