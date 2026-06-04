@@ -306,7 +306,7 @@ app.post('/api/agent/chat', requireAuth, async (req, res) => {
             api_key: TAVILY_KEY,
             query: `${lastUserMsg} mercado financeiro`,
             search_depth: 'advanced',
-            max_results: 7,
+            max_results: 20,
             include_answer: true,
           }),
         });
@@ -413,7 +413,7 @@ app.get('/api/news', requireAuth, async (req, res) => {
         api_key: TAVILY_KEY,
         query: `${topic} mercado financeiro`,
         search_depth: 'advanced',
-        max_results: 7,
+        max_results: 20,
         include_answer: true,
       }),
     });
@@ -495,8 +495,8 @@ app.get('/api/daily-content', requireAuth, async (req, res) => {
           api_key: TAVILY_KEY,
           query: 'mercado financeiro investimentos Brasil',
           search_depth: 'advanced',
-          max_results: 7,
-          include_answer: false,
+          max_results: 20,
+          include_answer: true,
         }),
       });
       const tavilyData = await tavilyRes.json();
