@@ -46,7 +46,7 @@ const useStore = create(persist(
     credits: 0,
     avulsoCredits: 0,
     addCredits: (amt) => set((s) => ({ credits: s.credits + amt })),
-    // Agents definitions
+    // Agents definitions — history is session-only (not persisted, see partialize)
     agents: [
       {
         id: 'linage',
@@ -55,14 +55,23 @@ const useStore = create(persist(
         history: []
       }
     ],
-    // Posts collection
-    posts: [], // {id, title, draft:true/false, agentId, createdAt}
+    // Posts collection — each post may carry chatHistory for draft continuity
+    posts: [],
     addPost: (post) => set((s) => ({ posts: [...s.posts, post] })),
-    setPosts: (posts) => set({ posts }),
+    // Preserve local chatHistory when overwriting with DB posts
+    setPosts: (newPosts) => set((s) => ({
+      posts: newPosts.map(p => {
+        const existing = s.posts.find(ep => ep.id === p.id);
+        return existing?.chatHistory ? { ...p, chatHistory: existing.chatHistory } : p;
+      })
+    })),
     updatePost: (id, updates) =>
       set((s) => ({
         posts: s.posts.map((p) => (p.id === id ? { ...p, ...updates } : p))
       })),
+    // Active draft being worked on in the Advisor page
+    activeDraftId: null,
+    setActiveDraftId: (id) => set({ activeDraftId: id }),
     // Chat handling (simple push to agent.history)
     addMessageToAgent: (agentId, message) =>
       set((s) => ({
@@ -80,14 +89,24 @@ const useStore = create(persist(
       set((s) => ({
         user: { ...s.user, dailyQuote: quote, suggestions }
       })),
-    // Advisor messages (store separate array)
+    // Legacy — kept so existing persisted state doesn't break on load
     advisorHistory: [],
     addAdvisorMessage: (msg) =>
       set((s) => ({ advisorHistory: [...s.advisorHistory, msg] }))
   }),
   {
     name: 'linage-store-v3',
-    getStorage: () => localStorage
+    // Agent history is session-only: never written to localStorage
+    partialize: (state) => ({
+      ...state,
+      agents: state.agents.map(a => ({ ...a, history: [] }))
+    }),
+    // Clear any history that might exist in older stored data
+    onRehydrateStorage: () => (state) => {
+      if (state?.agents) {
+        state.agents = state.agents.map(a => ({ ...a, history: [] }));
+      }
+    }
   }
 ));
 

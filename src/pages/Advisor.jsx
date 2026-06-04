@@ -9,6 +9,7 @@ import {
   FileText,
   FileCheck,
   RefreshCw,
+  Trash2,
 } from 'lucide-react';
 import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
 import { fetchNewsForTopic } from '../lib/news';
@@ -26,7 +27,11 @@ const AGENT_COLOR = '#f59e0b';
 function Advisor() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
-  const { agents, addPost, credits, addMessageToAgent, resetAgentHistory, user } = useStore();
+  const {
+    agents, posts, addPost, updatePost, setPosts,
+    credits, addMessageToAgent, resetAgentHistory, user,
+    activeDraftId, setActiveDraftId,
+  } = useStore();
 
   const agent = agents.find(a => a.id === 'linage');
 
@@ -41,13 +46,43 @@ function Advisor() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [postGenerated, setPostGenerated] = useState(false);
   const [pendingRevision, setPendingRevision] = useState(null);
+  const [draftSaved, setDraftSaved] = useState(false);
 
   const chatEndRef = useRef(null);
   const { ref: advisorInputRef, onFocus: advisorFocus, onBlur: advisorBlur } = useDecryptPlaceholder(ADVISOR_PHRASES);
 
+  // Restore from active draft on mount
+  useEffect(() => {
+    if (activeDraftId) {
+      const draft = posts.find(p => p.id === activeDraftId && p.draft);
+      if (draft) {
+        if (draft.chatHistory?.length > 0) {
+          useStore.setState(s => ({
+            agents: s.agents.map(a =>
+              a.id === 'linage' ? { ...a, history: draft.chatHistory } : a
+            )
+          }));
+        }
+        setGeneratedPostTitle(draft.title);
+        setGeneratedPostContent(draft.content);
+        setPostGenerated(true);
+        setDraftSaved(true);
+      } else {
+        // Draft was completed or deleted elsewhere
+        setActiveDraftId(null);
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [agent?.history, isTyping, suggestPost]);
+
+  const syncChatHistory = () => {
+    if (!activeDraftId) return;
+    const latest = useStore.getState().agents.find(a => a.id === 'linage')?.history || [];
+    updatePost(activeDraftId, { chatHistory: latest });
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -112,6 +147,8 @@ function Advisor() {
 
         if (data.suggestPost) setSuggestPost(true);
       }
+
+      syncChatHistory();
     } catch {
       addMessageToAgent('linage', {
         sender: 'agent',
@@ -135,11 +172,12 @@ function Advisor() {
     setShowPostGenerator(true);
 
     try {
-      const conversationContext = (agent?.history || [])
+      const currentHistory = useStore.getState().agents.find(a => a.id === 'linage')?.history || [];
+      const conversationContext = currentHistory
         .map(m => `${m.sender === 'user' ? 'Usuário' : 'Linage'}: ${m.text}`)
         .join('\n');
 
-      const topicMsg = [...(agent?.history || [])].reverse().find(m => m.sender === 'user')?.text || '';
+      const topicMsg = [...currentHistory].reverse().find(m => m.sender === 'user')?.text || '';
       const token = await getToken();
       const newsContext = await fetchNewsForTopic(topicMsg, token);
 
@@ -150,63 +188,137 @@ function Advisor() {
       });
       const data = await res.json();
       if (data.credits !== undefined) useStore.setState({ credits: data.credits });
+
       const raw = data.text || '';
       const titleMatch = raw.match(/TÍTULO:\s*(.+)/);
       const contentMatch = raw.match(/CONTEÚDO:\s*([\s\S]+)/);
+      const title = titleMatch ? titleMatch[1].trim() : 'Post gerado por Linage';
+      const content = contentMatch ? contentMatch[1].trim() : raw;
 
-      setGeneratedPostTitle(titleMatch ? titleMatch[1].trim() : 'Post gerado por Linage');
-      setGeneratedPostContent(contentMatch ? contentMatch[1].trim() : raw);
+      setGeneratedPostTitle(title);
+      setGeneratedPostContent(content);
 
-      resetAgentHistory('linage');
+      // Auto-save as draft immediately
+      const newPostId = 'post_' + Date.now();
+      const newPost = {
+        id: newPostId,
+        title,
+        content,
+        draft: true,
+        agentId: 'linage',
+        createdAt: new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }),
+        chatHistory: [...currentHistory],
+      };
+
+      try {
+        await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            id: newPost.id,
+            title: newPost.title,
+            content: newPost.content,
+            agentId: 'linage',
+            status: 'draft',
+          }),
+        });
+        addPost(newPost);
+        setActiveDraftId(newPostId);
+        setDraftSaved(true);
+      } catch {
+        // Auto-save failed — post shown locally only
+        setDraftSaved(false);
+      }
+
       setPostGenerated(true);
       addMessageToAgent('linage', {
         sender: 'agent',
-        text: 'Post redigido! Quer marcar como concluído ou tem uma visão diferente para apresentar?',
+        text: 'Post redigido e salvo como rascunho! Quer ajustar algo antes de publicar?',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       });
     } catch {
       setGeneratedPostContent('Erro ao gerar o post. Tente novamente.');
+      setShowPostGenerator(false);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleSavePost = async (status) => {
+  const handleCompletePost = async () => {
     const token = await getToken();
-    const newPost = {
-      id: 'post_' + Date.now(),
-      title: generatedPostTitle,
-      content: generatedPostContent,
-      draft: status === 'draft',
-      agentId: 'linage',
-      createdAt: new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }),
-    };
-
     try {
       await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          id: newPost.id,
-          title: newPost.title,
-          content: newPost.content,
-          agentId: newPost.agentId,
-          status: status === 'draft' ? 'draft' : 'completed',
+          id: activeDraftId,
+          title: generatedPostTitle,
+          content: generatedPostContent,
+          agentId: 'linage',
+          status: 'completed',
         }),
       });
-      addPost(newPost);
+      updatePost(activeDraftId, { draft: false, chatHistory: [] });
     } catch {
-      alert('Erro ao salvar o post. Tente novamente.');
+      alert('Erro ao salvar. Tente novamente.');
       return;
     }
 
+    resetAgentHistory('linage');
+    setActiveDraftId(null);
+    setPostGenerated(false);
+    setSuggestPost(false);
+    setDraftSaved(false);
     setShowPostGenerator(false);
+    setGeneratedPostTitle('');
+    setGeneratedPostContent('');
     navigate('/posts');
+  };
+
+  const handleDeleteDraft = async () => {
+    if (!window.confirm('Excluir este rascunho? O chat também será encerrado.')) return;
+
+    const token = await getToken();
+    try {
+      if (activeDraftId) {
+        await fetch(`/api/posts/${activeDraftId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setPosts(posts.filter(p => p.id !== activeDraftId));
+      }
+    } catch {}
+
+    resetAgentHistory('linage');
+    setActiveDraftId(null);
+    setPostGenerated(false);
+    setSuggestPost(false);
+    setPendingRevision(null);
+    setDraftSaved(false);
+    setShowPostGenerator(false);
+    setGeneratedPostTitle('');
+    setGeneratedPostContent('');
+  };
+
+  const handleNewConversation = () => {
+    if (!window.confirm('Iniciar nova conversa? O rascunho atual permanece salvo em Meus Posts.')) return;
+    resetAgentHistory('linage');
+    setActiveDraftId(null);
+    setPostGenerated(false);
+    setPendingRevision(null);
+    setSuggestPost(false);
+    setDraftSaved(false);
+    setShowPostGenerator(false);
+    setGeneratedPostTitle('');
+    setGeneratedPostContent('');
   };
 
   const handleApplyRevision = () => {
     if (!pendingRevision) return;
     setGeneratedPostContent(pendingRevision);
+    if (activeDraftId) {
+      updatePost(activeDraftId, { content: pendingRevision });
+    }
     setPendingRevision(null);
     if (!showPostGenerator) setShowPostGenerator(true);
     addMessageToAgent('linage', {
@@ -214,17 +326,6 @@ function Advisor() {
       text: 'Alterações aplicadas ao post.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     });
-  };
-
-  const handleNewConversation = () => {
-    if (!window.confirm('Iniciar nova conversa? O rascunho atual será perdido se não foi salvo.')) return;
-    resetAgentHistory('linage');
-    setPostGenerated(false);
-    setPendingRevision(null);
-    setSuggestPost(false);
-    setShowPostGenerator(false);
-    setGeneratedPostTitle('');
-    setGeneratedPostContent('');
   };
 
   const copyToClipboard = () => {
@@ -243,7 +344,7 @@ function Advisor() {
         <div className="header-text-container">
           <span className="header-subtitle">Advisor Estratégico</span>
           <h1 className="header-title">Fale com Linage</h1>
-          <p className="header-desc">Pergunte qualquer coisa — um tema que ficou entalado, uma dúvida de posicionamento, ou só uma ideia bruta que precisa de ângulo.</p>
+          <p className="header-desc">E aí. Pode jogar qualquer tema — eu transformo em algo que as pessoas vão querer comentar. Do que vamos falar hoje?</p>
         </div>
       </header>
 
@@ -374,11 +475,16 @@ function Advisor() {
             ) : (
               <div className="generator-main-workspace">
                 <header className="generator-header">
-                  <div>
+                  <div className="generator-header-left">
                     <span className="generator-badge" style={{ backgroundColor: AGENT_COLOR + '20', color: AGENT_COLOR }}>
                       Escritório do Linage
                     </span>
                     <h2>Rascunho Redigido</h2>
+                    {draftSaved && (
+                      <span className="draft-saved-indicator">
+                        <Check size={11} /> Rascunho salvo
+                      </span>
+                    )}
                   </div>
                   <button className="generator-close-btn" onClick={() => setShowPostGenerator(false)}>×</button>
                 </header>
@@ -446,12 +552,13 @@ function Advisor() {
                       {copySuccess ? <Check size={14} /> : <FileText size={14} />}
                       <span>{copySuccess ? 'Copiado!' : 'Copiar Texto'}</span>
                     </button>
+                    <button className="delete-draft-btn" onClick={handleDeleteDraft}>
+                      <Trash2 size={13} />
+                      <span>Excluir Rascunho</span>
+                    </button>
                   </div>
                   <div className="generator-actions">
-                    <button className="btn-secondary" onClick={() => handleSavePost('draft')}>
-                      Salvar Rascunho
-                    </button>
-                    <button className="btn-primary" style={{ backgroundColor: AGENT_COLOR }} onClick={() => handleSavePost('publish')}>
+                    <button className="btn-primary" style={{ backgroundColor: AGENT_COLOR }} onClick={handleCompletePost}>
                       Post Concluído
                     </button>
                   </div>
