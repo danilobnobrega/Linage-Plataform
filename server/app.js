@@ -293,10 +293,37 @@ app.post('/api/agent/chat', requireAuth, async (req, res) => {
   try {
     const { messages } = req.body;
     const user = await getUser(req.userId);
+
+    // Fetch real-time news for the latest user message
+    let newsSection = '';
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')?.content || '';
+    if (lastUserMsg && TAVILY_KEY) {
+      try {
+        const tavilyRes = await fetch('https://api.tavily.com/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            api_key: TAVILY_KEY,
+            query: `${lastUserMsg} mercado financeiro`,
+            search_depth: 'basic',
+            max_results: 3,
+            include_answer: false,
+          }),
+        });
+        const data = await tavilyRes.json();
+        const headlines = data.results
+          ?.map(r => `• ${r.title}: ${r.content?.slice(0, 220)}`)
+          .join('\n') || '';
+        if (headlines) {
+          newsSection = `\n\nNOTÍCIAS RECENTES (use quando agregar ângulo real à conversa):\n${headlines}`;
+        }
+      } catch {}
+    }
+
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
-      system: buildSystem(LINAGE_SYSTEM_PROMPT + LINAGE_CHAT_GUARD, user?.instructions),
+      system: buildSystem(LINAGE_SYSTEM_PROMPT + LINAGE_CHAT_GUARD + newsSection, user?.instructions),
       messages,
     });
     const raw = response.content[0].text;
