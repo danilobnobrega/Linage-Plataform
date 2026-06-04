@@ -52,7 +52,8 @@ async function requireAuth(req, res, next) {
     const payload = await clerk.verifyToken(token);
     req.userId = payload.sub;
     next();
-  } catch {
+  } catch (err) {
+    console.error('[auth] verifyToken falhou:', err.message);
     res.status(401).json({ error: 'Unauthorized' });
   }
 }
