@@ -69,7 +69,7 @@ function Posts() {
       await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ id: post.id, title: post.title, content: post.content, agentId: post.agentId, status: newDraft ? 'draft' : 'published' }),
+        body: JSON.stringify({ id: post.id, title: post.title, content: post.content, agentId: post.agentId, status: newDraft ? 'draft' : 'completed' }),
       });
     } catch {}
   };
@@ -97,14 +97,14 @@ function Posts() {
       await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ id: selectedPost.id, title: editTitle, content: editContent, agentId: selectedPost.agentId, status: selectedPost.draft ? 'draft' : 'published' }),
+        body: JSON.stringify({ id: selectedPost.id, title: editTitle, content: editContent, agentId: selectedPost.agentId, status: selectedPost.draft ? 'draft' : 'completed' }),
       });
     } catch {}
   };
 
   const filteredPosts = posts.filter(post => {
     if (activeTab === 'drafts') return post.draft;
-    if (activeTab === 'published') return !post.draft;
+    if (activeTab === 'completed') return !post.draft;
     return true;
   });
 
@@ -148,8 +148,8 @@ function Posts() {
             Rascunhos ({posts.filter(p => p.draft).length})
           </button>
           <button
-            className={`tab-filter-btn ${activeTab === 'published' ? 'active' : ''}`}
-            onClick={() => setActiveTab('published')}
+            className={`tab-filter-btn ${activeTab === 'completed' ? 'active' : ''}`}
+            onClick={() => setActiveTab('completed')}
           >
             Concluídos ({posts.filter(p => !p.draft).length})
           </button>
@@ -197,7 +197,7 @@ function Posts() {
                       {post.content.replace(/[*#]/g, '').substring(0, 120)}...
                     </p>
                     <div className="post-selector-actions">
-                      <span className={`badge-indicator ${post.draft ? 'draft' : 'published'}`}>
+                      <span className={`badge-indicator ${post.draft ? 'draft' : 'completed'}`}>
                         {post.draft ? 'Rascunho' : 'Concluído'}
                       </span>
                       <div className="selector-btn-group">
@@ -230,7 +230,7 @@ function Posts() {
             <div className="glass-card preview-workspace-card">
               <header className="workspace-header-actions">
                 <div className="workspace-badge-and-info">
-                  <span className={`status-pill ${selectedPost.draft ? 'draft' : 'published'}`}>
+                  <span className={`status-pill ${selectedPost.draft ? 'draft' : 'completed'}`}>
                     {selectedPost.draft ? 'Rascunho Pendente' : 'Concluído'}
                   </span>
                   <button className="status-toggle-link" onClick={(e) => handleTogglePublish(selectedPost, e)}>

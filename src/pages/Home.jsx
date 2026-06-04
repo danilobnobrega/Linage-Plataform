@@ -143,8 +143,8 @@ function Home() {
             {posts.slice(-3).reverse().map((post) => (
               <div key={post.id} className="post-row-card">
                 <div className="post-row-left">
-                  <div className={`status-badge-indicator ${post.draft ? 'draft' : 'published'}`}>
-                    {post.draft ? 'Rascunho' : 'Publicado'}
+                  <div className={`status-badge-indicator ${post.draft ? 'draft' : 'completed'}`}>
+                    {post.draft ? 'Rascunho' : 'Concluído'}
                   </div>
                   <div className="post-meta-details">
                     <h4 className="post-row-title">{post.title}</h4>

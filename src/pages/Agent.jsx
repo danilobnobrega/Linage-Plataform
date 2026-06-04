@@ -209,7 +209,7 @@ function Agent() {
           title: newPost.title,
           content: newPost.content,
           agentId: newPost.agentId,
-          status: status === 'draft' ? 'draft' : 'published',
+          status: status === 'draft' ? 'draft' : 'completed',
         }),
       });
       addPost(newPost);

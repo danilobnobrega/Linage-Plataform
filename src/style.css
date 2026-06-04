@@ -1757,7 +1757,7 @@ body {
   color: var(--accent);
 }
 
-.status-badge-indicator.published {
+.status-badge-indicator.completed {
   background-color: rgba(16, 185, 129, 0.1);
   color: var(--success);
 }
@@ -2733,7 +2733,7 @@ body {
   color: var(--accent);
 }
 
-.badge-indicator.published {
+.badge-indicator.completed {
   background-color: rgba(16, 185, 129, 0.1);
   color: var(--success);
 }
@@ -2828,7 +2828,7 @@ body {
   color: var(--accent);
 }
 
-.status-pill.published {
+.status-pill.completed {
   background-color: rgba(16, 185, 129, 0.15);
   color: var(--success);
 }
