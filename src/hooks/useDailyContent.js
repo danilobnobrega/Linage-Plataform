@@ -28,13 +28,19 @@ export function useDailyContent(fallbackQuote, fallbackSuggestions) {
         const res = await fetch('/api/daily-content', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) return;
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error('[daily-content] erro na API:', res.status, errText);
+          return;
+        }
         const data = await res.json();
         if (data.quote) {
           localStorage.setItem(key, JSON.stringify(data));
           setContent(data);
         }
-      } catch {}
+      } catch (err) {
+        console.error('[daily-content] falha na requisição:', err);
+      }
     }
 
     fetchContent();

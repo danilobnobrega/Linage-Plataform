@@ -217,7 +217,8 @@ app.post('/api/stripe/webhook', async (req, res) => {
     if (session.mode === 'subscription') {
       const subscription = await stripe.subscriptions.retrieve(session.subscription);
       const priceId = subscription.items.data[0].price.id;
-      const plan = priceId === process.env.STRIPE_PRICE_ID_PRO_MONTHLY ? 'pro' : 'starter';
+      const isProPlan = priceId === process.env.STRIPE_PRICE_ID_PRO_MONTHLY || priceId === process.env.STRIPE_PRICE_ID_PRO_ANNUAL;
+      const plan = isProPlan ? 'pro' : 'starter';
       await updateUserPlan(userId, plan, session.customer, session.subscription);
     } else if (session.mode === 'payment') {
       const creditsToAdd = parseInt(session.metadata?.credits || '0');

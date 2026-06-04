@@ -66,7 +66,7 @@ function Posts() {
     if (selectedPost?.id === post.id) setSelectedPost({ ...selectedPost, draft: newDraft });
     try {
       const token = await getToken();
-      fetch('/api/posts', {
+      await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id: post.id, title: post.title, content: post.content, agentId: post.agentId, status: newDraft ? 'draft' : 'published' }),
@@ -94,7 +94,7 @@ function Posts() {
     setIsEditing(false);
     try {
       const token = await getToken();
-      fetch('/api/posts', {
+      await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id: selectedPost.id, title: editTitle, content: editContent, agentId: selectedPost.agentId, status: selectedPost.draft ? 'draft' : 'published' }),

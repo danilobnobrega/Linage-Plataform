@@ -5000,4 +5000,14 @@ body {
   cursor: pointer;
   transition: opacity 0.15s;
 }
+
+.animate-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.generator-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .dismiss-revision-btn:hover { opacity: 0.7; }

@@ -56,7 +56,7 @@ export async function updateUserPlan(id, plan, stripeCustomerId, stripeSubscript
   await sql`
     UPDATE users SET
       plan = ${plan},
-      credits = ${planCredits[plan] ?? 2000},
+      credits = GREATEST(${planCredits[plan] ?? 0}, credits),
       credits_reset_at = NOW(),
       stripe_customer_id = ${stripeCustomerId},
       stripe_subscription_id = ${stripeSubscriptionId}
