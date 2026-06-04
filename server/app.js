@@ -367,7 +367,7 @@ app.post('/api/agent/generate-post', requireAuth, async (req, res) => {
     const userContent = `Conversa:\n${conversationContext}${newsContext ? `\n\nNotícias recentes sobre o tema:\n${newsContext}` : ''}\n\nEscreva o post agora.`;
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 2048,
       system: buildSystem(base, user?.instructions),
       messages: [{ role: 'user', content: userContent }],
     });

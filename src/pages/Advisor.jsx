@@ -201,6 +201,7 @@ const [isGenerating, setIsGenerating] = useState(false);
         body: JSON.stringify({ conversationContext, newsContext }),
       });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao gerar o post');
       if (data.credits !== undefined) useStore.setState({ credits: data.credits });
 
       const raw = data.text || '';
