@@ -7,7 +7,6 @@ import {
   Sparkles,
   Check,
   FileText,
-  FileCheck,
   RefreshCw,
   Trash2,
 } from 'lucide-react';
@@ -41,8 +40,7 @@ function Advisor() {
   const [showPostGenerator, setShowPostGenerator] = useState(false);
   const [generatedPostTitle, setGeneratedPostTitle] = useState('');
   const [generatedPostContent, setGeneratedPostContent] = useState('');
-  const [editorMode, setEditorMode] = useState('raw');
-  const [isGenerating, setIsGenerating] = useState(false);
+const [isGenerating, setIsGenerating] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [postGenerated, setPostGenerated] = useState(false);
   const [pendingRevision, setPendingRevision] = useState(null);
@@ -495,60 +493,21 @@ function Advisor() {
                 </header>
 
                 <div className="generator-editor-area">
-                  <div className="editor-tabs-bar">
-                    <button
-                      className={`editor-tab-btn ${editorMode === 'raw' ? 'active' : ''}`}
-                      onClick={() => setEditorMode('raw')}
-                    >
-                      <FileText size={14} />
-                      <span>Rascunho Raw</span>
-                    </button>
-                    <button
-                      className={`editor-tab-btn ${editorMode === 'preview' ? 'active' : ''}`}
-                      onClick={() => setEditorMode('preview')}
-                    >
-                      <FileCheck size={14} />
-                      <span>Visualização de Feed</span>
-                    </button>
+                  <div className="editor-input-container">
+                    <input
+                      type="text"
+                      value={generatedPostTitle}
+                      onChange={(e) => setGeneratedPostTitle(e.target.value)}
+                      className="post-editor-title-input"
+                      placeholder="Título do Post..."
+                    />
+                    <textarea
+                      value={generatedPostContent}
+                      onChange={(e) => setGeneratedPostContent(e.target.value)}
+                      className="post-editor-textarea"
+                      placeholder="Conteúdo do post..."
+                    />
                   </div>
-
-                  {editorMode === 'raw' ? (
-                    <div className="editor-input-container">
-                      <input
-                        type="text"
-                        value={generatedPostTitle}
-                        onChange={(e) => setGeneratedPostTitle(e.target.value)}
-                        className="post-editor-title-input"
-                        placeholder="Título do Post..."
-                      />
-                      <textarea
-                        value={generatedPostContent}
-                        onChange={(e) => setGeneratedPostContent(e.target.value)}
-                        className="post-editor-textarea"
-                        placeholder="Conteúdo do post..."
-                      />
-                    </div>
-                  ) : (
-                    <div className="social-mock-preview-container">
-                      <div className="social-preview-card">
-                        <div className="social-card-header">
-                          <div className="mock-avatar" style={{ backgroundColor: AGENT_COLOR }}>L</div>
-                          <div>
-                            <h4 className="mock-user-name">{user.name || 'Especialista Financeiro'}</h4>
-                            <p className="mock-user-headline">Advisory Privado | Insights Financeiros Descontraídos & Substância</p>
-                            <p className="mock-post-time">Agora • 🌐</p>
-                          </div>
-                        </div>
-                        <div className="mock-card-body">
-                          <p style={{ whiteSpace: 'pre-line' }}>{generatedPostContent}</p>
-                        </div>
-                        <div className="mock-card-footer">
-                          <span>👍 42 Reações</span>
-                          <span>💬 12 Comentários</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <footer className="generator-footer-bar">
