@@ -36,8 +36,14 @@ export async function initDb() {
 }
 
 export async function syncUser({ id, email }) {
-  const existing = await sql`SELECT id, plan, credits, avulso_credits, nickname, instructions FROM users WHERE id = ${id}`;
-  if (existing.length > 0) return existing[0];
+  const byId = await sql`SELECT id, plan, credits, avulso_credits, nickname, instructions FROM users WHERE id = ${id}`;
+  if (byId.length > 0) return byId[0];
+
+  if (email) {
+    const byEmail = await sql`SELECT id, plan, credits, avulso_credits, nickname, instructions FROM users WHERE email = ${email}`;
+    if (byEmail.length > 0) return byEmail[0];
+  }
+
   const [user] = await sql`
     INSERT INTO users (id, email) VALUES (${id}, ${email})
     RETURNING id, plan, credits, avulso_credits, nickname, instructions
