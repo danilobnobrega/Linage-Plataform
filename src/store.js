@@ -74,6 +74,10 @@ const useStore = create(persist(
           a.id === agentId ? { ...a, history: [] } : a
         )
       })),
+    setDailyContent: (quote, suggestions) =>
+      set((s) => ({
+        user: { ...s.user, dailyQuote: quote, suggestions }
+      })),
     // Advisor messages (store separate array)
     advisorHistory: [],
     addAdvisorMessage: (msg) =>

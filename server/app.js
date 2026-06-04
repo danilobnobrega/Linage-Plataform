@@ -475,12 +475,16 @@ app.get('/api/daily-content', requireAuth, async (req, res) => {
     });
 
     const text = response.content[0].text;
+    console.log('[daily-content] resposta da IA:', text.substring(0, 300));
     const get = (label) => text.match(new RegExp(`${label}:\\s*(.+)`))?.[1]?.trim() || '';
 
     const quote = get('PERSPECTIVA');
     const suggestions = [get('PAUTA_1'), get('PAUTA_2'), get('PAUTA_3')];
 
-    if (!quote) return res.status(500).json({ error: 'Unexpected response format' });
+    if (!quote) {
+      console.error('[daily-content] formato inesperado, texto completo:', text);
+      return res.status(500).json({ error: 'Unexpected response format' });
+    }
 
     res.json({ quote, suggestions });
   } catch (err) {

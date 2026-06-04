@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import useStore from '../store';
 
 const todayKey = () => `linage_daily_${new Date().toISOString().split('T')[0]}`;
 
 export function useDailyContent(fallbackQuote, fallbackSuggestions) {
   const key = todayKey();
   const { getToken } = useAuth();
+  const setDailyContent = useStore((s) => s.setDailyContent);
 
   const [content, setContent] = useState(() => {
     try {
@@ -37,6 +39,7 @@ export function useDailyContent(fallbackQuote, fallbackSuggestions) {
         if (data.quote) {
           localStorage.setItem(key, JSON.stringify(data));
           setContent(data);
+          setDailyContent(data.quote, data.suggestions);
         }
       } catch (err) {
         console.error('[daily-content] falha na requisição:', err);
