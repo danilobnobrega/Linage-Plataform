@@ -359,6 +359,7 @@ const [isGenerating, setIsGenerating] = useState(false);
         <div className="header-text-container">
           <span className="header-subtitle">Copywriter Estratégico</span>
           <h1 className="header-title">Fale com Linage</h1>
+          <p className="header-desc">Você dá as ordens. Eu faço a mágica, mas pode ficar com a fama.</p>
         </div>
       </header>
 
