@@ -26,12 +26,13 @@ const AGENT_COLOR = '#f59e0b';
 function Advisor() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
-  const { agents, posts, addPost, credits, addMessageToAgent, resetAgentHistory, user } = useStore();
+  const { agents, addPost, credits, addMessageToAgent, resetAgentHistory, user } = useStore();
 
   const agent = agents.find(a => a.id === 'linage');
 
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [suggestPost, setSuggestPost] = useState(false);
   const [showPostGenerator, setShowPostGenerator] = useState(false);
   const [generatedPostTitle, setGeneratedPostTitle] = useState('');
   const [generatedPostContent, setGeneratedPostContent] = useState('');
@@ -46,11 +47,13 @@ function Advisor() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [agent?.history, isTyping]);
+  }, [agent?.history, isTyping, suggestPost]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputText.trim() || isTyping) return;
+
+    setSuggestPost(false);
 
     const userMessage = {
       sender: 'user',
@@ -106,6 +109,8 @@ function Advisor() {
           text: data.text || 'Algo deu errado. Tente novamente.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         });
+
+        if (data.suggestPost) setSuggestPost(true);
       }
     } catch {
       addMessageToAgent('linage', {
@@ -119,6 +124,8 @@ function Advisor() {
   };
 
   const handleTriggerGenerator = async () => {
+    setSuggestPost(false);
+
     if (credits < 450) {
       alert('Saldo insuficiente! São necessários 450 créditos para gerar um post. Recarregue em Planos & Créditos.');
       return;
@@ -214,6 +221,7 @@ function Advisor() {
     resetAgentHistory('linage');
     setPostGenerated(false);
     setPendingRevision(null);
+    setSuggestPost(false);
     setShowPostGenerator(false);
     setGeneratedPostTitle('');
     setGeneratedPostContent('');
@@ -241,38 +249,29 @@ function Advisor() {
 
       <div className="advisor-full">
         <div className="advisor-chat-card glass-card">
-          <div className="chat-card-header">
-            <div className="chat-header-agent-info">
-              <div className="online-indicator-dot"></div>
-              <div>
-                <h3>Sessão Ativa</h3>
-                <p>Conversando com Linage</p>
+          {postGenerated && (
+            <div className="chat-card-header">
+              <div className="chat-header-agent-info">
+                <div className="online-indicator-dot"></div>
+                <div>
+                  <h3>Sessão Ativa</h3>
+                  <p>Conversando com Linage</p>
+                </div>
               </div>
-            </div>
-            <div className="chat-header-actions">
-              {postGenerated && !showPostGenerator && (
-                <button className="view-draft-btn" onClick={() => setShowPostGenerator(true)}>
-                  <FileText size={14} />
-                  <span>Ver rascunho</span>
-                </button>
-              )}
-              {postGenerated ? (
+              <div className="chat-header-actions">
+                {!showPostGenerator && (
+                  <button className="view-draft-btn" onClick={() => setShowPostGenerator(true)}>
+                    <FileText size={14} />
+                    <span>Ver rascunho</span>
+                  </button>
+                )}
                 <button className="generate-post-trigger-btn generate-post-trigger-btn--secondary" onClick={handleNewConversation}>
                   <RefreshCw size={15} />
                   <span>Nova Conversa</span>
                 </button>
-              ) : (
-                <button
-                  className="generate-post-trigger-btn"
-                  onClick={handleTriggerGenerator}
-                  disabled={isGenerating}
-                >
-                  <Sparkles size={16} />
-                  <span>Transformar em Post (-450 cr)</span>
-                </button>
-              )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="advisor-chat-messages">
             <div className="advisor-message-row linage">
@@ -316,6 +315,24 @@ function Advisor() {
                 </div>
               </div>
             )}
+
+            {suggestPost && !isTyping && (
+              <div className="advisor-message-row linage">
+                <div className="linage-avatar-icon">L</div>
+                <div className="advisor-msg-bubble post-offer-bubble">
+                  <div className="post-offer-actions">
+                    <button className="post-offer-confirm" onClick={handleTriggerGenerator}>
+                      <Sparkles size={14} />
+                      Sim, gera o post <span className="post-offer-cost">−450 cr</span>
+                    </button>
+                    <button className="post-offer-decline" onClick={() => setSuggestPost(false)}>
+                      Agora não
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div ref={chatEndRef} />
           </div>
 

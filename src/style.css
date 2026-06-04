@@ -5014,6 +5014,61 @@ body {
   transition: opacity 0.15s;
 }
 
+.post-offer-bubble {
+  gap: 12px;
+}
+
+.post-offer-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.post-offer-confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 50px;
+  border: none;
+  background: var(--accent);
+  color: var(--bg-primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.2);
+}
+
+.post-offer-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 255, 136, 0.28);
+}
+
+.post-offer-cost {
+  opacity: 0.75;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.post-offer-decline {
+  padding: 7px 14px;
+  border-radius: 50px;
+  border: 1px solid var(--border-primary);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.post-offer-decline:hover {
+  border-color: var(--text-muted);
+  color: var(--text-secondary);
+}
+
 .animate-pulse {
   animation: pulse-glow 2s ease-in-out infinite;
 }

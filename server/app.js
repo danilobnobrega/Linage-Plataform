@@ -299,7 +299,10 @@ app.post('/api/agent/chat', requireAuth, async (req, res) => {
       system: buildSystem(LINAGE_SYSTEM_PROMPT + LINAGE_CHAT_GUARD, user?.instructions),
       messages,
     });
-    res.json({ text: response.content[0].text });
+    const raw = response.content[0].text;
+    const suggestPost = raw.includes('[SUGERIR_POST]');
+    const text = raw.replace('[SUGERIR_POST]', '').trim();
+    res.json({ text, suggestPost });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
