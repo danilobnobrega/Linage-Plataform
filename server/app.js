@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClerkClient, verifyToken } from '@clerk/backend';
-import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, getPosts, savePost, deletePost, updateUserSettings, sql } from './db.js';
+import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, addAvulsoCredits, getPosts, savePost, deletePost, updateUserSettings, sql } from './db.js';
 import { LINAGE_SYSTEM_PROMPT, LINAGE_CHAT_GUARD, linagePostReviewPrompt } from './prompts.js';
 
 const app = express();
@@ -230,8 +230,7 @@ app.post('/api/stripe/webhook', async (req, res) => {
     } else if (session.mode === 'payment') {
       const creditsToAdd = parseInt(session.metadata?.credits || '0');
       if (creditsToAdd > 0) {
-        const user = await getUser(userId);
-        if (user) await updateUserCredits(userId, user.credits + creditsToAdd);
+        await addAvulsoCredits(userId, creditsToAdd);
       }
     }
   }
@@ -239,9 +238,11 @@ app.post('/api/stripe/webhook', async (req, res) => {
   if (event.type === 'invoice.payment_succeeded') {
     const invoice = event.data.object;
     if (invoice.billing_reason === 'subscription_cycle' && invoice.subscription) {
-      const users = await sql`SELECT id, plan FROM users WHERE stripe_subscription_id = ${invoice.subscription}`;
+      const users = await sql`SELECT id, plan, avulso_credits FROM users WHERE stripe_subscription_id = ${invoice.subscription}`;
       if (users[0]) {
-        await updateUserCredits(users[0].id, PLAN_CREDITS[users[0].plan] ?? 2000);
+        const planCredits = PLAN_CREDITS[users[0].plan] ?? 0;
+        const avulso = users[0].avulso_credits ?? 0;
+        await updateUserCredits(users[0].id, planCredits + avulso);
       }
     }
   }

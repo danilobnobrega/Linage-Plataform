@@ -17,6 +17,7 @@ export async function initDb() {
   `;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname TEXT NOT NULL DEFAULT ''`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS instructions TEXT NOT NULL DEFAULT ''`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avulso_credits INTEGER NOT NULL DEFAULT 0`;
   await sql`
     CREATE TABLE IF NOT EXISTS posts (
       id TEXT PRIMARY KEY,
@@ -33,11 +34,11 @@ export async function initDb() {
 }
 
 export async function syncUser({ id, email }) {
-  const existing = await sql`SELECT id, plan, credits, nickname, instructions FROM users WHERE id = ${id}`;
+  const existing = await sql`SELECT id, plan, credits, avulso_credits, nickname, instructions FROM users WHERE id = ${id}`;
   if (existing.length > 0) return existing[0];
   const [user] = await sql`
     INSERT INTO users (id, email) VALUES (${id}, ${email})
-    RETURNING id, plan, credits, nickname, instructions
+    RETURNING id, plan, credits, avulso_credits, nickname, instructions
   `;
   return user;
 }
@@ -56,12 +57,16 @@ export async function updateUserPlan(id, plan, stripeCustomerId, stripeSubscript
   await sql`
     UPDATE users SET
       plan = ${plan},
-      credits = GREATEST(${planCredits[plan] ?? 0}, credits),
+      credits = ${planCredits[plan] ?? 0} + avulso_credits,
       credits_reset_at = NOW(),
       stripe_customer_id = ${stripeCustomerId},
       stripe_subscription_id = ${stripeSubscriptionId}
     WHERE id = ${id}
   `;
+}
+
+export async function addAvulsoCredits(id, amount) {
+  await sql`UPDATE users SET credits = credits + ${amount}, avulso_credits = avulso_credits + ${amount} WHERE id = ${id}`;
 }
 
 export async function getPosts(userId) {

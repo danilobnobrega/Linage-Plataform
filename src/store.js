@@ -34,6 +34,7 @@ const useStore = create(persist(
     setDbUser: (u) => set((s) => ({
       dbUser: u,
       credits: u?.credits ?? 0,
+      avulsoCredits: u?.avulso_credits ?? 0,
       user: {
         ...s.user,
         plan: u?.plan ?? s.user.plan,
@@ -43,6 +44,7 @@ const useStore = create(persist(
     })),
     // Credit balance (local mirror of dbUser.credits)
     credits: 0,
+    avulsoCredits: 0,
     addCredits: (amt) => set((s) => ({ credits: s.credits + amt })),
     // Agents definitions
     agents: [

@@ -51,9 +51,9 @@ export const PLANS = [
 ];
 
 const CREDIT_PACKS = [
-  { amount: 900,  price: 'R$ 49',  unitAmount: 4900 },
-  { amount: 1800, price: 'R$ 99',  unitAmount: 9900 },
-  { amount: 2700, price: 'R$ 139', unitAmount: 13900 },
+  { amount: 900,  price: 'R$ 59',  unitAmount: 5900 },
+  { amount: 1800, price: 'R$ 99',  unitAmount: 9900, popular: true },
+  { amount: 3600, price: 'R$ 179', unitAmount: 17900 },
 ];
 
 function Credits() {
@@ -195,7 +195,7 @@ function Credits() {
       <section className="credits-section">
         <h2 className="credits-section-title">Créditos Avulsos</h2>
         <p className="credits-section-desc">
-          Sem troca de plano. Os créditos são adicionados diretamente ao seu saldo.
+          Sem troca de plano. Os créditos avulsos acumulam e nunca expiram — ao contrário dos créditos do plano, que no início de cada ciclo voltam ao limite do seu plano.
         </p>
         <div className="packs-grid">
           {CREDIT_PACKS.map((pack) => (

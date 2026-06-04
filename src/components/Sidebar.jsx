@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 function Sidebar() {
-  const { user, credits } = useStore();
+  const { user, credits, avulsoCredits } = useStore();
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const { user: clerkUser } = useUser();
@@ -30,7 +30,10 @@ function Sidebar() {
   const firstName = user.name.replace(/,.*$/, '').trim().split(' ')[0];
   const isProPlan = user.plan === 'pro';
   const PLAN_CREDITS = { free: 1350, starter: 4500, pro: 9000 };
-  const planMax = PLAN_CREDITS[user.plan] || 2000;
+  const planMax = PLAN_CREDITS[user.plan] || 1350;
+  const planCreditsRemaining = Math.max(0, credits - avulsoCredits);
+  const hasPlanCredits = planCreditsRemaining > 0;
+  const hasAvulso = avulsoCredits > 0;
 
   useEffect(() => {
     const handler = (e) => {
@@ -84,15 +87,26 @@ function Sidebar() {
               <span className="credits-title">Saldo de Créditos</span>
             </div>
           </div>
-          <div className="credits-amount">
-            {credits} <span className="credits-unit">créditos</span>
-          </div>
-          <div className="credits-bar-container">
-            <div
-              className="credits-bar"
-              style={{ width: `${Math.min(100, (credits / planMax) * 100)}%` }}
-            />
-          </div>
+          {hasPlanCredits && (
+            <div className="credits-amount">
+              {planCreditsRemaining.toLocaleString('pt-BR')}
+              <span className="credits-unit"> / {planMax.toLocaleString('pt-BR')} cr</span>
+            </div>
+          )}
+          {hasAvulso && (
+            <div className={`credits-avulso${hasPlanCredits ? ' credits-avulso--below' : ''}`}>
+              {avulsoCredits.toLocaleString('pt-BR')}
+              <span className="credits-unit"> cr avulsos</span>
+            </div>
+          )}
+          {hasPlanCredits && (
+            <div className="credits-bar-container">
+              <div
+                className="credits-bar"
+                style={{ width: `${Math.min(100, (planCreditsRemaining / planMax) * 100)}%` }}
+              />
+            </div>
+          )}
           <button className="credits-recharge-link" onClick={() => navigate('/credits')}>
             + Recarregar
           </button>

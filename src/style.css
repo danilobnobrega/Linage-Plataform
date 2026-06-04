@@ -533,6 +533,19 @@ body {
   box-shadow: 0 0 8px rgba(0, 255, 136, 0.5), 0 0 2px rgba(0, 255, 136, 0.9);
 }
 
+.credits-avulso {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.credits-avulso--below {
+  margin-top: 2px;
+  margin-bottom: 10px;
+}
+
 .credits-recharge-link {
   background: none;
   border: none;
