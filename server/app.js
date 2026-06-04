@@ -3,7 +3,7 @@ import cors from 'cors';
 import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import Anthropic from '@anthropic-ai/sdk';
-import { createClerkClient } from '@clerk/backend';
+import { createClerkClient, verifyToken } from '@clerk/backend';
 import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, getPosts, savePost, deletePost, updateUserSettings, sql } from './db.js';
 import { LINAGE_SYSTEM_PROMPT, LINAGE_CHAT_GUARD, linagePostReviewPrompt } from './prompts.js';
 
@@ -49,7 +49,7 @@ async function requireAuth(req, res, next) {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
-    const payload = await clerk.verifyToken(token);
+    const payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
     req.userId = payload.sub;
     next();
   } catch (err) {
