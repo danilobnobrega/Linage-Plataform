@@ -64,7 +64,7 @@ function AppContent() {
               <Routes>
                 <Route path="/" element={<RootRedirect />} />
                 <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                <Route path="/advisor" element={<ProtectedRoute><Advisor /></ProtectedRoute>} />
+                <Route path="/chat" element={<ProtectedRoute><Advisor /></ProtectedRoute>} />
                 <Route path="/posts" element={<ProtectedRoute><Posts /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/credits" element={<ProtectedRoute><Credits /></ProtectedRoute>} />

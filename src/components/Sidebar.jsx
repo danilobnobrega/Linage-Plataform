@@ -66,7 +66,7 @@ function Sidebar() {
             <Home size={18} />
             <span>Home</span>
           </NavLink>
-          <NavLink to="/advisor" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/chat" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <Sparkles size={18} className="advisor-spark" />
             <span>Falar com Linage</span>
           </NavLink>
