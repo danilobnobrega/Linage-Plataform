@@ -396,18 +396,7 @@ function Advisor() {
               <div className="linage-avatar-icon">L</div>
               <div className="advisor-msg-bubble">
                 <p>E aí! Pode jogar qualquer tema — eu transformo em algo que as pessoas vão querer comentar. Do que vamos falar hoje?</p>
-                <div className="advisor-msg-suggestions">
-                  <button onClick={() => setInputText("Com que frequência devo publicar?")} className="advisor-quick-btn">
-                    Com que frequência publicar?
-                  </button>
-                  <button onClick={() => setInputText("Como estruturo meu posicionamento no LinkedIn?")} className="advisor-quick-btn">
-                    Como estruturo meu posicionamento?
-                  </button>
-                  <button onClick={() => setInputText("Tenho uma ideia de post mas não sei por onde começar.")} className="advisor-quick-btn">
-                    Tenho uma ideia, mas...
-                  </button>
-                </div>
-                <span className="advisor-msg-time">agora</span>
+<span className="advisor-msg-time">agora</span>
               </div>
             </div>
 
