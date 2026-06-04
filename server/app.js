@@ -61,8 +61,13 @@ async function requireAuth(req, res, next) {
 // --- Auth ---
 app.post('/api/auth/sync', requireAuth, async (req, res) => {
   try {
-    const clerkUser = await clerk.users.getUser(req.userId);
-    const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+    let email = '';
+    try {
+      const clerkUser = await clerk.users.getUser(req.userId);
+      email = clerkUser.emailAddresses[0]?.emailAddress || '';
+    } catch (err) {
+      console.error('[auth/sync] clerk.users.getUser falhou:', err.message);
+    }
     const user = await syncUser({ id: req.userId, email });
     res.json(user);
   } catch (err) {
