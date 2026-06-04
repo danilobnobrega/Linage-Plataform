@@ -58,11 +58,12 @@ const useStore = create(persist(
     // Posts collection — each post may carry chatHistory for draft continuity
     posts: [],
     addPost: (post) => set((s) => ({ posts: [...s.posts, post] })),
-    // Preserve local chatHistory when overwriting with DB posts
+    // DB chatHistory is authoritative; fall back to local if DB has none
     setPosts: (newPosts) => set((s) => ({
       posts: newPosts.map(p => {
+        if (p.chatHistory?.length) return p;
         const existing = s.posts.find(ep => ep.id === p.id);
-        return existing?.chatHistory ? { ...p, chatHistory: existing.chatHistory } : p;
+        return existing?.chatHistory?.length ? { ...p, chatHistory: existing.chatHistory } : p;
       })
     })),
     updatePost: (id, updates) =>

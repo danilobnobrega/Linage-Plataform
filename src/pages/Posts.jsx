@@ -37,6 +37,7 @@ function Posts() {
           draft: p.status === 'draft',
           agentId: p.agent_id,
           createdAt: new Date(p.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }),
+          chatHistory: (() => { try { return JSON.parse(p.chat_history || '[]'); } catch { return []; } })(),
         })));
       } catch {}
     }

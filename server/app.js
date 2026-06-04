@@ -90,8 +90,8 @@ app.get('/api/posts', requireAuth, async (req, res) => {
 
 app.post('/api/posts', requireAuth, async (req, res) => {
   try {
-    const { id, title, content, agentId, status } = req.body;
-    const post = await savePost({ id, userId: req.userId, title, content, agentId, status });
+    const { id, title, content, agentId, status, chatHistory } = req.body;
+    const post = await savePost({ id, userId: req.userId, title, content, agentId, status, chatHistory });
     res.json(post);
   } catch (err) {
     res.status(500).json({ error: err.message });

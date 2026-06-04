@@ -33,6 +33,7 @@ export async function initDb() {
     )
   `;
   await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()`;
+  await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS chat_history TEXT NOT NULL DEFAULT '[]'`;
 }
 
 export async function syncUser({ id, email }) {
@@ -81,11 +82,14 @@ export async function getPosts(userId) {
   return sql`SELECT * FROM posts WHERE user_id = ${userId} ORDER BY updated_at DESC`;
 }
 
-export async function savePost({ id, userId, title, content, agentId, status }) {
+export async function savePost({ id, userId, title, content, agentId, status, chatHistory }) {
+  const chatJson = JSON.stringify(chatHistory ?? []);
   const [post] = await sql`
-    INSERT INTO posts (id, user_id, title, content, agent_id, status)
-    VALUES (${id}, ${userId}, ${title}, ${content}, ${agentId}, ${status})
-    ON CONFLICT (id) DO UPDATE SET title = ${title}, content = ${content}, status = ${status}, updated_at = NOW()
+    INSERT INTO posts (id, user_id, title, content, agent_id, status, chat_history)
+    VALUES (${id}, ${userId}, ${title}, ${content}, ${agentId}, ${status}, ${chatJson})
+    ON CONFLICT (id) DO UPDATE SET
+      title = ${title}, content = ${content}, status = ${status},
+      chat_history = ${chatJson}, updated_at = NOW()
     RETURNING *
   `;
   return post;

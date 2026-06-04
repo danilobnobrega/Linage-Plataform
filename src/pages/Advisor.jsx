@@ -78,10 +78,26 @@ function Advisor() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [agent?.history, isTyping, suggestPost]);
 
-  const syncChatHistory = () => {
+  const saveChatToDb = async (token) => {
     if (!activeDraftId) return;
     const latest = useStore.getState().agents.find(a => a.id === 'linage')?.history || [];
+    const post = useStore.getState().posts.find(p => p.id === activeDraftId);
+    if (!post) return;
     updatePost(activeDraftId, { chatHistory: latest });
+    try {
+      await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          id: activeDraftId,
+          title: post.title,
+          content: post.content,
+          agentId: 'linage',
+          status: 'draft',
+          chatHistory: latest,
+        }),
+      });
+    } catch {}
   };
 
   const handleSendMessage = async (e) => {
@@ -148,7 +164,7 @@ function Advisor() {
         if (data.suggestPost) setSuggestPost(true);
       }
 
-      syncChatHistory();
+      await saveChatToDb(token);
     } catch {
       addMessageToAgent('linage', {
         sender: 'agent',
@@ -220,6 +236,7 @@ function Advisor() {
             content: newPost.content,
             agentId: 'linage',
             status: 'draft',
+            chatHistory: newPost.chatHistory,
           }),
         });
         addPost(newPost);
@@ -344,7 +361,7 @@ function Advisor() {
         <div className="header-text-container">
           <span className="header-subtitle">Advisor Estratégico</span>
           <h1 className="header-title">Fale com Linage</h1>
-          <p className="header-desc">E aí. Pode jogar qualquer tema — eu transformo em algo que as pessoas vão querer comentar. Do que vamos falar hoje?</p>
+          <p className="header-desc">E aí! Pode jogar qualquer tema — eu transformo em algo que as pessoas vão querer comentar. Do que vamos falar hoje?</p>
         </div>
       </header>
 
@@ -378,7 +395,7 @@ function Advisor() {
             <div className="advisor-message-row linage">
               <div className="linage-avatar-icon">L</div>
               <div className="advisor-msg-bubble">
-                <p>E aí. Pode jogar qualquer tema — eu transformo em algo que as pessoas vão querer comentar. Do que vamos falar hoje?</p>
+                <p>E aí! Pode jogar qualquer tema — eu transformo em algo que as pessoas vão querer comentar. Do que vamos falar hoje?</p>
                 <div className="advisor-msg-suggestions">
                   <button onClick={() => setInputText("Com que frequência devo publicar?")} className="advisor-quick-btn">
                     Com que frequência publicar?
