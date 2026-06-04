@@ -37,7 +37,7 @@ function Home() {
       text: `Quero criar um conteúdo baseado nesta pauta: "${suggestion}". Como podemos começar?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     });
-    navigate('/agent/linage');
+    navigate('/advisor');
   };
 
   // Pre-configured custom backgrounds for agent quick launcher
@@ -134,7 +134,7 @@ function Home() {
             <PenTool size={36} className="empty-icon animate-bounce" />
             <h3>Ainda silencioso por aqui.</h3>
             <p>Os agentes estão esperando qualquer tema, qualquer notícia, qualquer insight que ficou na cabeça durante a semana.</p>
-            <button className="primary-action-btn magnetic" onClick={() => navigate('/agent/linage')}>
+            <button className="primary-action-btn magnetic" onClick={() => navigate('/advisor')}>
               Conversar com Linage
             </button>
           </div>

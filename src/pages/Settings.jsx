@@ -19,7 +19,7 @@ const SECTIONS = [
 ];
 
 function Settings() {
-  const { user, credits, posts, advisorHistory, notifications, privacy } = useStore();
+  const { user, credits, posts, agents, notifications, privacy } = useStore();
   const { user: clerkUser } = useUser();
   const { getToken } = useAuth();
   const { signOut } = useClerk();
@@ -144,7 +144,8 @@ function Settings() {
 
   const planMax = PLAN_CREDITS[user.plan] || 2000;
   const creditsPercent = Math.min(100, (credits / planMax) * 100);
-  const messagesSent = advisorHistory.filter((m) => m.sender === 'user').length;
+  const linageHistory = agents.find(a => a.id === 'linage')?.history || [];
+  const messagesSent = linageHistory.filter((m) => m.sender === 'user').length;
 
   const saveField = async (field, value) => {
     useStore.setState((s) => ({ user: { ...s.user, [field]: value } }));
