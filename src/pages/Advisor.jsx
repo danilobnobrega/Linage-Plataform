@@ -14,11 +14,11 @@ import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
 import { fetchNewsForTopic } from '../lib/news';
 
 const ADVISOR_PHRASES = [
-  'Qual é a sua dúvida estratégica?',
-  'Pergunte sobre frequência de posts...',
-  'Qual tese editorial quer desenvolver?',
-  'Como posso orquestrar seu conteúdo?',
-  'Sobre o que quer falar hoje?',
+  'Qual tema quer desenvolver hoje?',
+  'Compartilhe sua ideia bruta...',
+  'O que você quer transformar em post?',
+  'Descreva seu ponto de vista...',
+  'Qual conceito quer posicionar?',
 ];
 
 const AGENT_COLOR = '#f59e0b';
@@ -277,7 +277,7 @@ function Advisor() {
             <div className="advisor-message-row linage">
               <div className="linage-avatar-icon">L</div>
               <div className="advisor-msg-bubble">
-                <p>Pode jogar qualquer coisa — uma notícia do dia que você não sabe por onde pegar, uma dúvida de posicionamento, ou só um tema que ficou entalado. A gente vai de lá.</p>
+                <p>E aí. Pode jogar qualquer tema — eu transformo em algo que as pessoas vão querer comentar. Do que vamos falar hoje?</p>
                 <div className="advisor-msg-suggestions">
                   <button onClick={() => setInputText("Com que frequência devo publicar?")} className="advisor-quick-btn">
                     Com que frequência publicar?
