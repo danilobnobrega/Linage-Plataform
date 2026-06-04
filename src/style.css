@@ -2013,6 +2013,7 @@ body {
 /* Typing bubble effect */
 .typing-bubble {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 4px;
   padding: 12px 20px;
@@ -2293,8 +2294,7 @@ body {
 }
 
 .advisor-message-row.user {
-  align-self: flex-end;
-  flex-direction: row-reverse;
+  align-self: flex-start;
 }
 
 .linage-avatar-icon {
