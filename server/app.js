@@ -66,6 +66,7 @@ app.post('/api/auth/sync', requireAuth, async (req, res) => {
     const user = await syncUser({ id: req.userId, email });
     res.json(user);
   } catch (err) {
+    console.error('[auth/sync] erro:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
