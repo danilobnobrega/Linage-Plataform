@@ -15,7 +15,7 @@ import { fetchNewsForTopic } from '../lib/news';
 
 const ADVISOR_PHRASES = [
   'Qual tema quer desenvolver hoje?',
-  'Compartilhe sua ideia bruta...',
+  'Compartilhe sua ideia...',
   'O que você quer transformar em post?',
   'Descreva seu ponto de vista...',
   'Qual conceito quer posicionar?',
