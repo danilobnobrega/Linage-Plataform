@@ -359,7 +359,7 @@ function Advisor() {
           <div className="ai-orb-core"></div>
         </div>
         <div className="header-text-container">
-          <span className="header-subtitle">Advisor Estratégico</span>
+          <span className="header-subtitle">Copywriter Estratégico</span>
           <h1 className="header-title">Fale com Linage</h1>
         </div>
       </header>
