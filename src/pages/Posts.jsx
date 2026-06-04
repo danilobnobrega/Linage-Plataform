@@ -129,7 +129,7 @@ function Posts() {
         <div className="header-text-container">
           <span className="header-subtitle">Histórico Editorial</span>
           <h1 className="header-title">Meus Posts</h1>
-          <p className="header-desc">Acompanhe todos os rascunhos redigidos por seus estrategistas de marca. Edite, copie o rascunho finalizado ou simule o feed.</p>
+          <p className="header-desc">Todos os seus posts em um lugar. Edite, copie ou marque como concluído.</p>
         </div>
       </header>
 
