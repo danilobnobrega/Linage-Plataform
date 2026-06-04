@@ -305,14 +305,14 @@ app.post('/api/agent/chat', requireAuth, async (req, res) => {
           body: JSON.stringify({
             api_key: TAVILY_KEY,
             query: `${lastUserMsg} mercado financeiro`,
-            search_depth: 'basic',
-            max_results: 3,
-            include_answer: false,
+            search_depth: 'advanced',
+            max_results: 7,
+            include_answer: true,
           }),
         });
         const data = await tavilyRes.json();
         const headlines = data.results
-          ?.map(r => `• ${r.title}: ${r.content?.slice(0, 220)}`)
+          ?.map(r => `• ${r.title}: ${r.content?.slice(0, 500)}`)
           .join('\n') || '';
         if (headlines) {
           newsSection = `\n\nNOTÍCIAS RECENTES (use quando agregar ângulo real à conversa):\n${headlines}`;
@@ -412,14 +412,14 @@ app.get('/api/news', requireAuth, async (req, res) => {
       body: JSON.stringify({
         api_key: TAVILY_KEY,
         query: `${topic} mercado financeiro`,
-        search_depth: 'basic',
-        max_results: 5,
-        include_answer: false,
+        search_depth: 'advanced',
+        max_results: 7,
+        include_answer: true,
       }),
     });
     const data = await tavilyRes.json();
     const headlines = data.results
-      ?.map(r => `• ${r.title}: ${r.content?.slice(0, 250)}`)
+      ?.map(r => `• ${r.title}: ${r.content?.slice(0, 500)}`)
       .join('\n') || '';
     res.json({ headlines });
   } catch {
@@ -494,8 +494,8 @@ app.get('/api/daily-content', requireAuth, async (req, res) => {
         body: JSON.stringify({
           api_key: TAVILY_KEY,
           query: 'mercado financeiro investimentos Brasil',
-          search_depth: 'basic',
-          max_results: 5,
+          search_depth: 'advanced',
+          max_results: 7,
           include_answer: false,
         }),
       });
