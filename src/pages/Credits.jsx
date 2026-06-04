@@ -28,7 +28,6 @@ export const PLANS = [
       '4.500 créditos mensais (10 posts)',
       'Pesquisa em tempo real',
       'Refinamento ilimitado por post',
-      'Conversor de Senso Comum',
     ],
   },
   {
@@ -45,7 +44,6 @@ export const PLANS = [
       '9.000 créditos mensais (20 posts)',
       'Pesquisa em tempo real',
       'Refinamento ilimitado por post',
-      'Conversor de Senso Comum',
       'Suporte prioritário',
       'Acesso antecipado a novos recursos',
     ],
