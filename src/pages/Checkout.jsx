@@ -4,6 +4,8 @@ import { useAuth } from '@clerk/clerk-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Check, ArrowLeft, Lock } from 'lucide-react';
+import ThreeBackground from '../components/ThreeBackground';
+import AuthCursor from '../components/AuthCursor';
 import { PLANS } from './Credits';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -11,21 +13,39 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 const stripeAppearance = {
   theme: 'night',
   variables: {
-    colorPrimary: '#aa3bff',
-    colorBackground: '#0d0e14',
-    colorText: '#f3f4f6',
-    colorTextSecondary: '#9ca3af',
+    colorPrimary: '#00ff88',
+    colorBackground: 'rgba(8, 11, 18, 0.0)',
+    colorText: '#e8e6f0',
+    colorTextSecondary: '#8b8897',
     colorTextPlaceholder: '#6b7280',
-    borderRadius: '8px',
-    fontFamily: '"Space Grotesk", system-ui, sans-serif',
+    colorDanger: '#ff4d6a',
+    borderRadius: '10px',
+    fontFamily: "'Space Grotesk', system-ui, sans-serif",
     fontSizeBase: '14px',
   },
   rules: {
-    '.Input': { border: '1px solid #2e303a', boxShadow: 'none', backgroundColor: '#12131a' },
-    '.Input:focus': { border: '1px solid #aa3bff', boxShadow: '0 0 0 2px rgba(170,59,255,0.2)', outline: 'none' },
-    '.Label': { color: '#9ca3af', marginBottom: '6px' },
-    '.Tab': { border: '1px solid #2e303a', backgroundColor: '#12131a' },
-    '.Tab--selected': { border: '1px solid #aa3bff', backgroundColor: '#1a0a2e' },
+    '.Input': {
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      color: '#e8e6f0',
+      boxShadow: 'none',
+    },
+    '.Input:focus': {
+      border: '1px solid #00ff88',
+      boxShadow: '0 0 0 2px rgba(0,255,136,0.15)',
+    },
+    '.Label': { color: '#8b8897', marginBottom: '6px' },
+    '.Tab': {
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      color: '#8b8897',
+    },
+    '.Tab--selected': {
+      background: 'rgba(0,255,136,0.08)',
+      border: '1px solid rgba(0,255,136,0.4)',
+      color: '#00ff88',
+    },
+    '.TabLabel--selected': { color: '#00ff88' },
   },
 };
 
@@ -44,7 +64,6 @@ function CheckoutForm({ planData, billing, getToken }) {
     setLoading(true);
     setError(null);
 
-    // Step 1: validate form
     const { error: submitError } = await elements.submit();
     if (submitError) {
       setError(submitError.message);
@@ -52,12 +71,11 @@ function CheckoutForm({ planData, billing, getToken }) {
       return;
     }
 
-    // Step 2: confirm setup (save card)
     const { setupIntent, error: setupError } = await stripe.confirmSetup({
       elements,
       redirect: 'if_required',
       confirmParams: {
-        return_url: `${window.location.origin}/checkout${window.location.search}&setup_redirect=1`,
+        return_url: `${window.location.origin}/checkout${window.location.search}`,
       },
     });
 
@@ -67,17 +85,12 @@ function CheckoutForm({ planData, billing, getToken }) {
       return;
     }
 
-    // Step 3: create subscription with saved card
     try {
       const token = await getToken();
       const res = await fetch('/api/stripe/activate-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          plan: planData.id,
-          billing,
-          paymentMethodId: setupIntent.payment_method,
-        }),
+        body: JSON.stringify({ plan: planData.id, billing, paymentMethodId: setupIntent.payment_method }),
       });
       const data = await res.json();
 
@@ -85,14 +98,12 @@ function CheckoutForm({ planData, billing, getToken }) {
         navigate('/home?upgrade=success', { replace: true });
         return;
       }
-
       if (data.requiresAction && data.clientSecret) {
         const { error: actionError } = await stripe.handleNextAction({ clientSecret: data.clientSecret });
         if (actionError) { setError(actionError.message); setLoading(false); return; }
         navigate('/home?upgrade=success', { replace: true });
         return;
       }
-
       setError(data.error || 'Erro ao ativar assinatura.');
     } catch {
       setError('Erro de conexão. Tente novamente.');
@@ -102,8 +113,9 @@ function CheckoutForm({ planData, billing, getToken }) {
   }
 
   return (
-    <div style={s.layout}>
-      <div style={s.summary}>
+    <div style={s.card}>
+      <div style={s.cardLeft}>
+        <div style={s.planLabel}>Plano selecionado</div>
         <div style={s.planName}>{planData.name}</div>
         <div style={s.priceRow}>
           <span style={s.priceAmount}>{price}</span>
@@ -116,20 +128,22 @@ function CheckoutForm({ planData, billing, getToken }) {
         <ul style={s.featureList}>
           {planData.features.map((f, i) => (
             <li key={i} style={s.featureItem}>
-              <Check size={14} color="#aa3bff" style={{ flexShrink: 0 }} />
+              <Check size={13} color="#00ff88" style={{ flexShrink: 0 }} />
               <span>{f}</span>
             </li>
           ))}
         </ul>
         <div style={s.secureRow}>
-          <Lock size={12} color="#6b7280" />
+          <Lock size={11} color="#6b7280" />
           <span style={s.secureText}>Pagamento seguro via Stripe</span>
         </div>
       </div>
 
-      <div style={s.formWrap}>
-        <p style={s.formLabel}>Dados do cartão</p>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={s.cardDivider} />
+
+      <div style={s.cardRight}>
+        <div style={s.formTitle}>Dados do pagamento</div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <PaymentElement options={{ layout: 'tabs' }} />
           {error && <p style={s.errorMsg}>{error}</p>}
           <button
@@ -163,8 +177,7 @@ function Checkout() {
       navigate('/credits', { replace: true });
       return;
     }
-
-    async function createSetupIntent() {
+    async function init() {
       try {
         const token = await getToken();
         const res = await fetch('/api/stripe/create-setup-intent', {
@@ -181,89 +194,117 @@ function Checkout() {
         setLoading(false);
       }
     }
-
-    createSetupIntent();
+    init();
   }, []);
 
   if (!planData) return null;
 
   return (
-    <div style={s.page}>
-      <button onClick={() => navigate('/credits')} style={s.backBtn}>
-        <ArrowLeft size={15} />
-        <span>Voltar para planos</span>
-      </button>
-
-      {loading && (
-        <div style={s.centered}>
-          <p style={{ color: '#9ca3af', fontFamily: '"Space Grotesk", sans-serif' }}>
-            Preparando checkout...
-          </p>
-        </div>
-      )}
-
-      {initError && (
-        <div style={s.centered}>
-          <p style={{ color: '#f87171', fontFamily: '"Space Grotesk", sans-serif' }}>{initError}</p>
-          <button onClick={() => navigate('/credits')} style={s.linkBtn}>
-            Voltar para planos
+    <div className="auth-page">
+      <ThreeBackground />
+      <AuthCursor />
+      <div className="auth-content" style={{ gap: 24, width: '100%', maxWidth: 820, padding: '0 16px' }}>
+        <div style={s.header}>
+          <button onClick={() => navigate('/credits')} style={s.backBtn}>
+            <ArrowLeft size={14} />
+            <span>Voltar</span>
           </button>
+          <div className="auth-logo" style={{ fontSize: '1.6rem' }}>
+            <svg width="22" height="21" viewBox="0 0 48 46" fill="none">
+              <path fill="currentColor" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/>
+            </svg>
+            Linage
+          </div>
         </div>
-      )}
 
-      {clientSecret && (
-        <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
-          <CheckoutForm planData={planData} billing={billing} getToken={getToken} />
-        </Elements>
-      )}
+        {loading && (
+          <div style={s.centered}>
+            <p style={{ color: '#8b8897', fontFamily: "'Space Grotesk', sans-serif", fontSize: 14 }}>
+              Preparando checkout...
+            </p>
+          </div>
+        )}
+
+        {initError && (
+          <div style={s.centered}>
+            <p style={{ color: '#ff4d6a', fontFamily: "'Space Grotesk', sans-serif", fontSize: 14 }}>{initError}</p>
+            <button onClick={() => navigate('/credits')} style={s.linkBtn}>Voltar para planos</button>
+          </div>
+        )}
+
+        {clientSecret && (
+          <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
+            <CheckoutForm planData={planData} billing={billing} getToken={getToken} />
+          </Elements>
+        )}
+      </div>
     </div>
   );
 }
 
 const s = {
-  page: {
-    padding: '40px 32px',
-    maxWidth: 860,
-    margin: '0 auto',
-    minHeight: '80vh',
+  header: {
     display: 'flex',
-    flexDirection: 'column',
-    gap: 32,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
   },
   backBtn: {
     display: 'flex',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     background: 'none',
     border: 'none',
-    color: '#6b7280',
+    color: '#8b8897',
     fontSize: 13,
-    cursor: 'pointer',
+    cursor: 'none',
     padding: 0,
-    width: 'fit-content',
-    fontFamily: '"Space Grotesk", sans-serif',
+    fontFamily: "'Space Grotesk', sans-serif",
   },
-  layout: {
+  card: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1.5fr',
-    gap: 40,
-    alignItems: 'start',
+    gridTemplateColumns: '1fr 1px 1.4fr',
+    gap: 0,
+    background: 'rgba(8, 11, 18, 0.75)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    boxShadow: '0 0 60px rgba(0, 255, 136, 0.05)',
+    overflow: 'hidden',
+    width: '100%',
   },
-  summary: {
-    background: '#0d0e14',
-    border: '1px solid #1e1f29',
-    borderRadius: 12,
-    padding: '28px 24px',
+  cardLeft: {
+    padding: '32px 28px',
     display: 'flex',
     flexDirection: 'column',
-    gap: 14,
+    gap: 12,
+  },
+  cardDivider: {
+    background: 'rgba(255,255,255,0.08)',
+    width: 1,
+  },
+  cardRight: {
+    padding: '32px 28px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 16,
+  },
+  planLabel: {
+    fontSize: 11,
+    fontFamily: "'Space Grotesk', sans-serif",
+    color: '#00ff88',
+    textTransform: 'uppercase',
+    letterSpacing: '0.12em',
+    fontWeight: 500,
   },
   planName: {
-    fontFamily: '"Cormorant Garamond", serif',
-    fontSize: 30,
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: 32,
     fontWeight: 300,
-    color: '#f3f4f6',
+    color: '#f0eef8',
     letterSpacing: '0.04em',
+    lineHeight: 1.1,
   },
   priceRow: {
     display: 'flex',
@@ -271,26 +312,26 @@ const s = {
     gap: 4,
   },
   priceAmount: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 600,
     color: '#ffffff',
-    fontFamily: '"Space Grotesk", sans-serif',
+    fontFamily: "'Space Grotesk', sans-serif",
   },
   pricePeriod: {
     fontSize: 13,
     color: '#6b7280',
-    fontFamily: '"Space Grotesk", sans-serif',
+    fontFamily: "'Space Grotesk', sans-serif",
   },
   annualNote: {
     fontSize: 12,
     color: '#6b7280',
-    fontFamily: '"Space Grotesk", sans-serif',
+    fontFamily: "'Space Grotesk', sans-serif",
     marginTop: -4,
   },
   divider: {
     height: 1,
-    background: '#1e1f29',
-    margin: '2px 0',
+    background: 'rgba(255,255,255,0.08)',
+    margin: '4px 0',
   },
   featureList: {
     listStyle: 'none',
@@ -305,8 +346,8 @@ const s = {
     alignItems: 'center',
     gap: 10,
     fontSize: 13,
-    color: '#9ca3af',
-    fontFamily: '"Space Grotesk", sans-serif',
+    color: '#8b8897',
+    fontFamily: "'Space Grotesk', sans-serif",
   },
   secureRow: {
     display: 'flex',
@@ -317,46 +358,40 @@ const s = {
   secureText: {
     fontSize: 11,
     color: '#6b7280',
-    fontFamily: '"Space Grotesk", sans-serif',
+    fontFamily: "'Space Grotesk', sans-serif",
   },
-  formWrap: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 16,
-  },
-  formLabel: {
-    fontFamily: '"Space Grotesk", sans-serif',
+  formTitle: {
+    fontFamily: "'Space Grotesk', sans-serif",
     fontSize: 13,
     fontWeight: 500,
-    color: '#9ca3af',
-    margin: 0,
+    color: '#8b8897',
     textTransform: 'uppercase',
     letterSpacing: '0.08em',
   },
   errorMsg: {
-    color: '#f87171',
+    color: '#ff4d6a',
     fontSize: 13,
     margin: 0,
-    fontFamily: '"Space Grotesk", sans-serif',
+    fontFamily: "'Space Grotesk', sans-serif",
   },
   submitBtn: {
     width: '100%',
-    padding: '14px 24px',
-    background: '#aa3bff',
-    color: '#ffffff',
+    padding: '13px 24px',
+    background: 'linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)',
+    color: '#030508',
     border: 'none',
-    borderRadius: 8,
+    borderRadius: 10,
     fontSize: 15,
     fontWeight: 600,
-    fontFamily: '"Space Grotesk", sans-serif',
-    cursor: 'pointer',
+    fontFamily: "'Space Grotesk', sans-serif",
+    cursor: 'none',
     transition: 'opacity 0.2s',
     letterSpacing: '0.02em',
   },
   cancelNote: {
     fontSize: 12,
     color: '#6b7280',
-    fontFamily: '"Space Grotesk", sans-serif',
+    fontFamily: "'Space Grotesk', sans-serif",
     margin: 0,
     textAlign: 'center',
   },
@@ -366,16 +401,15 @@ const s = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
-    flex: 1,
-    minHeight: 300,
+    minHeight: 200,
   },
   linkBtn: {
     background: 'none',
     border: 'none',
-    color: '#aa3bff',
+    color: '#00ff88',
     fontSize: 14,
-    cursor: 'pointer',
-    fontFamily: '"Space Grotesk", sans-serif',
+    cursor: 'none',
+    fontFamily: "'Space Grotesk', sans-serif",
   },
 };
 
