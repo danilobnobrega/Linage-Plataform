@@ -41,6 +41,9 @@
 }
 
 .auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-family: 'Cormorant Garamond', serif;
   font-size: 2.4rem;
   font-weight: 300;

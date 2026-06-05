@@ -94,7 +94,6 @@ function Home() {
       <div className="glass-card suggestions-card">
         <div className="card-header-with-badge">
           <h2 className="card-title">Sugestões de Pauta de Hoje</h2>
-          <span className="card-badge">Filtro de IA</span>
         </div>
         <p className="card-desc">Temas que estão rendendo conversa agora. Clique para criar algo em torno disso.</p>
 

@@ -28,6 +28,8 @@ function applyMagnetic(btn, follower) {
   };
 }
 
+const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 function AuthCursor() {
   const cursorRef = useRef(null);
   const followerRef = useRef(null);
@@ -36,9 +38,6 @@ function AuthCursor() {
     const cursor = cursorRef.current;
     const follower = followerRef.current;
     if (!cursor || !follower) return;
-
-    const isTouch = window.matchMedia('(pointer: coarse)').matches;
-    if (isTouch) return;
 
     let mouseX = 0, mouseY = 0, followerX = 0, followerY = 0;
 
@@ -88,6 +87,8 @@ function AuthCursor() {
       });
     };
   }, []);
+
+  if (isTouch) return null;
 
   return (
     <>
