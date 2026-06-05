@@ -1297,7 +1297,7 @@ body {
   .plans-grid,
   .packs-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 24px;
   }
 
   .credits-page .page-header {
