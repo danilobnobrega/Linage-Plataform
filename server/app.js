@@ -194,7 +194,23 @@ app.post('/api/stripe/create-subscription-intent', requireAuth, async (req, res)
       expand: ['latest_invoice.payment_intent'],
     });
 
-    res.json({ clientSecret: subscription.latest_invoice.payment_intent.client_secret });
+    let clientSecret = subscription.latest_invoice?.payment_intent?.client_secret;
+
+    if (!clientSecret) {
+      const invoiceId = typeof subscription.latest_invoice === 'string'
+        ? subscription.latest_invoice
+        : subscription.latest_invoice?.id;
+      if (invoiceId) {
+        const invoice = await stripe.invoices.retrieve(invoiceId, { expand: ['payment_intent'] });
+        clientSecret = invoice.payment_intent?.client_secret;
+      }
+    }
+
+    if (!clientSecret) {
+      return res.status(500).json({ error: 'Não foi possível iniciar o pagamento. Tente novamente.' });
+    }
+
+    res.json({ clientSecret });
   } catch (err) {
     console.error('[stripe/create-subscription-intent]', err.message);
     res.status(500).json({ error: err.message });
