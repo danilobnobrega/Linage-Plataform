@@ -5409,11 +5409,8 @@ body {
   .advisor-chat-card {
     border-radius: 0;
     height: 100%;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    border-top: none;
-    box-shadow: none;
+    border: none;
+    box-shadow: none !important;
     overflow-y: auto;
     overflow-x: hidden;
   }
