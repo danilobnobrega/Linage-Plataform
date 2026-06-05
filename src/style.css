@@ -5362,6 +5362,10 @@ body {
     gap: 14px;
   }
 
+  .consensus-col {
+    width: 100%;
+  }
+
   .consensus-center {
     flex-direction: row;
     justify-content: center;
