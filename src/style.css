@@ -5412,6 +5412,8 @@ body {
     border-left: none;
     border-right: none;
     border-bottom: none;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .chat-card-header {
@@ -5428,16 +5430,22 @@ body {
 
   .advisor-chat-messages {
     padding: 16px 12px;
+    overflow: visible;
+    max-height: none;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .advisor-chat-input {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: var(--bg-primary);
+    padding: 10px 12px;
   }
 
   .advisor-msg-bubble {
     max-width: 88%;
     font-size: 14px;
-  }
-
-  .advisor-chat-input {
-    padding: 10px 12px;
   }
 
   .advisor-input-text {
