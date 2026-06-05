@@ -5266,6 +5266,7 @@ body {
   .main-content {
     padding-top: 56px;
     width: 100%;
+    height: 100svh;
   }
 
   /* ---------- Page containers ---------- */
