@@ -5433,7 +5433,7 @@ body {
 
   .advisor-chat-messages {
     padding: 16px 12px;
-    overflow: visible;
+    overflow-y: auto;
     max-height: none;
     -webkit-overflow-scrolling: touch;
   }
