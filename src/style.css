@@ -3095,6 +3095,12 @@ body {
   border-radius: 50%;
   background: #10b981;
   flex-shrink: 0;
+  animation: badge-dot-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes badge-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+  50% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
 }
 
 .consensus-title {
