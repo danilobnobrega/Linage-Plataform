@@ -60,17 +60,19 @@ function Home() {
         </div>
         
         {/* Plan badge */}
-        {user.plan === 'pro' ? (
-          <div className="status-badge">
-            <Zap size={14} className="glowing-icon" />
-            <span>Plano Pro Ativo</span>
-          </div>
-        ) : (
-          <button className="status-badge status-badge--clickable magnetic" onClick={() => setShowPlanModal(true)}>
-            <Zap size={14} className="glowing-icon" />
-            <span>{user.plan === 'starter' ? 'Plano Starter Ativo' : 'Free Trial Ativo'}</span>
-          </button>
-        )}
+        <div className="plan-badge-wrapper">
+          {user.plan === 'pro' ? (
+            <div className="status-badge">
+              <Zap size={14} className="glowing-icon" />
+              <span>Plano Pro Ativo</span>
+            </div>
+          ) : (
+            <button className="status-badge status-badge--clickable magnetic" onClick={() => setShowPlanModal(true)}>
+              <Zap size={14} className="glowing-icon" />
+              <span>{user.plan === 'starter' ? 'Plano Starter Ativo' : 'Free Trial Ativo'}</span>
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Quote Banner */}
