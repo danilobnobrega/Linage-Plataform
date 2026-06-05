@@ -4,8 +4,10 @@ import useStore from '../store';
 import { useDecryptPlaceholder } from '../hooks/useDecryptPlaceholder';
 import {
   User, Shield, CreditCard, BarChart2,
-  Check, X, ArrowDown, ArrowRight, Mail, ChevronRight, Camera, Bell,
+  Check, X, ArrowDown, ArrowRight, Mail, ChevronRight, Camera, Bell, ArrowLeft,
 } from 'lucide-react';
+
+const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 import { PLANS } from './Credits';
 
 const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
@@ -24,6 +26,7 @@ function Settings() {
   const { getToken } = useAuth();
   const { signOut } = useClerk();
   const [activeSection, setActiveSection] = useState('conta');
+  const [mobileShowSection, setMobileShowSection] = useState(false);
   const [userName, setUserName] = useState(user.name);
   const [nickname, setNickname] = useState(user.nickname || '');
   const [instructions, setInstructions] = useState(user.instructions || '');
@@ -171,22 +174,35 @@ function Settings() {
 
   return (
     <div className="page-container settings-page animate-fade-in">
-      <h1 className="settings-page-title">Configurações</h1>
+      <h1 className="settings-page-title">
+        {isMobile && mobileShowSection ? (
+          <button className="settings-back-btn" onClick={() => setMobileShowSection(false)}>
+            <ArrowLeft size={18} />
+          </button>
+        ) : null}
+        {isMobile && mobileShowSection
+          ? SECTIONS.find(s => s.id === activeSection)?.label
+          : 'Configurações'}
+      </h1>
 
       <div className="settings-layout">
-        <nav className="settings-nav">
-          {SECTIONS.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              className={`settings-nav-item${activeSection === id ? ' active' : ''}`}
-              onClick={() => setActiveSection(id)}
-            >
-              <Icon size={15} />
-              {label}
-            </button>
-          ))}
-        </nav>
+        {(!isMobile || !mobileShowSection) && (
+          <nav className="settings-nav">
+            {SECTIONS.map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                className={`settings-nav-item${activeSection === id ? ' active' : ''}`}
+                onClick={() => { setActiveSection(id); if (isMobile) setMobileShowSection(true); }}
+              >
+                <Icon size={15} />
+                {label}
+                {isMobile && <ChevronRight size={15} className="settings-nav-chevron" />}
+              </button>
+            ))}
+          </nav>
+        )}
 
+        {(!isMobile || mobileShowSection) && (
         <div className="settings-content">
 
           {/* CONTA */}
@@ -554,6 +570,7 @@ function Settings() {
 
 
         </div>
+        )}
       </div>
 
       {/* Plan Modal */}
