@@ -189,7 +189,11 @@ app.post('/api/stripe/create-subscription-intent', requireAuth, async (req, res)
       customer: customerId,
       items: [{ price: priceId }],
       payment_behavior: 'default_incomplete',
-      payment_settings: { save_default_payment_method: 'on_subscription' },
+      collection_method: 'charge_automatically',
+      payment_settings: {
+        save_default_payment_method: 'on_subscription',
+        payment_method_types: ['card'],
+      },
       metadata: { userId: req.userId },
       expand: ['latest_invoice.payment_intent'],
     });
@@ -218,7 +222,17 @@ app.post('/api/stripe/create-subscription-intent', requireAuth, async (req, res)
     }
 
     if (!clientSecret) {
-      return res.status(500).json({ error: 'Não foi possível iniciar o pagamento. Tente novamente.' });
+      const invoiceObj = typeof subscription.latest_invoice === 'object' ? subscription.latest_invoice : null;
+      return res.status(500).json({
+        error: 'Não foi possível iniciar o pagamento. Tente novamente.',
+        _debug: {
+          subStatus: subscription.status,
+          invoiceStatus: invoiceObj?.status,
+          piType: typeof invoiceObj?.payment_intent,
+          piId: typeof invoiceObj?.payment_intent === 'string' ? invoiceObj.payment_intent : invoiceObj?.payment_intent?.id,
+          piStatus: invoiceObj?.payment_intent?.status,
+        },
+      });
     }
 
     res.json({ clientSecret });
