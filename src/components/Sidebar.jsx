@@ -14,7 +14,7 @@ import {
   LogOut,
 } from 'lucide-react';
 
-function Sidebar() {
+function Sidebar({ isOpen, onClose }) {
   const { user, credits, avulsoCredits } = useStore();
   const navigate = useNavigate();
   const { signOut } = useClerk();
@@ -46,9 +46,9 @@ function Sidebar() {
   }, []);
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${isOpen ? ' sidebar--open' : ''}`}>
       {/* Logo */}
-      <div className="sidebar-logo-container" onClick={() => navigate('/home')}>
+      <div className="sidebar-logo-container" onClick={() => { navigate('/home'); onClose?.(); }}>
         <div className="logo-glow"></div>
         <div className="logo-icon-wrapper">
           <svg width="22" height="21" viewBox="0 0 48 46" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -62,15 +62,15 @@ function Sidebar() {
       <div className="sidebar-nav-scroll">
         <nav className="sidebar-group">
           <div className="group-label">Navegação</div>
-          <NavLink to="/home" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/home" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={onClose}>
             <Home size={18} />
             <span>Home</span>
           </NavLink>
-          <NavLink to="/chat" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/chat" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={onClose}>
             <Sparkles size={18} className="advisor-spark" />
             <span>Falar com Linage</span>
           </NavLink>
-          <NavLink to="/posts" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/posts" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={onClose}>
             <FileText size={18} />
             <span>Meus Posts</span>
           </NavLink>

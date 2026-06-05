@@ -5152,3 +5152,448 @@ body {
   gap: 8px;
 }
 .dismiss-revision-btn:hover { opacity: 0.7; }
+
+/* ============================================================
+   MOBILE RESPONSIVENESS — max-width: 768px
+   ============================================================ */
+
+/* --- Mobile top nav bar (hidden on desktop) --- */
+.mobile-nav-bar {
+  display: none;
+}
+
+/* --- Mobile back button (hidden on desktop) --- */
+.mobile-back-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+
+  /* ---------- Mobile top nav bar ---------- */
+  .mobile-nav-bar {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    z-index: 998;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+    align-items: center;
+    padding: 0 16px;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .mobile-hamburger {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+
+  .mobile-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--text-primary);
+  }
+
+  .mobile-credits-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(0, 255, 136, 0.08);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 50px;
+    padding: 5px 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* ---------- Sidebar as overlay ---------- */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 280px;
+  }
+
+  .sidebar--open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+  }
+
+  /* ---------- Main layout ---------- */
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .main-content {
+    padding-top: 56px;
+    width: 100%;
+  }
+
+  /* ---------- Page containers ---------- */
+  .page-container {
+    padding: 20px 16px;
+    gap: 20px;
+  }
+
+  /* ---------- Page headers ---------- */
+  .page-header {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .header-icon-wrapper {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* ---------- Glass cards ---------- */
+  .glass-card {
+    padding: 16px;
+  }
+
+  /* ============================================================
+     HOME PAGE
+     ============================================================ */
+  .home-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .home-title {
+    font-size: clamp(22px, 6vw, 32px);
+  }
+
+  .status-badge {
+    align-self: flex-start;
+  }
+
+  .quote-banner {
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px 16px;
+  }
+
+  .quote-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .quote-text {
+    font-size: 14px;
+  }
+
+  .suggestions-card {
+    padding: 16px;
+  }
+
+  .suggestion-item-btn {
+    padding: 12px 14px;
+  }
+
+  .post-row-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .preview-row-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .empty-posts-state {
+    padding: 32px 16px;
+  }
+
+  /* ============================================================
+     ADVISOR / CHAT PAGE
+     ============================================================ */
+  .advisor-page {
+    padding: 0;
+    gap: 0;
+    height: calc(100vh - 56px);
+    overflow: hidden;
+  }
+
+  .advisor-page .page-header {
+    display: none;
+  }
+
+  .advisor-full {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .advisor-chat-card {
+    border-radius: 0;
+    height: 100%;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .advisor-chat-messages {
+    padding: 16px 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .advisor-msg-bubble {
+    max-width: 88%;
+    font-size: 14px;
+  }
+
+  .advisor-chat-input {
+    padding: 10px 12px;
+  }
+
+  .advisor-input-text {
+    font-size: 16px; /* Prevent iOS keyboard zoom */
+  }
+
+  /* Post generator modal — full screen on mobile */
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  .post-generator-panel {
+    width: 100%;
+    max-width: 100%;
+    height: 92vh;
+    border-radius: 20px 20px 0 0;
+    animation: slide-up-mobile 0.3s ease;
+  }
+
+  .generator-editor-area {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .post-editor-title-input,
+  .post-editor-textarea {
+    font-size: 16px; /* Prevent iOS keyboard zoom */
+  }
+
+  .generator-loading-state {
+    padding: 40px 20px;
+  }
+
+  @keyframes slide-up-mobile {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  /* ============================================================
+     POSTS PAGE
+     ============================================================ */
+  .posts-page .page-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .posts-tabs-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabs-navigation {
+    flex-shrink: 0;
+  }
+
+  .posts-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  /* When no post selected: show list, hide preview */
+  .posts-grid-layout:not(.has-selection) .post-preview-panel {
+    display: none;
+  }
+
+  /* When post selected: hide list, show preview */
+  .posts-grid-layout.has-selection .posts-list-column {
+    display: none;
+  }
+
+  .mobile-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+
+  .preview-workspace-card {
+    border-radius: var(--radius-md);
+  }
+
+  .workspace-header-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .workspace-action-buttons {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .edit-content-textarea {
+    font-size: 16px;
+  }
+
+  .edit-title-input {
+    font-size: 16px;
+  }
+
+  /* ============================================================
+     SETTINGS PAGE
+     ============================================================ */
+  .settings-section-card {
+    padding: 16px;
+  }
+
+  .settings-photo-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .settings-billing-plan {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  /* ============================================================
+     CREDITS PAGE
+     ============================================================ */
+  .plan-modal {
+    width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px 16px;
+  }
+
+  .plan-modal-overlay {
+    padding: 16px;
+  }
+
+  /* ============================================================
+     MODALS & OVERLAYS
+     ============================================================ */
+  .plan-modal {
+    width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* ============================================================
+     GENERAL TYPOGRAPHY & SPACING REDUCTIONS
+     ============================================================ */
+  .section-title,
+  .card-title,
+  .home-title {
+    font-size: clamp(16px, 5vw, 22px);
+  }
+
+  .header-title {
+    font-size: clamp(18px, 5.5vw, 26px);
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+
+  .btn-primary-sm,
+  .btn-secondary-sm {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+}
+
+/* ============================================================
+   SMALL PHONES — max-width: 480px
+   ============================================================ */
+@media (max-width: 480px) {
+
+  .page-container {
+    padding: 16px 12px;
+    gap: 16px;
+  }
+
+  .mobile-nav-bar {
+    padding: 0 12px;
+  }
+
+  .advisor-chat-messages {
+    padding: 12px 10px;
+  }
+
+  .advisor-msg-bubble {
+    max-width: 92%;
+    font-size: 13px;
+  }
+
+  .post-generator-panel {
+    height: 96vh;
+  }
+
+  .greeting-pill {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .suggestion-item-btn {
+    padding: 10px 12px;
+  }
+
+  .suggestion-bullet {
+    font-size: 10px;
+  }
+
+  .workspace-action-buttons .btn-primary-sm,
+  .workspace-action-buttons .btn-secondary-sm {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}

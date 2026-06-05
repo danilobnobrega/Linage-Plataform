@@ -157,7 +157,7 @@ function Posts() {
         </div>
       </div>
 
-      <div className="posts-grid-layout">
+      <div className={`posts-grid-layout${selectedPost ? ' has-selection' : ''}`}>
         {/* Posts List */}
         <div className="posts-list-column">
           {filteredPosts.length === 0 ? (
@@ -227,6 +227,11 @@ function Posts() {
 
         {/* Post Preview Workspace Panel */}
         <div className="post-preview-panel">
+          {selectedPost && (
+            <button className="mobile-back-btn" onClick={() => { setSelectedPost(null); setIsEditing(false); }}>
+              ← Voltar
+            </button>
+          )}
           {selectedPost ? (
             <div className="glass-card preview-workspace-card">
               <header className="workspace-header-actions">
