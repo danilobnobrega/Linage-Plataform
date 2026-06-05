@@ -171,7 +171,6 @@ function Credits() {
                   {getPlanBilling(plan.id) === 'annual' && plan.annualTotal && (
                     <span className="plan-annual-total">{plan.annualTotal}</span>
                   )}
-                  <span className="plan-credits-label">{plan.creditsLabel}</span>
                   <ul className="plan-features">
                     {plan.features.map((f, i) => (
                       <li key={i} className="plan-feature-item">
