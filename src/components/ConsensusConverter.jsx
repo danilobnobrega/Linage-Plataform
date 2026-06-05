@@ -82,7 +82,7 @@ function ConsensusConverter() {
   const { getToken } = useAuth();
   const { credits } = useStore();
   const [text, setText] = useState('');
-  const [isDefault, setIsDefault] = useState(true);
+  const [isDefault, setIsDefault] = useState(false);
   const [flipped, setFlipped] = useState(false);
   const [flipping, setFlipping] = useState(false);
   const [flippedText, setFlippedText] = useState('');
