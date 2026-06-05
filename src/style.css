@@ -5303,6 +5303,10 @@ body {
     font-size: clamp(22px, 6vw, 32px);
   }
 
+  .decrypt-subtitle {
+    min-height: 36px;
+  }
+
   .plan-badge-wrapper {
     display: none;
   }
