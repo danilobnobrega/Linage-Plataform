@@ -5412,16 +5412,11 @@ body {
   }
 
   .advisor-chat-card {
-    border-radius: 0;
     width: 100%;
     height: 100%;
-    border: none;
-    box-shadow: none !important;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    border-radius: 0;
     background: var(--bg-primary);
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
   }
 
   .chat-card-header {

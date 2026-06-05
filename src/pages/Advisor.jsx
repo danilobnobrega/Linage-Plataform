@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
@@ -365,7 +366,7 @@ const [isGenerating, setIsGenerating] = useState(false);
       </header>
 
       <div className="advisor-full">
-        <div className="advisor-chat-card glass-card">
+        <div className={`advisor-chat-card${isMobile ? '' : ' glass-card'}`}>
           {postGenerated && (
             <div className="chat-card-header">
               <div className="chat-header-agent-info">
