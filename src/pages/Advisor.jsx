@@ -367,31 +367,30 @@ const [isGenerating, setIsGenerating] = useState(false);
 
       <div className="advisor-full">
         <div className={`advisor-chat-card${isMobile ? '' : ' glass-card'}`}>
-          {postGenerated && (
-            <div className="chat-card-header">
-              <div className="chat-header-agent-info">
-                <div className="online-indicator-dot"></div>
-                <div>
-                  <h3>Sessão Ativa</h3>
-                  <p>Conversando com Linage</p>
+          <div className="advisor-chat-messages">
+            {postGenerated && (
+              <div className="chat-card-header">
+                <div className="chat-header-agent-info">
+                  <div className="online-indicator-dot"></div>
+                  <div>
+                    <h3>Sessão Ativa</h3>
+                    <p>Conversando com Linage</p>
+                  </div>
+                </div>
+                <div className="chat-header-actions">
+                  {!showPostGenerator && (
+                    <button className="view-draft-btn" onClick={() => setShowPostGenerator(true)}>
+                      <FileText size={14} />
+                      <span>Ver rascunho</span>
+                    </button>
+                  )}
+                  <button className="generate-post-trigger-btn generate-post-trigger-btn--secondary" onClick={handleNewConversation}>
+                    <RefreshCw size={15} />
+                    <span>Nova Conversa</span>
+                  </button>
                 </div>
               </div>
-              <div className="chat-header-actions">
-                {!showPostGenerator && (
-                  <button className="view-draft-btn" onClick={() => setShowPostGenerator(true)}>
-                    <FileText size={14} />
-                    <span>Ver rascunho</span>
-                  </button>
-                )}
-                <button className="generate-post-trigger-btn generate-post-trigger-btn--secondary" onClick={handleNewConversation}>
-                  <RefreshCw size={15} />
-                  <span>Nova Conversa</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="advisor-chat-messages">
+            )}
             <div className="advisor-message-row linage">
               <div className="linage-avatar-icon">L</div>
               <div className="advisor-msg-bubble">
