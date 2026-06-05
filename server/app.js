@@ -164,15 +164,15 @@ app.post('/api/stripe/checkout', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/stripe/create-subscription-intent', requireAuth, async (req, res) => {
+// Step 1: create SetupIntent to collect card details
+app.post('/api/stripe/create-setup-intent', requireAuth, async (req, res) => {
   try {
     const { plan, billing = 'monthly' } = req.body;
     const priceIds = {
       starter: { monthly: process.env.STRIPE_PRICE_ID_STARTER_MONTHLY, annual: process.env.STRIPE_PRICE_ID_STARTER_ANNUAL },
       pro:     { monthly: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,     annual: process.env.STRIPE_PRICE_ID_PRO_ANNUAL },
     };
-    const priceId = priceIds[plan]?.[billing];
-    if (!priceId) return res.status(400).json({ error: 'Plano inválido' });
+    if (!priceIds[plan]?.[billing]) return res.status(400).json({ error: 'Plano inválido' });
 
     let user = await getUser(req.userId);
     let customerId = user?.stripe_customer_id;
@@ -185,59 +185,61 @@ app.post('/api/stripe/create-subscription-intent', requireAuth, async (req, res)
       await sql`UPDATE users SET stripe_customer_id = ${customerId} WHERE id = ${req.userId}`;
     }
 
+    const setupIntent = await stripe.setupIntents.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      usage: 'off_session',
+      metadata: { userId: req.userId, plan, billing },
+    });
+
+    res.json({ clientSecret: setupIntent.client_secret });
+  } catch (err) {
+    console.error('[stripe/create-setup-intent]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Step 2: create subscription after card is saved
+app.post('/api/stripe/activate-subscription', requireAuth, async (req, res) => {
+  try {
+    const { plan, billing = 'monthly', paymentMethodId } = req.body;
+    const priceIds = {
+      starter: { monthly: process.env.STRIPE_PRICE_ID_STARTER_MONTHLY, annual: process.env.STRIPE_PRICE_ID_STARTER_ANNUAL },
+      pro:     { monthly: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,     annual: process.env.STRIPE_PRICE_ID_PRO_ANNUAL },
+    };
+    const priceId = priceIds[plan]?.[billing];
+    if (!priceId || !paymentMethodId) return res.status(400).json({ error: 'Dados inválidos' });
+
+    const user = await getUser(req.userId);
+    const customerId = user?.stripe_customer_id;
+    if (!customerId) return res.status(400).json({ error: 'Cliente não encontrado' });
+
+    await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+    await stripe.customers.update(customerId, {
+      invoice_settings: { default_payment_method: paymentMethodId },
+    });
+
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
-      payment_behavior: 'default_incomplete',
-      collection_method: 'charge_automatically',
-      payment_settings: {
-        save_default_payment_method: 'on_subscription',
-        payment_method_types: ['card'],
-      },
+      default_payment_method: paymentMethodId,
+      payment_settings: { save_default_payment_method: 'on_subscription' },
       metadata: { userId: req.userId },
       expand: ['latest_invoice.payment_intent'],
     });
 
-    let clientSecret = subscription.latest_invoice?.payment_intent?.client_secret;
-
-    if (!clientSecret) {
-      const invoiceId = typeof subscription.latest_invoice === 'string'
-        ? subscription.latest_invoice
-        : subscription.latest_invoice?.id;
-
-      if (invoiceId) {
-        let invoice = await stripe.invoices.retrieve(invoiceId, { expand: ['payment_intent'] });
-
-        if (invoice.status === 'draft') {
-          invoice = await stripe.invoices.finalizeInvoice(invoiceId, { expand: ['payment_intent'] });
-        }
-
-        clientSecret = invoice.payment_intent?.client_secret;
-
-        if (!clientSecret && invoice.payment_intent?.id) {
-          const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent.id);
-          clientSecret = pi.client_secret;
-        }
-      }
+    if (subscription.status === 'active') {
+      const isProPlan = priceId === process.env.STRIPE_PRICE_ID_PRO_MONTHLY || priceId === process.env.STRIPE_PRICE_ID_PRO_ANNUAL;
+      await updateUserPlan(req.userId, isProPlan ? 'pro' : 'starter', customerId, subscription.id);
+      return res.json({ success: true });
     }
 
-    if (!clientSecret) {
-      const invoiceObj = typeof subscription.latest_invoice === 'object' ? subscription.latest_invoice : null;
-      return res.status(500).json({
-        error: 'Não foi possível iniciar o pagamento. Tente novamente.',
-        _debug: {
-          subStatus: subscription.status,
-          invoiceStatus: invoiceObj?.status,
-          piType: typeof invoiceObj?.payment_intent,
-          piId: typeof invoiceObj?.payment_intent === 'string' ? invoiceObj.payment_intent : invoiceObj?.payment_intent?.id,
-          piStatus: invoiceObj?.payment_intent?.status,
-        },
-      });
-    }
+    const clientSecret = subscription.latest_invoice?.payment_intent?.client_secret;
+    if (clientSecret) return res.json({ requiresAction: true, clientSecret });
 
-    res.json({ clientSecret });
+    res.status(500).json({ error: 'Não foi possível processar o pagamento.' });
   } catch (err) {
-    console.error('[stripe/create-subscription-intent]', err.message);
+    console.error('[stripe/activate-subscription]', err.message);
     res.status(500).json({ error: err.message });
   }
 });

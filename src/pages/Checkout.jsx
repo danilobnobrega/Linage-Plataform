@@ -29,7 +29,7 @@ const stripeAppearance = {
   },
 };
 
-function CheckoutForm({ planData, billing }) {
+function CheckoutForm({ planData, billing, getToken }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -44,6 +44,7 @@ function CheckoutForm({ planData, billing }) {
     setLoading(true);
     setError(null);
 
+    // Step 1: validate form
     const { error: submitError } = await elements.submit();
     if (submitError) {
       setError(submitError.message);
@@ -51,20 +52,53 @@ function CheckoutForm({ planData, billing }) {
       return;
     }
 
-    const { error: confirmError } = await stripe.confirmPayment({
+    // Step 2: confirm setup (save card)
+    const { setupIntent, error: setupError } = await stripe.confirmSetup({
       elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/home?upgrade=success`,
-      },
       redirect: 'if_required',
+      confirmParams: {
+        return_url: `${window.location.origin}/checkout${window.location.search}&setup_redirect=1`,
+      },
     });
 
-    if (confirmError) {
-      setError(confirmError.message);
+    if (setupError) {
+      setError(setupError.message);
       setLoading(false);
-    } else {
-      navigate('/home?upgrade=success', { replace: true });
+      return;
     }
+
+    // Step 3: create subscription with saved card
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/stripe/activate-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          plan: planData.id,
+          billing,
+          paymentMethodId: setupIntent.payment_method,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        navigate('/home?upgrade=success', { replace: true });
+        return;
+      }
+
+      if (data.requiresAction && data.clientSecret) {
+        const { error: actionError } = await stripe.handleNextAction({ clientSecret: data.clientSecret });
+        if (actionError) { setError(actionError.message); setLoading(false); return; }
+        navigate('/home?upgrade=success', { replace: true });
+        return;
+      }
+
+      setError(data.error || 'Erro ao ativar assinatura.');
+    } catch {
+      setError('Erro de conexão. Tente novamente.');
+    }
+
+    setLoading(false);
   }
 
   return (
@@ -130,10 +164,10 @@ function Checkout() {
       return;
     }
 
-    async function createIntent() {
+    async function createSetupIntent() {
       try {
         const token = await getToken();
-        const res = await fetch('/api/stripe/create-subscription-intent', {
+        const res = await fetch('/api/stripe/create-setup-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ plan: planId, billing }),
@@ -148,7 +182,7 @@ function Checkout() {
       }
     }
 
-    createIntent();
+    createSetupIntent();
   }, []);
 
   if (!planData) return null;
@@ -179,7 +213,7 @@ function Checkout() {
 
       {clientSecret && (
         <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
-          <CheckoutForm planData={planData} billing={billing} />
+          <CheckoutForm planData={planData} billing={billing} getToken={getToken} />
         </Elements>
       )}
     </div>
@@ -208,7 +242,6 @@ const s = {
     padding: 0,
     width: 'fit-content',
     fontFamily: '"Space Grotesk", sans-serif',
-    transition: 'color 0.15s',
   },
   layout: {
     display: 'grid',
