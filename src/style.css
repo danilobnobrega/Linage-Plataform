@@ -5340,6 +5340,39 @@ body {
   }
 
   /* ============================================================
+     CONSENSUS CONVERTER
+     ============================================================ */
+  .consensus-converter {
+    transform: none !important;
+  }
+
+  .consensus-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .consensus-description {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .consensus-flipper {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .consensus-center {
+    flex-direction: row;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .consensus-text-box {
+    min-height: 80px;
+  }
+
+  /* ============================================================
      ADVISOR / CHAT PAGE
      ============================================================ */
   .advisor-page {

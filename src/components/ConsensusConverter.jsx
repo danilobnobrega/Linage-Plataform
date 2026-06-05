@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 
+const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 const EXAMPLE = {
   consensus: 'A renda fixa está pagando 12% ao ano sem risco, então investir em renda variável agora é loucura.',
   outlier: '12% sem risco é o prêmio pelo privilégio de não pensar. Quando o ciclo virar — e ele sempre vira — quem ficou confortável na renda fixa vai entender que trocou crescimento por ilusão de segurança. Risco zero no curto prazo é risco máximo no longo.',
@@ -31,6 +33,7 @@ function ConsensusConverter() {
   }, []);
 
   useEffect(() => {
+    if (isTouch) return;
     const onMove = (e) => {
       if (textFocusedRef.current) return;
       const card = cardRef.current;
