@@ -52,7 +52,7 @@ export const PLANS = [
 
 const CREDIT_PACKS = [
   { amount: 900,  price: 'R$ 59',  unitAmount: 5900 },
-  { amount: 1800, price: 'R$ 99',  unitAmount: 9900 },
+  { amount: 1800, price: 'R$ 99',  unitAmount: 9900, popular: true },
   { amount: 3600, price: 'R$ 179', unitAmount: 17900 },
 ];
 
@@ -60,7 +60,9 @@ function Credits() {
   const { user, credits } = useStore();
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(null);
-  const [billing, setBilling] = useState('monthly');
+  const [billingPerPlan, setBillingPerPlan] = useState({});
+  const getPlanBilling = (planId) => billingPerPlan[planId] || 'monthly';
+  const setPlanBilling = (planId, value) => setBillingPerPlan(prev => ({ ...prev, [planId]: value }));
 
   const upgradePlans = PLANS.filter(
     (p) => PLAN_ORDER[p.id] > (PLAN_ORDER[user.plan] ?? 0)
@@ -73,7 +75,7 @@ function Credits() {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ plan: planId, billing }),
+        body: JSON.stringify({ plan: planId, billing: getPlanBilling(planId) }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -121,22 +123,6 @@ function Credits() {
       <section className="credits-section">
         <div className="credits-section-header">
           <h2 className="credits-section-title">Upgrade de Plano</h2>
-          {upgradePlans.some(p => p.priceAnnual) && (
-            <div className="billing-toggle">
-              <button
-                className={`billing-toggle-btn${billing === 'monthly' ? ' active' : ''}`}
-                onClick={() => setBilling('monthly')}
-              >
-                Mensal
-              </button>
-              <button
-                className={`billing-toggle-btn${billing === 'annual' ? ' active' : ''}`}
-                onClick={() => setBilling('annual')}
-              >
-                Anual <span className="billing-discount">-20%</span>
-              </button>
-            </div>
-          )}
         </div>
 
         {upgradePlans.length === 0 ? (
@@ -151,7 +137,7 @@ function Credits() {
           <div className="plans-grid">
             {upgradePlans.map((plan) => {
               const { Icon } = plan;
-              const displayPrice = billing === 'annual' && plan.priceAnnual ? plan.priceAnnual : plan.price;
+              const displayPrice = getPlanBilling(plan.id) === 'annual' && plan.priceAnnual ? plan.priceAnnual : plan.price;
               return (
                 <div
                   key={plan.id}
@@ -162,11 +148,27 @@ function Credits() {
                     <Icon size={20} />
                   </div>
                   <h3 className="plan-name">{plan.name}</h3>
+                  {plan.priceAnnual && (
+                    <div className="billing-toggle billing-toggle--card">
+                      <button
+                        className={`billing-toggle-btn${getPlanBilling(plan.id) === 'monthly' ? ' active' : ''}`}
+                        onClick={() => setPlanBilling(plan.id, 'monthly')}
+                      >
+                        Mensal
+                      </button>
+                      <button
+                        className={`billing-toggle-btn${getPlanBilling(plan.id) === 'annual' ? ' active' : ''}`}
+                        onClick={() => setPlanBilling(plan.id, 'annual')}
+                      >
+                        Anual <span className="billing-discount">-20%</span>
+                      </button>
+                    </div>
+                  )}
                   <div className="plan-price-row">
                     <span className="plan-price-value">{displayPrice}</span>
                     <span className="plan-price-period">{plan.period}</span>
                   </div>
-                  {billing === 'annual' && plan.annualTotal && (
+                  {getPlanBilling(plan.id) === 'annual' && plan.annualTotal && (
                     <span className="plan-annual-total">{plan.annualTotal}</span>
                   )}
                   <span className="plan-credits-label">{plan.creditsLabel}</span>
@@ -203,7 +205,7 @@ function Credits() {
               key={pack.amount}
               className={`pack-card glass-card${pack.popular ? ' pack-card--popular' : ''}`}
             >
-              {pack.popular && <div className="pack-badge">Melhor valor</div>}
+              {pack.popular && <div className="pack-badge">Mais popular</div>}
               <div className="pack-amount-row">
                 <span className="pack-number">{pack.amount.toLocaleString('pt-BR')}</span>
                 <span className="pack-unit">créditos</span>

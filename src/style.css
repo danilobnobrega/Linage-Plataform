@@ -729,6 +729,16 @@ body {
   padding: 4px;
 }
 
+.billing-toggle--card {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.billing-toggle--card .billing-toggle-btn {
+  flex: 1;
+  justify-content: center;
+}
+
 .billing-toggle-btn {
   padding: 6px 16px;
   border-radius: 7px;
