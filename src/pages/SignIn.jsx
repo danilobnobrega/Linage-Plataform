@@ -68,8 +68,8 @@ function SignInPage() {
             Linage
           </div>
           <SignIn
-            fallbackRedirectUrl="/home"
-            signUpUrl="/sign-up"
+            forceRedirectUrl={new URLSearchParams(window.location.search).get('redirect_url') || '/home'}
+            signUpUrl={(() => { const r = new URLSearchParams(window.location.search).get('redirect_url'); return r ? `/sign-up?redirect_url=${encodeURIComponent(r)}` : '/sign-up'; })()}
             appearance={appearance}
           />
         </div>

@@ -55,6 +55,11 @@ const appearance = {
 };
 
 function SignUpPage() {
+  const redirectUrl = new URLSearchParams(window.location.search).get('redirect_url') || '/home';
+  const signInUrl = redirectUrl !== '/home'
+    ? `/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`
+    : '/sign-in';
+
   return (
     <div className="auth-page">
       <ThreeBackground />
@@ -68,8 +73,8 @@ function SignUpPage() {
             Linage
           </div>
           <SignUp
-            fallbackRedirectUrl="/home"
-            signInUrl="/sign-in"
+            forceRedirectUrl={redirectUrl}
+            signInUrl={signInUrl}
             appearance={appearance}
           />
         </div>
