@@ -5266,12 +5266,11 @@ body {
   .main-content {
     padding-top: 56px;
     width: 100%;
-    height: 100svh;
   }
 
   /* ---------- Page containers ---------- */
   .page-container {
-    padding: 20px 16px;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
     gap: 20px;
   }
 
