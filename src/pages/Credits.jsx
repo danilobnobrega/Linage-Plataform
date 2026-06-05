@@ -52,7 +52,7 @@ export const PLANS = [
 
 const CREDIT_PACKS = [
   { amount: 900,  price: 'R$ 59',  unitAmount: 5900 },
-  { amount: 1800, price: 'R$ 99',  unitAmount: 9900, popular: true },
+  { amount: 1800, price: 'R$ 99',  unitAmount: 9900 },
   { amount: 3600, price: 'R$ 179', unitAmount: 17900 },
 ];
 

@@ -59,7 +59,7 @@ function MobileNavBar({ onHamburger }) {
         </svg>
         <span>LINAGE</span>
       </div>
-      <div className="mobile-credits-pill" onClick={() => navigate('/credits')}>
+      <div className="mobile-credits-pill">
         <Coins size={13} />
         <span>{formatCredits(credits)}</span>
       </div>
