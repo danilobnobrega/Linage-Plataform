@@ -62,9 +62,8 @@ function Credits() {
   const [loading, setLoading] = useState(null);
   const [billing, setBilling] = useState('monthly');
 
-  const upgradePlans = PLANS.filter(
-    (p) => PLAN_ORDER[p.id] > PLAN_ORDER[user.plan]
-  );
+  const currentPlanOrder = PLAN_ORDER[user.plan] ?? 0;
+  const paidPlans = PLANS.filter(p => p.id !== 'free');
 
   const handleUpgrade = async (planId) => {
     setLoading(planId);
@@ -139,45 +138,41 @@ function Credits() {
           )}
         </div>
 
-        {upgradePlans.length === 0 ? (
-          <div className="credits-best-plan glass-card">
-            <Sparkles size={24} style={{ color: 'var(--accent)' }} />
-            <div>
-              <h3>Você já está no melhor plano</h3>
-              <p>Para alterar ou cancelar, acesse Configurações → Cobrança.</p>
-            </div>
-          </div>
-        ) : (
-          <div className="plans-grid">
-            {upgradePlans.map((plan) => {
-              const { Icon } = plan;
-              const displayPrice = billing === 'annual' && plan.priceAnnual ? plan.priceAnnual : plan.price;
-              return (
-                <div
-                  key={plan.id}
-                  className={`plan-card glass-card${plan.highlight ? ' plan-card--highlight' : ''}`}
-                >
-                  {plan.highlight && <div className="plan-badge">Mais popular</div>}
-                  <div className="plan-icon-wrap">
-                    <Icon size={20} />
-                  </div>
-                  <h3 className="plan-name">{plan.name}</h3>
-                  <div className="plan-price-row">
-                    <span className="plan-price-value">{displayPrice}</span>
-                    <span className="plan-price-period">{plan.period}</span>
-                  </div>
-                  {billing === 'annual' && plan.annualTotal && (
-                    <span className="plan-annual-total">{plan.annualTotal}</span>
-                  )}
-                  <span className="plan-credits-label">{plan.creditsLabel}</span>
-                  <ul className="plan-features">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className="plan-feature-item">
-                        <Check size={13} className="plan-check-icon" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+        <div className="plans-grid">
+          {paidPlans.map((plan) => {
+            const { Icon } = plan;
+            const isCurrent = plan.id === user.plan;
+            const isUpgrade = PLAN_ORDER[plan.id] > currentPlanOrder;
+            const displayPrice = billing === 'annual' && plan.priceAnnual ? plan.priceAnnual : plan.price;
+            return (
+              <div
+                key={plan.id}
+                className={`plan-card glass-card${plan.highlight ? ' plan-card--highlight' : ''}`}
+              >
+                {plan.highlight && <div className="plan-badge">Mais popular</div>}
+                <div className="plan-icon-wrap">
+                  <Icon size={20} />
+                </div>
+                <h3 className="plan-name">{plan.name}</h3>
+                <div className="plan-price-row">
+                  <span className="plan-price-value">{displayPrice}</span>
+                  <span className="plan-price-period">{plan.period}</span>
+                </div>
+                {billing === 'annual' && plan.annualTotal && (
+                  <span className="plan-annual-total">{plan.annualTotal}</span>
+                )}
+                <span className="plan-credits-label">{plan.creditsLabel}</span>
+                <ul className="plan-features">
+                  {plan.features.map((f, i) => (
+                    <li key={i} className="plan-feature-item">
+                      <Check size={13} className="plan-check-icon" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                {isCurrent ? (
+                  <div className="plan-current-label">Plano atual — gerencie em Configurações → Cobrança</div>
+                ) : isUpgrade ? (
                   <button
                     className="plan-cta-btn"
                     onClick={() => handleUpgrade(plan.id)}
@@ -185,11 +180,13 @@ function Credits() {
                   >
                     {loading === plan.id ? 'Aguarde...' : <><span>Fazer upgrade</span> <ArrowRight size={14} /></>}
                   </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                ) : (
+                  <div className="plan-current-label">Para fazer downgrade, acesse Configurações → Cobrança</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <section className="credits-section">
