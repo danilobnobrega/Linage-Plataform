@@ -164,6 +164,43 @@ app.post('/api/stripe/checkout', requireAuth, async (req, res) => {
   }
 });
 
+app.post('/api/stripe/create-subscription-intent', requireAuth, async (req, res) => {
+  try {
+    const { plan, billing = 'monthly' } = req.body;
+    const priceIds = {
+      starter: { monthly: process.env.STRIPE_PRICE_ID_STARTER_MONTHLY, annual: process.env.STRIPE_PRICE_ID_STARTER_ANNUAL },
+      pro:     { monthly: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,     annual: process.env.STRIPE_PRICE_ID_PRO_ANNUAL },
+    };
+    const priceId = priceIds[plan]?.[billing];
+    if (!priceId) return res.status(400).json({ error: 'Plano inválido' });
+
+    let user = await getUser(req.userId);
+    let customerId = user?.stripe_customer_id;
+
+    if (!customerId) {
+      const clerkUser = await clerk.users.getUser(req.userId);
+      const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+      const customer = await stripe.customers.create({ email, metadata: { userId: req.userId } });
+      customerId = customer.id;
+      await sql`UPDATE users SET stripe_customer_id = ${customerId} WHERE id = ${req.userId}`;
+    }
+
+    const subscription = await stripe.subscriptions.create({
+      customer: customerId,
+      items: [{ price: priceId }],
+      payment_behavior: 'default_incomplete',
+      payment_settings: { save_default_payment_method: 'on_subscription' },
+      metadata: { userId: req.userId },
+      expand: ['latest_invoice.payment_intent'],
+    });
+
+    res.json({ clientSecret: subscription.latest_invoice.payment_intent.client_secret });
+  } catch (err) {
+    console.error('[stripe/create-subscription-intent]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/stripe/portal', requireAuth, async (req, res) => {
   try {
     const user = await getUser(req.userId);
@@ -238,6 +275,16 @@ app.post('/api/stripe/webhook', async (req, res) => {
 
   if (event.type === 'invoice.payment_succeeded') {
     const invoice = event.data.object;
+    if (invoice.billing_reason === 'subscription_create' && invoice.subscription) {
+      const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+      const userId = subscription.metadata?.userId;
+      if (userId) {
+        const priceId = subscription.items.data[0].price.id;
+        const isProPlan = priceId === process.env.STRIPE_PRICE_ID_PRO_MONTHLY || priceId === process.env.STRIPE_PRICE_ID_PRO_ANNUAL;
+        const plan = isProPlan ? 'pro' : 'starter';
+        await updateUserPlan(userId, plan, invoice.customer, invoice.subscription);
+      }
+    }
     if (invoice.billing_reason === 'subscription_cycle' && invoice.subscription) {
       const users = await sql`SELECT id, plan, avulso_credits FROM users WHERE stripe_subscription_id = ${invoice.subscription}`;
       if (users[0]) {
