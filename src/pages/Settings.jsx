@@ -27,7 +27,8 @@ function Settings() {
   const [userName, setUserName] = useState(user.name);
   const [nickname, setNickname] = useState(user.nickname || '');
   const [instructions, setInstructions] = useState(user.instructions || '');
-  const [saveSuccess, setSaveSuccess] = useState(null); // field name that was saved
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [modalBilling, setModalBilling] = useState({ starter: 'annual', pro: 'annual' });
   const [notifSuggestions, setNotifSuggestions] = useState(notifications?.suggestions ?? true);
@@ -147,23 +148,25 @@ function Settings() {
   const linageHistory = agents.find(a => a.id === 'linage')?.history || [];
   const messagesSent = linageHistory.filter((m) => m.sender === 'user').length;
 
-  const saveField = async (field, value) => {
-    useStore.setState((s) => ({ user: { ...s.user, [field]: value } }));
-    setSaveSuccess(field);
-    setTimeout(() => setSaveSuccess(null), 2000);
+  const isDirty =
+    userName !== (user.name || '') ||
+    nickname !== (user.nickname || '') ||
+    instructions !== (user.instructions || '');
 
-    if (field === 'nickname' || field === 'instructions') {
-      const store = useStore.getState();
+  const handleSaveAccount = async () => {
+    setIsSaving(true);
+    useStore.setState((s) => ({ user: { ...s.user, name: userName, nickname, instructions } }));
+    try {
       const token = await getToken();
-      fetch('/api/user/settings', {
+      await fetch('/api/user/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          nickname: field === 'nickname' ? value : (store.user.nickname || ''),
-          instructions: field === 'instructions' ? value : (store.user.instructions || ''),
-        }),
+        body: JSON.stringify({ nickname, instructions }),
       });
-    }
+    } catch {}
+    setIsSaving(false);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2500);
   };
 
   return (
@@ -230,7 +233,6 @@ function Settings() {
                     type="text"
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
-                    onBlur={() => saveField('name', userName)}
                     className="settings-text-input"
                   />
                 </div>
@@ -242,7 +244,6 @@ function Settings() {
                     type="text"
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
-                    onBlur={() => saveField('nickname', nickname)}
                     className="settings-text-input"
                   />
                 </div>
@@ -260,12 +261,29 @@ function Settings() {
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
                     onFocus={instructionsFocus}
-                    onBlur={(e) => { instructionsBlur(e); saveField('instructions', instructions); }}
+                    onBlur={instructionsBlur}
                     className="settings-text-input"
                     rows={4}
                     style={{ resize: 'vertical' }}
                   />
                 </div>
+
+                {isDirty && (
+                  <div className="settings-save-row">
+                    <button
+                      className="btn-primary-sm settings-save-btn"
+                      onClick={handleSaveAccount}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? 'Salvando...' : 'Salvar alterações'}
+                    </button>
+                    {saveSuccess && (
+                      <span className="save-success-msg">
+                        <Check size={13} style={{ marginRight: 4 }} /> Salvo!
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <div className="settings-divider" />
 
@@ -320,11 +338,6 @@ function Settings() {
                   <button className="plan-cancel-btn" onClick={handleDeleteAccount}>Excluir conta</button>
                 </div>
 
-                {saveSuccess && (
-                  <span className="save-success-msg" style={{ marginTop: 12, display: 'inline-flex' }}>
-                    <Check size={14} style={{ marginRight: 4 }} /> Salvo!
-                  </span>
-                )}
               </div>
             </div>
           )}

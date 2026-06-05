@@ -3449,6 +3449,19 @@ body {
   align-items: center;
 }
 
+.settings-save-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.settings-save-btn {
+  padding: 8px 20px;
+  font-size: 13px;
+}
+
 .save-settings-submit-btn {
   padding: 10px 20px;
   background: var(--accent-gradient);

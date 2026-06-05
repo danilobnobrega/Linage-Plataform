@@ -54,7 +54,7 @@ function Home() {
       {/* Top Greeting & Header */}
       <header className="home-header">
         <div className="welcome-section">
-          <span className="greeting-pill">{getTimeOfDayGreeting()}, {(user.name || 'Especialista').split(',')[0].trim()}</span>
+          <span className="greeting-pill">{getTimeOfDayGreeting()}, {user.nickname?.trim() || (user.name || 'Especialista').split(' ')[0]}</span>
           <h1 className="home-title">O que você tem a dizer hoje?</h1>
           <DecryptText phrases={HOME_PHRASES} className="decrypt-subtitle" />
         </div>
