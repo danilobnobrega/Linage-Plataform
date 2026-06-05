@@ -18,6 +18,8 @@ function ConsensusConverter() {
   const rectRef = useRef(null);   // cached when card is flat; never updated while tilted
   const textFocusedRef = useRef(false);
   const tiltActiveRef = useRef(false);
+  const textareaRef = useRef(null);
+  const outlierRef = useRef(null);
 
   const resetTilt = useCallback(() => {
     if (rafRef.current) {
@@ -85,6 +87,18 @@ function ConsensusConverter() {
   const [flipping, setFlipping] = useState(false);
   const [flippedText, setFlippedText] = useState('');
 
+  useEffect(() => {
+    if (!isTouch) return;
+    const sync = () => {
+      if (outlierRef.current && textareaRef.current) {
+        textareaRef.current.style.height = outlierRef.current.getBoundingClientRect().height + 'px';
+      }
+    };
+    sync();
+    window.addEventListener('resize', sync);
+    return () => window.removeEventListener('resize', sync);
+  }, [flipped, flippedText]);
+
   const handleFocus = () => {
     textFocusedRef.current = true;
     resetTilt();
@@ -151,6 +165,7 @@ function ConsensusConverter() {
         <div className="consensus-col">
           <span className="consensus-col-label consensus-col-label--warm">SENSO COMUM</span>
           <textarea
+            ref={textareaRef}
             className={`consensus-text-box consensus-text-editable${isDefault ? ' consensus-text-dimmed' : ''}`}
             value={currentText}
             onFocus={handleFocus}
@@ -175,7 +190,7 @@ function ConsensusConverter() {
         {/* Right — Ângulo Outlier */}
         <div className="consensus-col">
           <span className="consensus-col-label consensus-col-label--outlier">ÂNGULO INUSITADO (POSICIONAMENTO)</span>
-          <div className={`consensus-text-box consensus-text-box--outlier ${flipped ? 'consensus-text-box--visible' : ''}`}>
+          <div ref={outlierRef} className={`consensus-text-box consensus-text-box--outlier ${flipped ? 'consensus-text-box--visible' : ''}`}>
             {flipped ? (
               <span style={{ whiteSpace: 'pre-line' }}>
                 {isDefault ? EXAMPLE.outlier : flippedText}

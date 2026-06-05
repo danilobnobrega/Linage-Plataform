@@ -5369,13 +5369,11 @@ body {
   }
 
   .consensus-text-box {
-    min-height: 140px;
-    height: 140px;
-    overflow-y: auto;
+    min-height: 80px;
   }
 
   .consensus-text-editable {
-    height: 140px;
+    overflow-y: auto;
   }
 
   /* ============================================================
