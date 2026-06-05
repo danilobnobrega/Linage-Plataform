@@ -84,7 +84,7 @@ function AppContent() {
     if (main) main.scrollTop = 0;
   }, [pathname]);
 
-  const isAuthPage = pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up');
+  const isAuthPage = pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up') || pathname.startsWith('/checkout');
 
   return (
     <>
