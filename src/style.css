@@ -189,6 +189,7 @@ body {
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
+  overflow-anchor: none;
   position: relative;
   background-color: var(--bg-primary);
   transition: var(--transition-smooth);
