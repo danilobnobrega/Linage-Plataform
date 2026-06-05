@@ -1304,6 +1304,15 @@ body {
     gap: 12px;
   }
 
+  .billing-toggle--card .billing-toggle-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .billing-toggle--card .billing-discount {
+    font-size: 9px;
+  }
+
   .settings-plan-card {
     flex-direction: column;
     align-items: flex-start;
