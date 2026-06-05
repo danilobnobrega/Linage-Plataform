@@ -5412,20 +5412,16 @@ body {
   }
 
   .advisor-chat-card {
-    border-radius: 0 !important;
+    border-radius: 0;
     width: 100%;
     height: 100%;
-    border: none !important;
+    border: none;
     box-shadow: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background: var(--bg-secondary) !important;
-    overflow: hidden;
-  }
-
-  .advisor-chat-card:hover {
-    border-color: transparent !important;
-    box-shadow: none !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--bg-primary);
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .chat-card-header {
@@ -5442,12 +5438,16 @@ body {
 
   .advisor-chat-messages {
     padding: 16px 12px;
-    overflow-y: auto;
+    overflow: visible;
     max-height: none;
     -webkit-overflow-scrolling: touch;
   }
 
   .advisor-chat-input {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: var(--bg-primary);
     padding: 10px 12px;
   }
 
