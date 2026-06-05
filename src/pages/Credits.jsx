@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import { Check, Zap, Crown, Star, ArrowRight, Coins, Sparkles } from 'lucide-react';
@@ -59,6 +60,7 @@ const CREDIT_PACKS = [
 function Credits() {
   const { user, credits } = useStore();
   const { getToken } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(null);
   const [billingPerPlan, setBillingPerPlan] = useState({});
   const getPlanBilling = (planId) => billingPerPlan[planId] || 'monthly';
@@ -68,22 +70,8 @@ function Credits() {
     (p) => PLAN_ORDER[p.id] > (PLAN_ORDER[user.plan] ?? 0)
   );
 
-  const handleUpgrade = async (planId) => {
-    setLoading(planId);
-    try {
-      const token = await getToken();
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ plan: planId, billing: getPlanBilling(planId) }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch {
-      alert('Erro ao iniciar checkout. Tente novamente.');
-    } finally {
-      setLoading(null);
-    }
+  const handleUpgrade = (planId) => {
+    navigate(`/checkout?plan=${planId}&billing=${getPlanBilling(planId)}`);
   };
 
   const handleBuyPack = async (amount, unitAmount) => {
