@@ -36,15 +36,7 @@ function ProtectedRoute({ children }) {
 function RootRedirect() {
   const { isLoaded, isSignedIn } = useAuth();
   if (!isLoaded) return null;
-  if (isSignedIn) {
-    const intendedPlan = localStorage.getItem('linage_intended_plan');
-    if (intendedPlan) {
-      localStorage.removeItem('linage_intended_plan');
-      return <Navigate to="/credits" replace />;
-    }
-    return <Navigate to="/home" replace />;
-  }
-  return <Navigate to="/sign-in" replace />;
+  return <Navigate to={isSignedIn ? '/home' : '/sign-in'} replace />;
 }
 
 function MobileNavBar({ onHamburger }) {
