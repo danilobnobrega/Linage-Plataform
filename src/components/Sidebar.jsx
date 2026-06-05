@@ -118,27 +118,27 @@ function Sidebar({ isOpen, onClose }) {
             <div className="user-dropdown">
               <button
                 className="user-dropdown-item"
-                onClick={() => { navigate('/settings'); setShowUserMenu(false); }}
+                onClick={() => { navigate('/settings'); setShowUserMenu(false); onClose?.(); }}
               >
                 <Settings size={14} /><span>Configurações</span>
               </button>
               <button
                 className="user-dropdown-item"
-                onClick={() => { navigate('/help'); setShowUserMenu(false); }}
+                onClick={() => { navigate('/help'); setShowUserMenu(false); onClose?.(); }}
               >
                 <HelpCircle size={14} /><span>Receber ajuda</span>
               </button>
               {!isProPlan && (
                 <button
                   className="user-dropdown-item user-dropdown-item--accent"
-                  onClick={() => { navigate('/credits'); setShowUserMenu(false); }}
+                  onClick={() => { navigate('/credits'); setShowUserMenu(false); onClose?.(); }}
                 >
                   <Zap size={14} /><span>Fazer upgrade</span>
                 </button>
               )}
               <button
                 className="user-dropdown-item"
-                onClick={() => { navigate('/terms'); setShowUserMenu(false); }}
+                onClick={() => { navigate('/terms'); setShowUserMenu(false); onClose?.(); }}
               >
                 <ExternalLink size={14} /><span>Termos & Privacidade</span>
               </button>
