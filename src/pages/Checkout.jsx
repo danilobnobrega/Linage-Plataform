@@ -5,7 +5,6 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Check, ArrowLeft, Lock } from 'lucide-react';
 import ThreeBackground from '../components/ThreeBackground';
-import AuthCursor from '../components/AuthCursor';
 import { PLANS } from './Credits';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -202,7 +201,6 @@ function Checkout() {
   return (
     <div className="auth-page">
       <ThreeBackground />
-      <AuthCursor />
       <div className="auth-content" style={{ gap: 24, width: '100%', maxWidth: 820, padding: '0 16px' }}>
         <div style={s.header}>
           <button onClick={() => navigate('/credits')} style={s.backBtn}>
@@ -257,7 +255,7 @@ const s = {
     border: 'none',
     color: '#8b8897',
     fontSize: 13,
-    cursor: 'none',
+    cursor: 'pointer',
     padding: 0,
     fontFamily: "'Space Grotesk', sans-serif",
   },
@@ -384,7 +382,7 @@ const s = {
     fontSize: 15,
     fontWeight: 600,
     fontFamily: "'Space Grotesk', sans-serif",
-    cursor: 'none',
+    cursor: 'pointer',
     transition: 'opacity 0.2s',
     letterSpacing: '0.02em',
   },
@@ -408,7 +406,7 @@ const s = {
     border: 'none',
     color: '#00ff88',
     fontSize: 14,
-    cursor: 'none',
+    cursor: 'pointer',
     fontFamily: "'Space Grotesk', sans-serif",
   },
 };
