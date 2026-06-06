@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Check, ArrowLeft, Lock } from 'lucide-react';
 import ThreeBackground from '../components/ThreeBackground';
 import { PLANS } from './Credits';
@@ -48,7 +48,7 @@ const stripeAppearance = {
   },
 };
 
-function CheckoutForm({ planData, billing, getToken, clientSecret }) {
+function CheckoutForm({ planData, billing, getToken }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -63,9 +63,12 @@ function CheckoutForm({ planData, billing, getToken, clientSecret }) {
     setLoading(true);
     setError(null);
 
-    const cardElement = elements.getElement(CardElement);
-    const { setupIntent, error: setupError } = await stripe.confirmCardSetup(clientSecret, {
-      payment_method: { card: cardElement },
+    const { setupIntent, error: setupError } = await stripe.confirmSetup({
+      elements,
+      redirect: 'if_required',
+      confirmParams: {
+        return_url: `${window.location.origin}/home?upgrade=success`,
+      },
     });
 
     if (setupError) {
@@ -132,8 +135,8 @@ function CheckoutForm({ planData, billing, getToken, clientSecret }) {
 
       <div style={s.cardRight}>
         <div style={s.formTitle}>Dados do pagamento</div>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <CardElement options={{ style: { base: { color: '#e8e6f0', fontSize: '16px', '::placeholder': { color: '#8b8897' } } } }} />
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <PaymentElement options={{ layout: 'tabs' }} />
           {error && <p style={s.errorMsg}>{error}</p>}
           <button
             type="submit"
@@ -193,22 +196,24 @@ function Checkout() {
     init();
   }, []);
 
-  const elementsOptions = useMemo(() => (
-    stripeReady ? { appearance: stripeAppearance } : null
-  ), [stripeReady]);
+  const elementsOptions = useMemo(() =>
+    clientSecret ? { clientSecret, appearance: stripeAppearance } : null
+  , [clientSecret]);
 
   if (!planData) return null;
 
   return (
-    <div style={{ padding: 40 }}>
-      <div>
+    <div style={s.page}>
+      <ThreeBackground />
+      <div style={s.content}>
+
         <div style={s.header}>
           <button onClick={() => navigate('/credits')} style={s.backBtn}>
             <ArrowLeft size={14} />
             <span>Voltar</span>
           </button>
           <div style={s.logo}>
-            <svg width="22" height="21" viewBox="0 0 48 46" fill="none">
+            <svg width="20" height="19" viewBox="0 0 48 46" fill="none">
               <path fill="currentColor" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/>
             </svg>
             Linage
@@ -217,67 +222,51 @@ function Checkout() {
 
         {loading && (
           <div style={s.centered}>
-            <p style={{ color: '#8b8897', fontFamily: "'Space Grotesk', sans-serif", fontSize: 14 }}>
-              Preparando checkout...
-            </p>
+            <p style={s.loadingText}>Preparando checkout...</p>
           </div>
         )}
 
         {initError && (
           <div style={s.centered}>
-            <p style={{ color: '#ff4d6a', fontFamily: "'Space Grotesk', sans-serif", fontSize: 14 }}>{initError}</p>
+            <p style={s.errorText}>{initError}</p>
             <button onClick={() => navigate('/credits')} style={s.linkBtn}>Voltar para planos</button>
           </div>
         )}
 
         {stripeReady && elementsOptions && (
           <Elements stripe={stripePromise} options={elementsOptions}>
-            <CheckoutForm planData={planData} billing={billing} getToken={getToken} clientSecret={clientSecret} />
+            <CheckoutForm planData={planData} billing={billing} getToken={getToken} />
           </Elements>
         )}
+
       </div>
     </div>
   );
 }
 
 const s = {
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    zIndex: 200,
-    backgroundColor: '#030508',
+  page: {
+    minHeight: '100vh',
+    position: 'relative',
+    background: '#030508',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    overflowY: 'auto',
-    padding: '32px 16px',
+    padding: '40px 16px',
   },
   content: {
     position: 'relative',
-    zIndex: 201,
+    zIndex: 1,
+    width: '100%',
+    maxWidth: 840,
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    gap: 24,
-    width: '100%',
-    maxWidth: 820,
-  },
-  logo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    fontFamily: "'Cormorant Garamond', serif",
-    fontSize: '1.6rem',
-    fontWeight: 300,
-    letterSpacing: '0.25em',
-    color: '#ffffff',
-    textTransform: 'uppercase',
+    gap: 28,
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%',
   },
   backBtn: {
     display: 'flex',
@@ -291,34 +280,44 @@ const s = {
     padding: 0,
     fontFamily: "'Space Grotesk', sans-serif",
   },
+  logo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: '1.5rem',
+    fontWeight: 300,
+    letterSpacing: '0.25em',
+    color: '#ffffff',
+    textTransform: 'uppercase',
+  },
   card: {
     display: 'grid',
     gridTemplateColumns: '1fr 1px 1.4fr',
-    gap: 0,
     background: 'rgba(8, 11, 18, 0.75)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
     border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 16,
-    boxShadow: '0 0 60px rgba(0, 255, 136, 0.05)',
+    boxShadow: '0 0 60px rgba(0, 255, 136, 0.05), 0 24px 64px rgba(0,0,0,0.4)',
     overflow: 'hidden',
     width: '100%',
   },
   cardLeft: {
-    padding: '32px 28px',
+    padding: '36px 32px',
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
   },
   cardDivider: {
-    background: 'rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.07)',
     width: 1,
   },
   cardRight: {
-    padding: '32px 28px',
+    padding: '36px 32px',
     display: 'flex',
     flexDirection: 'column',
-    gap: 16,
+    gap: 20,
   },
   planLabel: {
     fontSize: 11,
@@ -330,7 +329,7 @@ const s = {
   },
   planName: {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: 300,
     color: '#f0eef8',
     letterSpacing: '0.04em',
@@ -342,7 +341,7 @@ const s = {
     gap: 4,
   },
   priceAmount: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 600,
     color: '#ffffff',
     fontFamily: "'Space Grotesk', sans-serif",
@@ -360,7 +359,7 @@ const s = {
   },
   divider: {
     height: 1,
-    background: 'rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.07)',
     margin: '4px 0',
   },
   featureList: {
@@ -383,7 +382,7 @@ const s = {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    marginTop: 4,
+    marginTop: 8,
   },
   secureText: {
     fontSize: 11,
@@ -392,11 +391,11 @@ const s = {
   },
   formTitle: {
     fontFamily: "'Space Grotesk', sans-serif",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 500,
-    color: '#8b8897',
+    color: '#6b7280',
     textTransform: 'uppercase',
-    letterSpacing: '0.08em',
+    letterSpacing: '0.1em',
   },
   errorMsg: {
     color: '#ff4d6a',
@@ -406,7 +405,7 @@ const s = {
   },
   submitBtn: {
     width: '100%',
-    padding: '13px 24px',
+    padding: '14px 24px',
     background: 'linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)',
     color: '#030508',
     border: 'none',
@@ -431,7 +430,19 @@ const s = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
-    minHeight: 200,
+    minHeight: 300,
+  },
+  loadingText: {
+    color: '#8b8897',
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontSize: 14,
+    margin: 0,
+  },
+  errorText: {
+    color: '#ff4d6a',
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontSize: 14,
+    margin: 0,
   },
   linkBtn: {
     background: 'none',
