@@ -59,7 +59,8 @@ function SignInPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const redirectUrl = new URLSearchParams(window.location.search).get('redirect_url') || '/home';
 
-  if (isLoaded && isSignedIn) return <Navigate to={redirectUrl} replace />;
+  if (!isLoaded) return null;
+  if (isSignedIn) return <Navigate to={redirectUrl} replace />;
 
   return (
     <div className="auth-page">

@@ -59,7 +59,8 @@ function SignUpPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const redirectUrl = new URLSearchParams(window.location.search).get('redirect_url') || '/welcome';
 
-  if (isLoaded && isSignedIn) return <Navigate to={redirectUrl} replace />;
+  if (!isLoaded) return null;
+  if (isSignedIn) return <Navigate to={redirectUrl} replace />;
   const signInUrl = redirectUrl !== '/home'
     ? `/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`
     : '/sign-in';
