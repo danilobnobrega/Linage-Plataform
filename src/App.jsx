@@ -84,8 +84,17 @@ function MobileNavBar({ onHamburger }) {
         </button>
         {showCreditsPopover && (
           <div className="credits-popover">
-            <p>Você tem {credits.toLocaleString('pt-BR')} créditos.</p>
-            <p>Dá para criar mais {posts} {posts === 1 ? 'post' : 'posts'} por aqui.</p>
+            {credits === 0 ? (
+              <>
+                <p>Você zerou os créditos por aqui.</p>
+                <p>A criatividade agradece a pausa. Abasteça o tanque para continuar.</p>
+              </>
+            ) : (
+              <>
+                <p>Você tem {credits.toLocaleString('pt-BR')} créditos.</p>
+                <p>Dá para criar mais {posts} {posts === 1 ? 'post' : 'posts'} por aqui.</p>
+              </>
+            )}
           </div>
         )}
       </div>

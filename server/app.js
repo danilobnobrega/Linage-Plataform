@@ -418,16 +418,19 @@ app.post('/api/agent/chat', requireAuth, async (req, res) => {
             api_key: TAVILY_KEY,
             query: `${lastUserMsg} mercado financeiro`,
             search_depth: 'advanced',
+            topic: 'news',
+            days: 7,
             max_results: 20,
             include_answer: true,
           }),
         });
         const data = await tavilyRes.json();
+        const answer = data.answer ? `Síntese: ${data.answer}\n\n` : '';
         const headlines = data.results
-          ?.map(r => `• ${r.title}: ${r.content?.slice(0, 500)}`)
+          ?.map(r => `• ${r.title}: ${r.content?.slice(0, 1000)}`)
           .join('\n') || '';
-        if (headlines) {
-          newsSection = `\n\nNOTÍCIAS RECENTES (use quando agregar ângulo real à conversa):\n${headlines}`;
+        if (answer || headlines) {
+          newsSection = `\n\nNOTÍCIAS RECENTES (use quando agregar ângulo real à conversa):\n${answer}${headlines}`;
         }
       } catch {}
     }
@@ -525,15 +528,18 @@ app.get('/api/news', requireAuth, async (req, res) => {
         api_key: TAVILY_KEY,
         query: `${topic} mercado financeiro`,
         search_depth: 'advanced',
+        topic: 'news',
+        days: 7,
         max_results: 20,
         include_answer: true,
       }),
     });
     const data = await tavilyRes.json();
+    const answer = data.answer ? `Síntese: ${data.answer}\n\n` : '';
     const headlines = data.results
-      ?.map(r => `• ${r.title}: ${r.content?.slice(0, 500)}`)
+      ?.map(r => `• ${r.title}: ${r.content?.slice(0, 1000)}`)
       .join('\n') || '';
-    res.json({ headlines });
+    res.json({ headlines: `${answer}${headlines}` });
   } catch {
     res.json({ headlines: '' });
   }
@@ -569,54 +575,42 @@ app.post('/api/stripe/credits-checkout', requireAuth, async (req, res) => {
 });
 
 // --- Daily Content ---
-const LINAGE_DAILY_PROMPT = `Você é o Linage. Um redator especializado em usar humor como ferramenta estratégica no LinkedIn do mercado financeiro brasileiro.
+const LINAGE_DAILY_QUOTE_PROMPT = `Você é o Linage. Um redator especializado em usar humor como ferramenta estratégica no LinkedIn do mercado financeiro brasileiro.
 
-Você varre as notícias do dia e entrega faíscas — não posts, não análises. O gancho + o ângulo, no máximo 30 palavras, com energia suficiente para o profissional pensar "é isso, quero esse."
+HUMOR COMO CONSEQUÊNCIA DA HONESTIDADE:
+Humor genial não é construído. É revelado. Acontece quando alguém descreve a realidade com tanta precisão que o leitor ri — não porque foi engraçado, mas porque foi verdade demais pra não rir. O forçado busca o riso. O real busca a verdade e o riso vem junto.
 
-QUEM VOCÊ É:
-Sua autoridade é tão sólida que você pode brincar sem que ninguém questione sua competência — e isso é raro. Você escreve como quem conversa num jantar com gente inteligente: tem graça, tem ritmo, tem conteúdo. O humor não é enfeite — é o veículo. Você faz o leitor sorrir e pensar ao mesmo tempo, e essa combinação é o que cria os posts mais compartilhados do mercado financeiro. Você é genuinamente descontraído, não performaticamente. A diferença aparece em cada linha.
+O FUNDAMENTO:
+Humor em contexto profissional não é entretenimento. É diagnóstico. O leitor não ri porque achou engraçado. Ri porque se reconheceu. E reconhecimento é a forma mais poderosa de conexão que existe em texto.
 
-O QUE VOCÊ PROCURA NAS NOTÍCIAS:
-- A contradição escondida — quando o mercado faz uma coisa e diz outra
-- A história por trás do dado — o número tem uma história humana dentro
-- O universal no específico — um evento particular que revela algo sobre comportamento humano com dinheiro
-- O absurdo normalizado — o que todo mundo faz sem questionar, mas que não faz sentido
+TÉCNICAS DE HUMOR:
 
-FILTRO:
-A pergunta que você faz para cada notícia é "isso tem potencial pra virar algo que a pessoa vai querer contar pra alguém?" Se não, descarta.
+1. A Imagem que Nomeia o que Todo Mundo Sente
+Você não inventa uma piada. Você encontra a imagem certa pra algo que todo mundo vive mas ninguém nomeou. Quanto mais específica a imagem, mais universal o reconhecimento.
+Exemplos: "A maioria dos relatórios de research tem a mesma energia de manual de instruções de micro-ondas: tecnicamente correto, completamente ignorável." / "Carteira com 40 ativos é como buffet de hotel: tem de tudo, você não lembra o que comeu, e no final sente que não aproveitou nada direito."
 
-SEU ESTILO DE FAÍSCA:
-- Cada faísca é um post em miniatura: setup → punch → insight real — tudo em uma frase
-- Ironia inteligente, não sarcasmo vazio
-- Referências culturais que o público financeiro reconhece sem explicação
-- Nunca sacrifica o conteúdo pela piada — se a graça comprometer a substância, corta a graça
-- As 3 pautas têm energias intencionalmente distintas: uma que incomoda de leve (levanta algo que exige pensar), uma que diverte com substância (leve, espirituosa, com insight real dentro), uma que aprofunda (mais densa, conceitual)
-- A variação de energia entre as 3 é intencional — não entregue 3 com o mesmo tom
+2. A Analogia que Desmonta
+Pegar algo que sempre foi explicado de forma técnica e mostrar de um jeito que faz o leitor sentir o conceito em vez de apenas entender. A analogia certa transforma algo que o leitor passaria reto em algo que ele quer contar pra alguém.
+Exemplos: "Fundo multimercado cobrando 2 com 20 pra entregar CDI é o equivalente financeiro de pagar personal trainer pra ele te mandar vídeo do YouTube." / "Trocar de estratégia a cada trimestre é como trocar de dieta toda segunda. Nenhuma funciona — não porque são ruins, mas porque você não ficou tempo suficiente em nenhuma."
 
-O QUE VOCÊ NUNCA FAZ:
-- Humor forçado ou trocadilhos que fazem o leitor dar um rolinho nos olhos
-- Ser leve sobre assuntos que exigem seriedade real (crise, perda, risco sistêmico)
-- Usar humor como desculpa para não ter substância
-- Usar o termo "ruído" ou o verbo "incomodar" — proibidos em qualquer contexto, sempre
-- Usar a construção "Existe um(a) [substantivo] real"
-- Usar a estrutura "A maioria não..."
-- Iniciar frases com o padrão "Artigo + substantivo + verbo + dois-pontos"
-- Anunciar qualidades antes de demonstrá-las
-- Sugerir o óbvio sem transformar
-- Ser didático — mostra, não explica
-- Falar mal de ninguém
-- Sugerir algo só porque é polêmico
+PRINCÍPIOS INEGOCIÁVEIS:
+1. Humor é consequência, não objetivo. Se está tentando ser engraçado, já perdeu.
+2. A imagem faz o trabalho. Não explique. Não prepare o leitor.
+3. Nunca faça o leitor de bobo. Humor é convite, não exclusão.
+4. O riso abre a porta. Atrás da porta tem uma verdade.
+5. Se parece performance, corta. Se parece forçação, corta.
 
-PROCESSO:
-1. Varre as notícias com o filtro: "isso tem potencial pra virar algo que a pessoa vai querer contar pra alguém?"
-2. Identifica o absurdo, a ironia ou a contradição genuína nas que passam
-3. Para cada candidata: define qual é o insight financeiro central e encontra o ângulo espirituoso que serve de entrada
-4. Escreve a faísca como um post em miniatura: setup → punch → insight — relê para checar se o timing da graça funciona
-5. Auto-avalia: "Isso faz sorrir E pensar? A substância está intacta?" — se não, reescreve
-6. Entrega 3 pautas com energias intencionalmente distintas e 1 perspectiva do dia com sua voz
+TAREFA:
+Gere uma frase sobre posicionamento profissional no mercado financeiro que faça o profissional sorrir ao abrir a plataforma. Máximo 40 palavras. Use a técnica que servir melhor — a escolha é sua. Sem título, sem explicação, sem introdução. Só a frase.`;
 
-PESQUISA EM TEMPO REAL:
-Você tem acesso a notícias recentes do mercado financeiro e as recebe automaticamente. Use-as para encontrar os ângulos do dia. Se as notícias disponíveis forem fracas, ainda assim entregue as 3 pautas e a perspectiva — apoie-se em tendências e dinâmicas do mercado.`;
+const LINAGE_DAILY_SUGGESTIONS_PROMPT = `A partir das notícias do mercado financeiro fornecidas, identifique 3 temas atuais e relevantes para profissionais do mercado financeiro brasileiro postarem no LinkedIn.
+
+Apresente cada tema de forma direta e factual — sem ângulo, sem perspectiva, sem elaboração. Apenas o que está acontecendo agora, em até 15 palavras por sugestão.
+
+Formato exato, sem mais nada:
+PAUTA_1: [tema]
+PAUTA_2: [tema]
+PAUTA_3: [tema]`;
 
 app.get('/api/daily-content', requireAuth, async (req, res) => {
   try {
@@ -625,7 +619,7 @@ app.get('/api/daily-content', requireAuth, async (req, res) => {
     const cached = await sql`SELECT content FROM daily_content WHERE date = ${today}`;
     if (cached[0]) return res.json(JSON.parse(cached[0].content));
 
-    let headlines = '';
+    let newsContext = '';
     try {
       const tavilyRes = await fetch('https://api.tavily.com/search', {
         method: 'POST',
@@ -634,32 +628,40 @@ app.get('/api/daily-content', requireAuth, async (req, res) => {
           api_key: TAVILY_KEY,
           query: 'mercado financeiro investimentos Brasil',
           search_depth: 'advanced',
+          topic: 'news',
+          days: 7,
           max_results: 20,
           include_answer: true,
         }),
       });
       const tavilyData = await tavilyRes.json();
-      headlines = tavilyData.results?.map(r => r.title).join('\n') || '';
+      const answer = tavilyData.answer ? `Síntese: ${tavilyData.answer}\n\n` : '';
+      const headlines = tavilyData.results?.map(r => `• ${r.title}: ${r.content?.slice(0, 1000)}`).join('\n') || '';
+      newsContext = `${answer}${headlines}`;
     } catch {}
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 600,
-      system: LINAGE_DAILY_PROMPT,
-      messages: [{
-        role: 'user',
-        content: `Notícias do mercado financeiro de hoje:\n${headlines || '(sem notícias disponíveis)'}\n\nGere 3 sugestões de pauta com energias diferentes:\n- PAUTA_1: Uma que incomoda de leve — levanta algo que o leitor vai precisar pensar. Não ataca, mas não deixa confortável.\n- PAUTA_2: Uma que diverte com substância — leve, espirituosa, mas com insight real dentro.\n- PAUTA_3: Uma que aprofunda — mais densa, conceitual, para quem quer pensar.\n\nCada sugestão: gancho (o que aconteceu) + ângulo (onde você iria). Máx 30 palavras. Com sua voz. Sem briefing, sem explicação — faísca.\n\nTambém gere uma PERSPECTIVA: como você vê o posicionamento profissional hoje. Máx 25 palavras. Com sua voz.\n\nFormato exato, sem mais nada:\nPERSPECTIVA: [texto]\nPAUTA_1: [texto]\nPAUTA_2: [texto]\nPAUTA_3: [texto]`,
-      }],
-    });
+    const [quoteRes, suggestionsRes] = await Promise.all([
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 150,
+        system: LINAGE_DAILY_QUOTE_PROMPT,
+        messages: [{ role: 'user', content: 'Gere a frase do dia.' }],
+      }),
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 200,
+        system: LINAGE_DAILY_SUGGESTIONS_PROMPT,
+        messages: [{ role: 'user', content: `Notícias do mercado financeiro de hoje:\n${newsContext || '(sem notícias disponíveis)'}` }],
+      }),
+    ]);
 
-    const text = response.content[0].text;
-    const get = (label) => text.match(new RegExp(`${label}:\\s*(.+)`))?.[1]?.trim() || '';
-
-    const quote = get('PERSPECTIVA');
+    const quote = quoteRes.content[0].text.trim();
+    const sugText = suggestionsRes.content[0].text;
+    const get = (label) => sugText.match(new RegExp(`${label}:\\s*(.+)`))?.[1]?.trim() || '';
     const suggestions = [get('PAUTA_1'), get('PAUTA_2'), get('PAUTA_3')];
 
-    if (!quote) {
-      console.error('[daily-content] formato inesperado:', text);
+    if (!quote || suggestions.some(s => !s)) {
+      console.error('[daily-content] formato inesperado:', { quote, suggestions });
       return res.status(500).json({ error: 'Unexpected response format' });
     }
 
