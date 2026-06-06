@@ -210,9 +210,8 @@ function Checkout() {
   if (!planData) return null;
 
   return (
-    <div style={s.overlay}>
-      <ThreeBackground />
-      <div style={s.content}>
+    <div style={{ padding: 40 }}>
+      <div>
         <div style={s.header}>
           <button onClick={() => navigate('/credits')} style={s.backBtn}>
             <ArrowLeft size={14} />
