@@ -272,9 +272,9 @@ const s = {
     gap: 28,
   },
   header: {
-    display: 'flex',
+    display: 'grid',
+    gridTemplateColumns: '1fr auto 1fr',
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
   backBtn: {
     display: 'flex',
