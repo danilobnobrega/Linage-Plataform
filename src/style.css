@@ -5304,7 +5304,7 @@ body {
   }
 
   .main-content {
-    height: 100dvh;
+    height: 100svh;
     overscroll-behavior-y: contain;
     padding-top: 56px;
     padding-bottom: 40px;
