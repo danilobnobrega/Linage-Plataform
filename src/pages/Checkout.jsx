@@ -238,7 +238,6 @@ function Checkout() {
   return (
     <div style={{
       ...s.page,
-      minHeight: isMobile ? 0 : '100vh',
       padding: isMobile ? '24px 12px 40px' : '40px 16px',
       alignItems: isMobile ? 'flex-start' : 'center',
     }}>
