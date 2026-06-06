@@ -16,6 +16,16 @@ import { PLANS } from './Credits';
 
 let stripePromise = null;
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return isMobile;
+}
+
 const cardStyle = {
   base: {
     color: '#e8e6f0',
@@ -42,7 +52,7 @@ function StripeField({ label, children, focused }) {
   );
 }
 
-function CheckoutForm({ planData, billing, getToken, clientSecret }) {
+function CheckoutForm({ planData, billing, getToken, clientSecret, isMobile }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -98,13 +108,22 @@ function CheckoutForm({ planData, billing, getToken, clientSecret }) {
 
   const fo = (name) => ({ onFocus: () => setFocused(name), onBlur: () => setFocused(null) });
 
+  const pad = isMobile ? '24px 20px' : '36px 32px';
+
   return (
-    <div style={s.card}>
-      <div style={s.cardLeft}>
+    <div style={{
+      ...s.card,
+      gridTemplateColumns: isMobile ? undefined : '1fr 1px 1.4fr',
+      display: isMobile ? 'flex' : 'grid',
+      flexDirection: isMobile ? 'column' : undefined,
+    }}>
+
+      {/* Plan summary */}
+      <div style={{ ...s.cardLeft, padding: pad }}>
         <div style={s.planLabel}>Plano selecionado</div>
-        <div style={s.planName}>{planData.name}</div>
+        <div style={{ ...s.planName, fontSize: isMobile ? 26 : 34 }}>{planData.name}</div>
         <div style={s.priceRow}>
-          <span style={s.priceAmount}>{price}</span>
+          <span style={{ ...s.priceAmount, fontSize: isMobile ? 22 : 28 }}>{price}</span>
           <span style={s.pricePeriod}>{planData.period}</span>
         </div>
         {billing === 'annual' && planData.annualTotal && (
@@ -125,9 +144,14 @@ function CheckoutForm({ planData, billing, getToken, clientSecret }) {
         </div>
       </div>
 
-      <div style={s.cardDivider} />
+      {/* Divider */}
+      <div style={isMobile
+        ? { height: 1, background: 'rgba(255,255,255,0.07)' }
+        : { width: 1, background: 'rgba(255,255,255,0.07)' }
+      } />
 
-      <div style={s.cardRight}>
+      {/* Payment form */}
+      <div style={{ ...s.cardRight, padding: pad }}>
         <div style={s.formTitle}>Dados do pagamento</div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -164,6 +188,7 @@ function CheckoutForm({ planData, billing, getToken, clientSecret }) {
 function Checkout() {
   const { getToken } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [clientSecret, setClientSecret] = useState(null);
   const [stripeReady, setStripeReady] = useState(false);
   const [initError, setInitError] = useState(null);
@@ -211,17 +236,29 @@ function Checkout() {
   if (!planData) return null;
 
   return (
-    <div style={s.page}>
+    <div style={{
+      ...s.page,
+      padding: isMobile ? '24px 12px 40px' : '40px 16px',
+      alignItems: isMobile ? 'flex-start' : 'center',
+    }}>
       <ThreeBackground />
-      <div style={s.content}>
+      <div style={{
+        ...s.content,
+        gap: isMobile ? 20 : 28,
+        maxWidth: isMobile ? '100%' : 840,
+      }}>
 
         <div style={s.header}>
           <button onClick={() => navigate('/credits')} style={s.backBtn}>
             <ArrowLeft size={14} />
             <span>Voltar</span>
           </button>
-          <div style={s.logo}>
-            <svg width="20" height="19" viewBox="0 0 48 46" fill="none">
+          <div style={{
+            ...s.logo,
+            fontSize: isMobile ? '1.15rem' : '1.5rem',
+            gap: isMobile ? 8 : 10,
+          }}>
+            <svg width={isMobile ? 16 : 20} height={isMobile ? 15 : 19} viewBox="0 0 48 46" fill="none">
               <path fill="currentColor" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/>
             </svg>
             Linage
@@ -243,7 +280,13 @@ function Checkout() {
 
         {stripeReady && elementsOptions && (
           <Elements stripe={stripePromise} options={elementsOptions}>
-            <CheckoutForm planData={planData} billing={billing} getToken={getToken} clientSecret={clientSecret} />
+            <CheckoutForm
+              planData={planData}
+              billing={billing}
+              getToken={getToken}
+              clientSecret={clientSecret}
+              isMobile={isMobile}
+            />
           </Elements>
         )}
 
@@ -258,7 +301,6 @@ const s = {
     position: 'relative',
     background: '#030508',
     display: 'flex',
-    alignItems: 'center',
     justifyContent: 'center',
     padding: '40px 16px',
   },
@@ -300,8 +342,6 @@ const s = {
     textTransform: 'uppercase',
   },
   card: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1px 1.4fr',
     background: 'rgba(8, 11, 18, 0.75)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
@@ -316,10 +356,6 @@ const s = {
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
-  },
-  cardDivider: {
-    background: 'rgba(255,255,255,0.07)',
-    width: 1,
   },
   cardRight: {
     padding: '36px 32px',
