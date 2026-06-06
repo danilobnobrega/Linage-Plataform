@@ -10,8 +10,8 @@ import {
 const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 import { PLANS } from './Credits';
 
-const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
-const PLAN_CREDITS = { free: 1350, starter: 4500, pro: 9000 };
+const PLAN_ORDER = { trial: 0, starter: 1, pro: 2 };
+const PLAN_CREDITS = { trial: 1350, starter: 4500, pro: 9000 };
 
 const SECTIONS = [
   { id: 'conta',       label: 'Conta',       Icon: User },
@@ -135,9 +135,9 @@ function Settings() {
 
   const currentPlan = PLANS.find((p) => p.id === user.plan) || PLANS[0];
   const downgradePlans = PLANS.filter(
-    (p) => PLAN_ORDER[p.id] < PLAN_ORDER[user.plan] && p.id !== 'free'
+    (p) => PLAN_ORDER[p.id] < PLAN_ORDER[user.plan] && p.id !== 'trial'
   );
-  const isPaidPlan = user.plan !== 'free';
+  const isPaidPlan = user.plan !== 'trial';
   const email = clerkUser?.primaryEmailAddress?.emailAddress || '—';
 
   const handlePhotoChange = async (e) => {
@@ -588,7 +588,7 @@ function Settings() {
             </div>
 
                     <div className="plans-grid" style={{ marginBottom: 24 }}>
-                {PLANS.filter(p => p.id !== 'free').map((plan) => {
+                {PLANS.filter(p => p.id !== 'trial').map((plan) => {
                   const { Icon } = plan;
                   const selectedBilling = modalBilling[plan.id] || 'monthly';
                   const isCurrentPlan = plan.id === user.plan;

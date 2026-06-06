@@ -56,7 +56,7 @@ export async function syncUser({ id, email }) {
 export async function startTrial(id) {
   const [user] = await sql`
     UPDATE users SET credits = 1350, trial_activated = TRUE
-    WHERE id = ${id} AND plan = 'free' AND trial_activated = FALSE
+    WHERE id = ${id} AND plan = 'trial' AND trial_activated = FALSE
     RETURNING id, plan, credits, avulso_credits, nickname, instructions, trial_activated
   `;
   return user;
@@ -72,7 +72,7 @@ export async function updateUserCredits(id, credits) {
 }
 
 export async function updateUserPlan(id, plan, stripeCustomerId, stripeSubscriptionId) {
-  const planCredits = { free: 1350, starter: 4500, pro: 9000 };
+  const planCredits = { trial: 1350, starter: 4500, pro: 9000 };
   await sql`
     UPDATE users SET
       plan = ${plan},

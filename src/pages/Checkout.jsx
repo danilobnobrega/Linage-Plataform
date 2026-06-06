@@ -200,7 +200,7 @@ function Checkout() {
   const planData = PLANS.find(p => p.id === planId);
 
   useEffect(() => {
-    if (!planId || planId === 'free' || !planData) {
+    if (!planId || planId === 'trial' || !planData) {
       navigate('/credits', { replace: true });
       return;
     }

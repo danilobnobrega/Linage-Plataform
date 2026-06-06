@@ -4,11 +4,11 @@ import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import { Check, Zap, Crown, Star, ArrowRight, Coins, Sparkles } from 'lucide-react';
 
-const PLAN_ORDER = { free: 0, starter: 1, pro: 2 };
+const PLAN_ORDER = { trial: 0, starter: 1, pro: 2 };
 
 export const PLANS = [
   {
-    id: 'free',
+    id: 'trial',
     name: 'Teste Grátis',
     price: 'Grátis',
     period: '',

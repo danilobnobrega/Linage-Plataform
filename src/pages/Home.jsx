@@ -24,7 +24,7 @@ function Home() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
 
-  const showTrialBanner = user.plan === 'free' && !trialActivated;
+  const showTrialBanner = user.plan === 'trial' && !trialActivated;
 
   const handleStartTrial = async () => {
     setTrialLoading(true);
@@ -207,7 +207,7 @@ function Home() {
             </div>
 
             <div className="plans-grid">
-              {PLANS.filter((p) => p.id !== 'free').map((plan) => {
+              {PLANS.filter((p) => p.id !== 'trial').map((plan) => {
                 const { Icon } = plan;
                 const isCurrent = plan.id === user.plan;
                 return (

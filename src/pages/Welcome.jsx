@@ -14,7 +14,7 @@ function Welcome() {
 
   useEffect(() => {
     if (!dbUser) return;
-    if (dbUser.trial_activated || user.plan !== 'free') {
+    if (dbUser.trial_activated || user.plan !== 'trial') {
       navigate('/home', { replace: true });
     }
   }, [dbUser, user.plan]);

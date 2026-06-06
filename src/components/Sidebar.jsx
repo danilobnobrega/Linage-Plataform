@@ -25,7 +25,7 @@ function Sidebar({ isOpen, onClose }) {
   const [trialLoading, setTrialLoading] = useState(false);
   const userMenuRef = useRef(null);
 
-  const showTrialCta = user.plan === 'free' && !trialActivated;
+  const showTrialCta = user.plan === 'trial' && !trialActivated;
 
   const handleStartTrial = async () => {
     setTrialLoading(true);
@@ -51,7 +51,7 @@ function Sidebar({ isOpen, onClose }) {
 
   const firstName = user.name.replace(/,.*$/, '').trim().split(' ')[0];
   const isProPlan = user.plan === 'pro';
-  const PLAN_CREDITS = { free: 1350, starter: 4500, pro: 9000 };
+  const PLAN_CREDITS = { trial: 1350, starter: 4500, pro: 9000 };
   const planMax = PLAN_CREDITS[user.plan] || 1350;
   const planCreditsRemaining = Math.max(0, credits - avulsoCredits);
   const hasPlanCredits = planCreditsRemaining > 0;
