@@ -474,8 +474,8 @@ const [isGenerating, setIsGenerating] = useState(false);
               <div className="generator-loading-state">
                 <div className="rotating-gradient-ring"></div>
                 <Sparkles size={40} className="glow-spark-icon animate-pulse" />
-                <h3>Linage está redigindo...</h3>
-                <p>Moldando argumentos de alto impacto, revisando ritmo e injetando autoridade.</p>
+                <h3>Estou escrevendo…</h3>
+                <p>Se ficar bom, foi sorte. Se ficar ótimo, finja que foi você.</p>
               </div>
             ) : (
               <div className="generator-main-workspace">
