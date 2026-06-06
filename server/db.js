@@ -34,20 +34,30 @@ export async function initDb() {
   `;
   await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()`;
   await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS chat_history TEXT NOT NULL DEFAULT '[]'`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_activated BOOLEAN NOT NULL DEFAULT FALSE`;
 }
 
 export async function syncUser({ id, email }) {
-  const byId = await sql`SELECT id, plan, credits, avulso_credits, nickname, instructions FROM users WHERE id = ${id}`;
+  const byId = await sql`SELECT id, plan, credits, avulso_credits, nickname, instructions, trial_activated FROM users WHERE id = ${id}`;
   if (byId.length > 0) return byId[0];
 
   if (email) {
-    const byEmail = await sql`SELECT id, plan, credits, avulso_credits, nickname, instructions FROM users WHERE email = ${email}`;
+    const byEmail = await sql`SELECT id, plan, credits, avulso_credits, nickname, instructions, trial_activated FROM users WHERE email = ${email}`;
     if (byEmail.length > 0) return byEmail[0];
   }
 
   const [user] = await sql`
     INSERT INTO users (id, email) VALUES (${id}, ${email})
-    RETURNING id, plan, credits, avulso_credits, nickname, instructions
+    RETURNING id, plan, credits, avulso_credits, nickname, instructions, trial_activated
+  `;
+  return user;
+}
+
+export async function startTrial(id) {
+  const [user] = await sql`
+    UPDATE users SET credits = 1350, trial_activated = TRUE
+    WHERE id = ${id} AND plan = 'free' AND trial_activated = FALSE
+    RETURNING id, plan, credits, avulso_credits, nickname, instructions, trial_activated
   `;
   return user;
 }

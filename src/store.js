@@ -35,6 +35,7 @@ const useStore = create(persist(
       dbUser: u,
       credits: u?.credits ?? 0,
       avulsoCredits: u?.avulso_credits ?? 0,
+      trialActivated: u?.trial_activated ?? false,
       user: {
         ...s.user,
         plan: u?.plan ?? s.user.plan,
@@ -45,6 +46,7 @@ const useStore = create(persist(
     // Credit balance (local mirror of dbUser.credits)
     credits: 0,
     avulsoCredits: 0,
+    trialActivated: false,
     addCredits: (amt) => set((s) => ({ credits: s.credits + amt })),
     // Agents definitions — history is session-only (not persisted, see partialize)
     agents: [

@@ -55,7 +55,7 @@ const appearance = {
 };
 
 function SignUpPage() {
-  const redirectUrl = new URLSearchParams(window.location.search).get('redirect_url') || '/home';
+  const redirectUrl = new URLSearchParams(window.location.search).get('redirect_url') || '/welcome';
   const signInUrl = redirectUrl !== '/home'
     ? `/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`
     : '/sign-in';

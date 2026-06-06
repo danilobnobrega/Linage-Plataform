@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import ConsensusConverter from '../components/ConsensusConverter';
 import DecryptText from '../components/DecryptText';
@@ -16,10 +17,31 @@ const HOME_PHRASES = [
 ];
 
 function Home() {
-  const { user, posts, agents, addMessageToAgent } = useStore();
+  const { user, posts, agents, addMessageToAgent, trialActivated, setDbUser } = useStore();
   const [showPlanModal, setShowPlanModal] = useState(false);
+  const [trialLoading, setTrialLoading] = useState(false);
   const daily = useDailyContent(user.dailyQuote, user.suggestions);
   const navigate = useNavigate();
+  const { getToken } = useAuth();
+
+  const showTrialBanner = user.plan === 'free' && !trialActivated;
+
+  const handleStartTrial = async () => {
+    setTrialLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/auth/start-trial', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      const updatedUser = await res.json();
+      setDbUser(updatedUser);
+    } catch {
+    } finally {
+      setTrialLoading(false);
+    }
+  };
   
 
 
@@ -51,6 +73,13 @@ function Home() {
 
   return (
     <div className="page-container home-page animate-fade-in">
+      {showTrialBanner && (
+        <button className="trial-banner" onClick={handleStartTrial} disabled={trialLoading}>
+          <span>{trialLoading ? 'Iniciando...' : '✦ Teste grátis disponível — 1.350 créditos'}</span>
+          <span className="trial-banner-cta">{trialLoading ? '' : 'Ativar agora →'}</span>
+        </button>
+      )}
+
       {/* Top Greeting & Header */}
       <header className="home-header">
         <div className="welcome-section">

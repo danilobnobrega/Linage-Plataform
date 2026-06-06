@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useClerk, useUser } from '@clerk/clerk-react';
+import { useClerk, useUser, useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import {
   Home,
@@ -12,15 +12,37 @@ import {
   Zap,
   ExternalLink,
   LogOut,
+  Gift,
 } from 'lucide-react';
 
 function Sidebar({ isOpen, onClose }) {
-  const { user, credits, avulsoCredits } = useStore();
+  const { user, credits, avulsoCredits, trialActivated, setDbUser } = useStore();
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const { user: clerkUser } = useUser();
+  const { getToken } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [trialLoading, setTrialLoading] = useState(false);
   const userMenuRef = useRef(null);
+
+  const showTrialCta = user.plan === 'free' && !trialActivated;
+
+  const handleStartTrial = async () => {
+    setTrialLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/auth/start-trial', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      const updatedUser = await res.json();
+      setDbUser(updatedUser);
+    } catch {
+    } finally {
+      setTrialLoading(false);
+    }
+  };
 
   const getInitials = (name) => {
     const clean = name.replace(/,.*$/, '').trim();
@@ -76,6 +98,17 @@ function Sidebar({ isOpen, onClose }) {
           </NavLink>
         </nav>
       </div>
+
+      {/* Free trial CTA */}
+      {showTrialCta && (
+        <div className="sidebar-trial-wrap">
+          <button className="sidebar-trial-cta" onClick={handleStartTrial} disabled={trialLoading}>
+            <Gift size={15} />
+            <span>{trialLoading ? 'Iniciando...' : 'Iniciar teste grátis'}</span>
+          </button>
+          <span className="sidebar-trial-sub">1.350 créditos gratuitos</span>
+        </div>
+      )}
 
       {/* Bottom: credits card + user section */}
       <div className="sidebar-bottom">

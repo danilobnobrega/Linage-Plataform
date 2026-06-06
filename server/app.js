@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClerkClient, verifyToken } from '@clerk/backend';
-import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, addAvulsoCredits, getPosts, savePost, deletePost, updateUserSettings, sql } from './db.js';
+import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, addAvulsoCredits, getPosts, savePost, deletePost, updateUserSettings, startTrial, sql } from './db.js';
 import { LINAGE_SYSTEM_PROMPT, LINAGE_CHAT_GUARD, linagePostReviewPrompt } from './prompts.js';
 
 const app = express();
@@ -77,6 +77,16 @@ app.post('/api/auth/sync', requireAuth, async (req, res) => {
   }
 });
 
+
+app.post('/api/auth/start-trial', requireAuth, async (req, res) => {
+  try {
+    const user = await startTrial(req.userId);
+    if (!user) return res.status(400).json({ error: 'Trial não disponível.' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // --- Posts ---
 app.get('/api/posts', requireAuth, async (req, res) => {
