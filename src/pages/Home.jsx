@@ -11,7 +11,7 @@ const HOME_PHRASES = [
   'Existe um post ótimo na sua cabeça. Eu só vou tirar ele de lá.',
   'Você sabe. Só não teve tempo de escrever ainda.',
   'O que você falou no café hoje rendia um post. De nada.',
-  'Autoridade não se pede emprestada. Mas às vezes se escreve em 3 minutos.',
+  'Autoridade não tem delivery, mas aqui chega rápido.',
   'Seu feed vai agradecer. A sua agenda também.',
 ];
 
