@@ -35,6 +35,13 @@ export async function initDb() {
   await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()`;
   await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS chat_history TEXT NOT NULL DEFAULT '[]'`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_activated BOOLEAN NOT NULL DEFAULT FALSE`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS daily_content (
+      date DATE PRIMARY KEY,
+      content TEXT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `;
 }
 
 export async function syncUser({ id, email }) {

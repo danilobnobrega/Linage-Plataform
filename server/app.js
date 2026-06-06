@@ -620,6 +620,11 @@ Você tem acesso a notícias recentes do mercado financeiro e as recebe automati
 
 app.get('/api/daily-content', requireAuth, async (req, res) => {
   try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const cached = await sql`SELECT content FROM daily_content WHERE date = ${today}`;
+    if (cached[0]) return res.json(JSON.parse(cached[0].content));
+
     let headlines = '';
     try {
       const tavilyRes = await fetch('https://api.tavily.com/search', {
@@ -648,18 +653,20 @@ app.get('/api/daily-content', requireAuth, async (req, res) => {
     });
 
     const text = response.content[0].text;
-    console.log('[daily-content] resposta da IA:', text.substring(0, 300));
     const get = (label) => text.match(new RegExp(`${label}:\\s*(.+)`))?.[1]?.trim() || '';
 
     const quote = get('PERSPECTIVA');
     const suggestions = [get('PAUTA_1'), get('PAUTA_2'), get('PAUTA_3')];
 
     if (!quote) {
-      console.error('[daily-content] formato inesperado, texto completo:', text);
+      console.error('[daily-content] formato inesperado:', text);
       return res.status(500).json({ error: 'Unexpected response format' });
     }
 
-    res.json({ quote, suggestions });
+    const data = { quote, suggestions };
+    await sql`INSERT INTO daily_content (date, content) VALUES (${today}, ${JSON.stringify(data)}) ON CONFLICT (date) DO NOTHING`;
+
+    res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
