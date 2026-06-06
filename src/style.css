@@ -5307,7 +5307,7 @@ body {
     height: 100dvh;
     overscroll-behavior-y: contain;
     padding-top: 56px;
-    padding-bottom: 80px;
+    padding-bottom: 40px;
     width: 100%;
   }
 
