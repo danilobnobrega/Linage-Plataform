@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -203,6 +203,10 @@ function Checkout() {
     init();
   }, []);
 
+  const elementsOptions = useMemo(() => (
+    clientSecret ? { clientSecret, appearance: stripeAppearance } : null
+  ), [clientSecret]);
+
   if (!planData) return null;
 
   return (
@@ -237,8 +241,8 @@ function Checkout() {
           </div>
         )}
 
-        {stripeReady && clientSecret && (
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
+        {stripeReady && elementsOptions && (
+          <Elements stripe={stripePromise} options={elementsOptions}>
             <CheckoutForm planData={planData} billing={billing} getToken={getToken} />
           </Elements>
         )}
