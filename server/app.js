@@ -24,7 +24,7 @@ const mailer = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 });
-const PLAN_CREDITS = { free: 1350, starter: 4500, pro: 9000 };
+const PLAN_CREDITS = { starter: 4500, pro: 9000 };
 
 // Initialize DB once at module load (works for both local and serverless)
 const dbReady = initDb();
@@ -353,8 +353,17 @@ app.post('/api/stripe/webhook', async (req, res) => {
 
   if (event.type === 'customer.subscription.deleted') {
     const sub = event.data.object;
-    const users = await sql`SELECT id FROM users WHERE stripe_subscription_id = ${sub.id}`;
-    if (users[0]) await updateUserPlan(users[0].id, 'trial', sub.customer, null);
+    const users = await sql`SELECT id, avulso_credits FROM users WHERE stripe_subscription_id = ${sub.id}`;
+    if (users[0]) {
+      await sql`
+        UPDATE users SET
+          plan = 'trial',
+          credits = ${users[0].avulso_credits ?? 0},
+          stripe_subscription_id = NULL,
+          credits_reset_at = NOW()
+        WHERE id = ${users[0].id}
+      `;
+    }
   }
 
   res.json({ received: true });

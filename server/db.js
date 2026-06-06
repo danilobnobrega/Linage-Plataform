@@ -72,14 +72,15 @@ export async function updateUserCredits(id, credits) {
 }
 
 export async function updateUserPlan(id, plan, stripeCustomerId, stripeSubscriptionId) {
-  const planCredits = { trial: 1350, starter: 4500, pro: 9000 };
+  const planCredits = { starter: 4500, pro: 9000 };
   await sql`
     UPDATE users SET
       plan = ${plan},
       credits = ${planCredits[plan] ?? 0} + avulso_credits,
       credits_reset_at = NOW(),
       stripe_customer_id = ${stripeCustomerId},
-      stripe_subscription_id = ${stripeSubscriptionId}
+      stripe_subscription_id = ${stripeSubscriptionId},
+      trial_activated = TRUE
     WHERE id = ${id}
   `;
 }
