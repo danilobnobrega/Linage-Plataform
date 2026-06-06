@@ -54,7 +54,7 @@ function Sidebar({ isOpen, onClose }) {
   const PLAN_CREDITS = { trial: 1350, starter: 4500, pro: 9000 };
   const planMax = PLAN_CREDITS[user.plan] || 1350;
   const planCreditsRemaining = Math.max(0, credits - avulsoCredits);
-  const hasPlanCredits = planCreditsRemaining > 0;
+  const hasPlanCredits = planCreditsRemaining > 0 || trialActivated || user.plan !== 'trial';
   const hasAvulso = avulsoCredits > 0;
 
   useEffect(() => {
