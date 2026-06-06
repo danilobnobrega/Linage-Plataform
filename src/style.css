@@ -5304,10 +5304,10 @@ body {
   }
 
   .main-content {
-    height: 100svh;
+    height: 100dvh;
     overscroll-behavior-y: contain;
     padding-top: 56px;
-    padding-bottom: 40px;
+    padding-bottom: 80px;
     width: 100%;
   }
 
