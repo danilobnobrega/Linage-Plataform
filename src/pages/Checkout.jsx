@@ -7,7 +7,7 @@ import { Check, ArrowLeft, Lock } from 'lucide-react';
 import ThreeBackground from '../components/ThreeBackground';
 import { PLANS } from './Credits';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+let stripePromise = null;
 
 const stripeAppearance = {
   theme: 'night',
@@ -164,6 +164,7 @@ function Checkout() {
   const { getToken } = useAuth();
   const navigate = useNavigate();
   const [clientSecret, setClientSecret] = useState(null);
+  const [stripeReady, setStripeReady] = useState(false);
   const [initError, setInitError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -186,8 +187,13 @@ function Checkout() {
           body: JSON.stringify({ plan: planId, billing }),
         });
         const data = await res.json();
-        if (data.clientSecret) setClientSecret(data.clientSecret);
-        else setInitError(data.error || 'Erro ao iniciar pagamento.');
+        if (data.clientSecret && data.publishableKey) {
+          stripePromise = loadStripe(data.publishableKey);
+          setClientSecret(data.clientSecret);
+          setStripeReady(true);
+        } else {
+          setInitError(data.error || 'Erro ao iniciar pagamento.');
+        }
       } catch {
         setInitError('Erro de conexão. Tente novamente.');
       } finally {
@@ -231,7 +237,7 @@ function Checkout() {
           </div>
         )}
 
-        {clientSecret && (
+        {stripeReady && clientSecret && (
           <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
             <CheckoutForm planData={planData} billing={billing} getToken={getToken} />
           </Elements>

@@ -192,7 +192,10 @@ app.post('/api/stripe/create-setup-intent', requireAuth, async (req, res) => {
       metadata: { userId: req.userId, plan, billing },
     });
 
-    res.json({ clientSecret: setupIntent.client_secret });
+    res.json({
+      clientSecret: setupIntent.client_secret,
+      publishableKey: process.env.VITE_STRIPE_PUBLISHABLE_KEY,
+    });
   } catch (err) {
     console.error('[stripe/create-setup-intent]', err.message);
     res.status(500).json({ error: err.message });
