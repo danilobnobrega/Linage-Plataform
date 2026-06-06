@@ -2,51 +2,45 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import {
+  Elements,
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js';
 import { Check, ArrowLeft, Lock } from 'lucide-react';
 import ThreeBackground from '../components/ThreeBackground';
 import { PLANS } from './Credits';
 
 let stripePromise = null;
 
-const stripeAppearance = {
-  theme: 'night',
-  variables: {
-    colorPrimary: '#00ff88',
-    colorBackground: '#0d0f16',
-    colorText: '#e8e6f0',
-    colorTextSecondary: '#8b8897',
-    colorTextPlaceholder: '#6b7280',
-    colorDanger: '#ff4d6a',
-    borderRadius: '10px',
+const cardStyle = {
+  base: {
+    color: '#e8e6f0',
     fontFamily: "'Space Grotesk', system-ui, sans-serif",
-    fontSizeBase: '14px',
+    fontSize: '15px',
+    fontSmoothing: 'antialiased',
+    '::placeholder': { color: '#6b7280' },
   },
-  rules: {
-    '.Input': {
-      background: 'rgba(255,255,255,0.04)',
-      border: '1px solid rgba(255,255,255,0.08)',
-      color: '#e8e6f0',
-      boxShadow: 'none',
-    },
-    '.Input:focus': {
-      border: '1px solid #00ff88',
-      boxShadow: '0 0 0 2px rgba(0,255,136,0.15)',
-    },
-    '.Label': { color: '#8b8897', marginBottom: '6px' },
-    '.Tab': {
-      background: 'rgba(255,255,255,0.04)',
-      border: '1px solid rgba(255,255,255,0.08)',
-      color: '#8b8897',
-    },
-    '.Tab--selected': {
-      background: 'rgba(0,255,136,0.08)',
-      border: '1px solid rgba(0,255,136,0.4)',
-      color: '#00ff88',
-    },
-    '.TabLabel--selected': { color: '#00ff88' },
-  },
+  invalid: { color: '#ff4d6a', iconColor: '#ff4d6a' },
 };
+
+function StripeField({ label, children, focused }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label style={s.fieldLabel}>{label}</label>
+      <div style={{
+        ...s.stripeField,
+        border: focused ? '1px solid #00ff88' : '1px solid rgba(255,255,255,0.08)',
+        boxShadow: focused ? '0 0 0 2px rgba(0,255,136,0.15)' : 'none',
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 function CheckoutForm({ planData, billing, getToken, clientSecret }) {
   const stripe = useStripe();
@@ -54,6 +48,7 @@ function CheckoutForm({ planData, billing, getToken, clientSecret }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [focused, setFocused] = useState(null);
 
   const price = billing === 'annual' ? planData.priceAnnual : planData.price;
 
@@ -63,13 +58,9 @@ function CheckoutForm({ planData, billing, getToken, clientSecret }) {
     setLoading(true);
     setError(null);
 
-    const { setupIntent, error: setupError } = await stripe.confirmSetup({
-      elements,
-      clientSecret,
-      redirect: 'if_required',
-      confirmParams: {
-        return_url: `${window.location.origin}/home?upgrade=success`,
-      },
+    const cardNumber = elements.getElement(CardNumberElement);
+    const { setupIntent, error: setupError } = await stripe.confirmCardSetup(clientSecret, {
+      payment_method: { card: cardNumber },
     });
 
     if (setupError) {
@@ -105,6 +96,8 @@ function CheckoutForm({ planData, billing, getToken, clientSecret }) {
     setLoading(false);
   }
 
+  const fo = (name) => ({ onFocus: () => setFocused(name), onBlur: () => setFocused(null) });
+
   return (
     <div style={s.card}>
       <div style={s.cardLeft}>
@@ -136,9 +129,23 @@ function CheckoutForm({ planData, billing, getToken, clientSecret }) {
 
       <div style={s.cardRight}>
         <div style={s.formTitle}>Dados do pagamento</div>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <PaymentElement options={{ layout: 'tabs' }} />
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          <StripeField label="Número do cartão" focused={focused === 'number'}>
+            <CardNumberElement options={{ style: cardStyle, showIcon: true }} {...fo('number')} />
+          </StripeField>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <StripeField label="Validade" focused={focused === 'expiry'}>
+              <CardExpiryElement options={{ style: cardStyle }} {...fo('expiry')} />
+            </StripeField>
+            <StripeField label="CVC" focused={focused === 'cvc'}>
+              <CardCvcElement options={{ style: cardStyle }} {...fo('cvc')} />
+            </StripeField>
+          </div>
+
           {error && <p style={s.errorMsg}>{error}</p>}
+
           <button
             type="submit"
             className="magnetic"
@@ -198,7 +205,7 @@ function Checkout() {
   }, []);
 
   const elementsOptions = useMemo(() =>
-    stripeReady ? { mode: 'setup', paymentMethodTypes: ['card'], appearance: stripeAppearance } : null
+    stripeReady ? { appearance: { theme: 'night' } } : null
   , [stripeReady]);
 
   if (!planData) return null;
@@ -300,7 +307,7 @@ const s = {
     WebkitBackdropFilter: 'blur(20px)',
     border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 16,
-    boxShadow: '0 0 60px rgba(0, 255, 136, 0.05), 0 24px 64px rgba(0,0,0,0.4)',
+    boxShadow: '0 0 60px rgba(0,255,136,0.05), 0 24px 64px rgba(0,0,0,0.4)',
     overflow: 'hidden',
     width: '100%',
   },
@@ -398,6 +405,18 @@ const s = {
     textTransform: 'uppercase',
     letterSpacing: '0.1em',
   },
+  fieldLabel: {
+    fontSize: 12,
+    color: '#8b8897',
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontWeight: 500,
+  },
+  stripeField: {
+    padding: '12px 14px',
+    background: 'rgba(255,255,255,0.04)',
+    borderRadius: 10,
+    transition: 'border 0.15s, box-shadow 0.15s',
+  },
   errorMsg: {
     color: '#ff4d6a',
     fontSize: 13,
@@ -417,6 +436,7 @@ const s = {
     cursor: 'pointer',
     transition: 'opacity 0.2s',
     letterSpacing: '0.02em',
+    marginTop: 4,
   },
   cancelNote: {
     fontSize: 12,
