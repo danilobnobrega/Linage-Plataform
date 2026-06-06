@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Check, ArrowLeft, Lock } from 'lucide-react';
 import ThreeBackground from '../components/ThreeBackground';
 import { PLANS } from './Credits';
@@ -48,7 +48,7 @@ const stripeAppearance = {
   },
 };
 
-function CheckoutForm({ planData, billing, getToken }) {
+function CheckoutForm({ planData, billing, getToken, clientSecret }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -63,19 +63,9 @@ function CheckoutForm({ planData, billing, getToken }) {
     setLoading(true);
     setError(null);
 
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      setError(submitError.message);
-      setLoading(false);
-      return;
-    }
-
-    const { setupIntent, error: setupError } = await stripe.confirmSetup({
-      elements,
-      redirect: 'if_required',
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout${window.location.search}`,
-      },
+    const cardElement = elements.getElement(CardElement);
+    const { setupIntent, error: setupError } = await stripe.confirmCardSetup(clientSecret, {
+      payment_method: { card: cardElement },
     });
 
     if (setupError) {
@@ -143,7 +133,7 @@ function CheckoutForm({ planData, billing, getToken }) {
       <div style={s.cardRight}>
         <div style={s.formTitle}>Dados do pagamento</div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <PaymentElement options={{ layout: 'tabs' }} />
+          <CardElement options={{ style: { base: { color: '#e8e6f0', fontSize: '16px', '::placeholder': { color: '#8b8897' } } } }} />
           {error && <p style={s.errorMsg}>{error}</p>}
           <button
             type="submit"
@@ -204,8 +194,8 @@ function Checkout() {
   }, []);
 
   const elementsOptions = useMemo(() => (
-    clientSecret ? { clientSecret, appearance: stripeAppearance } : null
-  ), [clientSecret]);
+    stripeReady ? { appearance: stripeAppearance } : null
+  ), [stripeReady]);
 
   if (!planData) return null;
 
@@ -242,7 +232,7 @@ function Checkout() {
 
         {stripeReady && elementsOptions && (
           <Elements stripe={stripePromise} options={elementsOptions}>
-            <CheckoutForm planData={planData} billing={billing} getToken={getToken} />
+            <CheckoutForm planData={planData} billing={billing} getToken={getToken} clientSecret={clientSecret} />
           </Elements>
         )}
       </div>
