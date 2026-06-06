@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
-import ConsensusConverter from '../components/ConsensusConverter';
 import DecryptText from '../components/DecryptText';
 import { useDailyContent } from '../hooks/useDailyContent';
 import { PLANS } from './Credits';
@@ -147,8 +146,6 @@ function Home() {
 
 
 
-      {/* Consensus Converter */}
-      <ConsensusConverter />
 
       {/* Recent Posts Section */}
       <section className="recent-posts-section">
