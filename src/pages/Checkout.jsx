@@ -13,7 +13,7 @@ const stripeAppearance = {
   theme: 'night',
   variables: {
     colorPrimary: '#00ff88',
-    colorBackground: 'rgba(8, 11, 18, 0.0)',
+    colorBackground: '#0d0f16',
     colorText: '#e8e6f0',
     colorTextSecondary: '#8b8897',
     colorTextPlaceholder: '#6b7280',
@@ -147,6 +147,7 @@ function CheckoutForm({ planData, billing, getToken }) {
           {error && <p style={s.errorMsg}>{error}</p>}
           <button
             type="submit"
+            className="magnetic"
             disabled={!stripe || loading}
             style={{ ...s.submitBtn, opacity: (!stripe || loading) ? 0.6 : 1 }}
           >
