@@ -5304,6 +5304,7 @@ body {
   }
 
   .main-content {
+    height: 100dvh;
     padding-top: 56px;
     padding-bottom: 40px;
     width: 100%;
