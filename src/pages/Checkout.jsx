@@ -48,7 +48,7 @@ const stripeAppearance = {
   },
 };
 
-function CheckoutForm({ planData, billing, getToken }) {
+function CheckoutForm({ planData, billing, getToken, clientSecret }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -65,6 +65,7 @@ function CheckoutForm({ planData, billing, getToken }) {
 
     const { setupIntent, error: setupError } = await stripe.confirmSetup({
       elements,
+      clientSecret,
       redirect: 'if_required',
       confirmParams: {
         return_url: `${window.location.origin}/home?upgrade=success`,
@@ -197,8 +198,8 @@ function Checkout() {
   }, []);
 
   const elementsOptions = useMemo(() =>
-    clientSecret ? { clientSecret, appearance: stripeAppearance } : null
-  , [clientSecret]);
+    stripeReady ? { mode: 'setup', paymentMethodTypes: ['card'], appearance: stripeAppearance } : null
+  , [stripeReady]);
 
   if (!planData) return null;
 
@@ -235,7 +236,7 @@ function Checkout() {
 
         {stripeReady && elementsOptions && (
           <Elements stripe={stripePromise} options={elementsOptions}>
-            <CheckoutForm planData={planData} billing={billing} getToken={getToken} />
+            <CheckoutForm planData={planData} billing={billing} getToken={getToken} clientSecret={clientSecret} />
           </Elements>
         )}
 
