@@ -1,4 +1,5 @@
-import { SignUp, ClerkLoaded } from '@clerk/clerk-react';
+import { SignUp, ClerkLoaded, useAuth } from '@clerk/clerk-react';
+import { Navigate } from 'react-router-dom';
 import ThreeBackground from '../components/ThreeBackground';
 import AuthCursor from '../components/AuthCursor';
 
@@ -55,7 +56,10 @@ const appearance = {
 };
 
 function SignUpPage() {
+  const { isLoaded, isSignedIn } = useAuth();
   const redirectUrl = new URLSearchParams(window.location.search).get('redirect_url') || '/welcome';
+
+  if (isLoaded && isSignedIn) return <Navigate to={redirectUrl} replace />;
   const signInUrl = redirectUrl !== '/home'
     ? `/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`
     : '/sign-in';
