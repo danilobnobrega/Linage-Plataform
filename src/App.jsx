@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { useUserSync } from './hooks/useUserSync';
@@ -44,11 +44,28 @@ function RootRedirect() {
 function MobileNavBar({ onHamburger }) {
   const { credits } = useStore();
   const navigate = useNavigate();
+  const [showCreditsPopover, setShowCreditsPopover] = useState(false);
+  const popoverRef = useRef(null);
 
   const formatCredits = (n) => {
-    if (n >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'k';
-    return n.toString();
+    if (n >= 1000) {
+      const val = (n / 1000).toFixed(2).replace(/\.?0+$/, '');
+      return val + 'k cr';
+    }
+    return n + ' cr';
   };
+
+  const posts = Math.floor(credits / 450);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+        setShowCreditsPopover(false);
+      }
+    };
+    if (showCreditsPopover) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showCreditsPopover]);
 
   return (
     <div className="mobile-nav-bar">
@@ -61,9 +78,16 @@ function MobileNavBar({ onHamburger }) {
         </svg>
         <span>LINAGE</span>
       </div>
-      <div className="mobile-credits-pill">
-        <Coins size={13} />
-        <span>{formatCredits(credits)}</span>
+      <div ref={popoverRef} style={{ position: 'relative', flexShrink: 0 }}>
+        <button className="mobile-credits-pill" onClick={() => setShowCreditsPopover(v => !v)}>
+          <Coins size={13} />
+          <span>{formatCredits(credits)}</span>
+        </button>
+        {showCreditsPopover && (
+          <div className="credits-popover">
+            Você tem {credits.toLocaleString('pt-BR')} créditos. Dá para criar mais {posts} {posts === 1 ? 'post' : 'posts'} por aqui.
+          </div>
+        )}
       </div>
     </div>
   );
