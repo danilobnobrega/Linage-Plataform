@@ -5307,6 +5307,7 @@ body {
     padding-top: 56px;
     padding-bottom: 40px;
     width: 100%;
+    overscroll-behavior-y: none;
   }
 
   /* ---------- Page containers ---------- */
