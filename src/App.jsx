@@ -49,10 +49,9 @@ function MobileNavBar({ onHamburger }) {
 
   const formatCredits = (n) => {
     if (n >= 1000) {
-      const val = (n / 1000).toFixed(2).replace(/\.?0+$/, '');
-      return val + 'k cr';
+      return (n / 1000).toFixed(2).replace(/\.?0+$/, '') + 'k';
     }
-    return n + ' cr';
+    return n.toString();
   };
 
   const posts = Math.floor(credits / 450);
@@ -85,7 +84,8 @@ function MobileNavBar({ onHamburger }) {
         </button>
         {showCreditsPopover && (
           <div className="credits-popover">
-            Você tem {credits.toLocaleString('pt-BR')} créditos. Dá para criar mais {posts} {posts === 1 ? 'post' : 'posts'} por aqui.
+            <p>Você tem {credits.toLocaleString('pt-BR')} créditos.</p>
+            <p>Dá para criar mais {posts} {posts === 1 ? 'post' : 'posts'} por aqui.</p>
           </div>
         )}
       </div>
