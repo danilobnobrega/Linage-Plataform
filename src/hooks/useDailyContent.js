@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 
-const todayKey = () => `linage_daily_${new Date().toISOString().split('T')[0]}`;
+const todayKey = () => `linage_daily_${new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date())}`;
 
 export function useDailyContent(fallbackQuote, fallbackSuggestions) {
   const key = todayKey();
@@ -22,8 +22,6 @@ export function useDailyContent(fallbackQuote, fallbackSuggestions) {
       .filter(k => k.startsWith('linage_daily_') && k !== key)
       .forEach(k => localStorage.removeItem(k));
 
-    if (localStorage.getItem(key)) return;
-
     let cancelled = false;
     let retryTimer = null;
 
@@ -41,7 +39,7 @@ export function useDailyContent(fallbackQuote, fallbackSuggestions) {
           return;
         }
         const data = await res.json();
-        if (data.quote) {
+        if (data.suggestions?.length) {
           localStorage.setItem(key, JSON.stringify(data));
           setContent(data);
           setDailyContent(data.quote, data.suggestions);

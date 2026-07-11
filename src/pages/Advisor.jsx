@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import {
@@ -26,9 +27,10 @@ const AGENT_COLOR = '#f59e0b';
 
 function Advisor() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { getToken } = useAuth();
   const {
-    agents, posts, addPost, updatePost, setPosts,
+    agents, posts, addPost, updatePost, removePost, setPosts,
     credits, addMessageToAgent, resetAgentHistory, user,
     activeDraftId, setActiveDraftId,
   } = useStore();
@@ -49,6 +51,23 @@ const [isGenerating, setIsGenerating] = useState(false);
 
   const chatEndRef = useRef(null);
   const { ref: advisorInputRef, onFocus: advisorFocus, onBlur: advisorBlur } = useDecryptPlaceholder(ADVISOR_PHRASES);
+
+  useEffect(() => {
+    if (!window.matchMedia('(max-width: 768px)').matches) return;
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.top = '0';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.top = '';
+      document.body.style.overflow = '';
+    };
+  }, []);
+
 
   // Restore from active draft on mount
   useEffect(() => {
@@ -74,17 +93,65 @@ const [isGenerating, setIsGenerating] = useState(false);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    if (!agent?.history?.length && !isTyping && !suggestPost) return;
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [agent?.history, isTyping, suggestPost]);
+
+
+
+
+  useEffect(() => {
+    const seedMessage = location.state?.seedMessage;
+    if (!seedMessage) return;
+    navigate(location.pathname, { replace: true, state: {} });
+
+    const userMessage = {
+      sender: 'user',
+      text: seedMessage,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    addMessageToAgent('linage', userMessage);
+    setIsTyping(true);
+
+    (async () => {
+      try {
+        const token = await getToken();
+        const existingHistory = (agent?.history || []).map(msg => ({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.text,
+        }));
+        const messages = [...existingHistory, { role: 'user', content: seedMessage }];
+        const res = await fetch('/api/agent/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ messages }),
+        });
+        const data = await res.json();
+        addMessageToAgent('linage', {
+          sender: 'agent',
+          text: data.text || 'Algo deu errado. Tente novamente.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        });
+        if (data.suggestPost) setSuggestPost(true);
+      } catch {
+        addMessageToAgent('linage', {
+          sender: 'agent',
+          text: 'Algo deu errado na conexão. Tente novamente.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        });
+      } finally {
+        setIsTyping(false);
+      }
+    })();
+  }, [location.state?.seedMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveChatToDb = async (token) => {
     if (!activeDraftId) return;
     const latest = useStore.getState().agents.find(a => a.id === 'linage')?.history || [];
     const post = useStore.getState().posts.find(p => p.id === activeDraftId);
     if (!post) return;
-    updatePost(activeDraftId, { chatHistory: latest });
     try {
-      await fetch('/api/posts', {
+      const res = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -96,6 +163,7 @@ const [isGenerating, setIsGenerating] = useState(false);
           chatHistory: latest,
         }),
       });
+      if (res.ok) updatePost(activeDraftId, { chatHistory: latest });
     } catch {}
   };
 
@@ -226,26 +294,31 @@ const [isGenerating, setIsGenerating] = useState(false);
         chatHistory: [...currentHistory],
       };
 
-      try {
-        await fetch('/api/posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            id: newPost.id,
-            title: newPost.title,
-            content: newPost.content,
-            agentId: 'linage',
-            status: 'draft',
-            chatHistory: newPost.chatHistory,
-          }),
-        });
-        addPost(newPost);
-        setActiveDraftId(newPostId);
-        setDraftSaved(true);
-      } catch {
-        // Auto-save failed — post shown locally only
-        setDraftSaved(false);
-      }
+      addPost(newPost);
+      setActiveDraftId(newPostId);
+      setDraftSaved(true);
+
+      (async () => {
+        while (true) {
+          try {
+            const t = await getToken();
+            const res = await fetch('/api/posts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+              body: JSON.stringify({
+                id: newPost.id,
+                title: newPost.title,
+                content: newPost.content,
+                agentId: 'linage',
+                status: 'draft',
+                chatHistory: newPost.chatHistory,
+              }),
+            });
+            if (res.ok) break;
+          } catch {}
+          await new Promise(r => setTimeout(r, 5000));
+        }
+      })();
 
       setPostGenerated(true);
       addMessageToAgent('linage', {
@@ -264,7 +337,7 @@ const [isGenerating, setIsGenerating] = useState(false);
   const handleCompletePost = async () => {
     const token = await getToken();
     try {
-      await fetch('/api/posts', {
+      const res = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -275,6 +348,7 @@ const [isGenerating, setIsGenerating] = useState(false);
           status: 'completed',
         }),
       });
+      if (!res.ok) throw new Error('save failed');
       updatePost(activeDraftId, { draft: false, chatHistory: [] });
     } catch {
       alert('Erro ao salvar. Tente novamente.');
@@ -298,11 +372,11 @@ const [isGenerating, setIsGenerating] = useState(false);
     const token = await getToken();
     try {
       if (activeDraftId) {
-        await fetch(`/api/posts/${activeDraftId}`, {
+        const res = await fetch(`/api/posts/${activeDraftId}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
         });
-        setPosts(posts.filter(p => p.id !== activeDraftId));
+        if (res.ok) removePost(activeDraftId);
       }
     } catch {}
 
@@ -367,30 +441,32 @@ const [isGenerating, setIsGenerating] = useState(false);
 
       <div className="advisor-full">
         <div className={`advisor-chat-card${isMobile ? '' : ' glass-card'}`}>
-          <div className="advisor-chat-messages">
-            {postGenerated && (
-              <div className="chat-card-header">
-                <div className="chat-header-agent-info">
-                  <div className="online-indicator-dot"></div>
-                  <div>
-                    <h3>Sessão Ativa</h3>
-                    <p>Conversando com Linage</p>
-                  </div>
-                </div>
-                <div className="chat-header-actions">
-                  {!showPostGenerator && (
-                    <button className="view-draft-btn" onClick={() => setShowPostGenerator(true)}>
-                      <FileText size={14} />
-                      <span>Ver rascunho</span>
-                    </button>
-                  )}
-                  <button className="generate-post-trigger-btn generate-post-trigger-btn--secondary" onClick={handleNewConversation}>
-                    <RefreshCw size={15} />
-                    <span>Nova Conversa</span>
-                  </button>
+          {(agent?.history || []).length > 0 && (
+            <div className="chat-card-header">
+              <div className="chat-header-agent-info">
+                <div className="online-indicator-dot"></div>
+                <div>
+                  <h3>Sessão Ativa</h3>
+                  <p>Conversando com Linage</p>
                 </div>
               </div>
-            )}
+              <div className="chat-header-actions">
+                {postGenerated && !showPostGenerator && (
+                  <button className="view-draft-btn" onClick={() => setShowPostGenerator(true)}>
+                    <FileText size={14} />
+                    <span>Ver rascunho</span>
+                  </button>
+                )}
+                <button className="generate-post-trigger-btn generate-post-trigger-btn--secondary" onClick={handleNewConversation}>
+                  <RefreshCw size={15} />
+                  <span>Nova conversa</span>
+                </button>
+              </div>
+            </div>
+          )}
+          <div className="advisor-chat-scroll-area">
+          <div className="advisor-chat-content-wrapper">
+          <div className="advisor-chat-messages">
             <div className="advisor-message-row linage">
               <div className="linage-avatar-icon">L</div>
               <div className="advisor-msg-bubble">
@@ -439,7 +515,10 @@ const [isGenerating, setIsGenerating] = useState(false);
               </div>
             )}
 
+            <div style={{ height: '160px', flexShrink: 0 }} />
             <div ref={chatEndRef} />
+          </div>
+          </div>
           </div>
 
           {pendingRevision && (
@@ -450,20 +529,38 @@ const [isGenerating, setIsGenerating] = useState(false);
             </div>
           )}
 
-          <form onSubmit={handleSendMessage} className="advisor-chat-input">
-            <input
-              ref={advisorInputRef}
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onFocus={advisorFocus}
-              onBlur={advisorBlur}
-              className="advisor-input-text"
-            />
-            <button type="submit" className="advisor-send-btn">
-              <Send size={16} />
-            </button>
-          </form>
+          {isMobile ? createPortal(
+            <form onSubmit={handleSendMessage} className="advisor-chat-input">
+              <input
+                ref={advisorInputRef}
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onFocus={advisorFocus}
+                onBlur={advisorBlur}
+                className="advisor-input-text"
+              />
+              <button type="submit" className="advisor-send-btn">
+                <Send size={16} />
+              </button>
+            </form>,
+            document.body
+          ) : (
+            <form onSubmit={handleSendMessage} className="advisor-chat-input">
+              <input
+                ref={advisorInputRef}
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onFocus={advisorFocus}
+                onBlur={advisorBlur}
+                className="advisor-input-text"
+              />
+              <button type="submit" className="advisor-send-btn">
+                <Send size={16} />
+              </button>
+            </form>
+          )}
         </div>
       </div>
 

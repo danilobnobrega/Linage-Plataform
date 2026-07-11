@@ -15,6 +15,10 @@ import Checkout from './pages/Checkout';
 import Welcome from './pages/Welcome';
 import Help from './pages/Help';
 import Terms from './pages/Terms';
+import TermsOfUse from './pages/TermsOfUse';
+import Privacy from './pages/Privacy';
+import LegalTermsOfUse from './pages/LegalTermsOfUse';
+import LegalPrivacy from './pages/LegalPrivacy';
 import useStore from './store';
 import { Menu, Coins } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -22,8 +26,16 @@ import { useNavigate } from 'react-router-dom';
 function ScrollToTop() {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     const main = document.querySelector('.main-content');
     if (main) main.scrollTop = 0;
+    window.scrollTo(0, 0);
+    // iOS Safari restores scroll after layout — force it again after paint
+    const id = setTimeout(() => {
+      if (main) main.scrollTop = 0;
+      window.scrollTo(0, 0);
+    }, 0);
+    return () => clearTimeout(id);
   }, [pathname]);
   return null;
 }
@@ -118,7 +130,7 @@ function AppContent() {
     if (main) main.scrollTop = 0;
   }, [pathname]);
 
-  const isAuthPage = pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up');
+  const isAuthPage = pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up') || pathname.startsWith('/legal/');
 
   return (
     <>
@@ -126,6 +138,8 @@ function AppContent() {
         <Routes>
           <Route path="/sign-in/*" element={<SignInPage />} />
           <Route path="/sign-up/*" element={<SignUpPage />} />
+          <Route path="/legal/uso" element={<LegalTermsOfUse />} />
+          <Route path="/legal/privacidade" element={<LegalPrivacy />} />
         </Routes>
       ) : (
         <>
@@ -137,7 +151,7 @@ function AppContent() {
             )}
             <MobileNavBar onHamburger={() => setSidebarOpen(true)} />
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-            <main className="main-content">
+            <main className={`main-content${pathname === '/chat' ? ' advisor-active' : ''}`}>
               <Routes>
                 <Route path="/" element={<RootRedirect />} />
                 <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
@@ -149,6 +163,8 @@ function AppContent() {
                 <Route path="/welcome" element={<ProtectedRoute><Welcome /></ProtectedRoute>} />
                 <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
                 <Route path="/terms" element={<ProtectedRoute><Terms /></ProtectedRoute>} />
+                <Route path="/terms/uso" element={<TermsOfUse />} />
+                <Route path="/terms/privacidade" element={<Privacy />} />
               </Routes>
             </main>
           </div>

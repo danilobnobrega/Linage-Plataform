@@ -11,12 +11,12 @@ const HOME_PHRASES = [
   'Existe um post ótimo na sua cabeça. Eu só vou tirar ele de lá.',
   'Você sabe. Só não teve tempo de escrever ainda.',
   'O que você falou no café hoje rendia um post. De nada.',
-  'Autoridade não tem delivery, mas aqui chega rápido.',
+  'Você foca no seu cliente. Do seu feed, cuido eu.',
   'Seu feed vai agradecer. A sua agenda também.',
 ];
 
 function Home() {
-  const { user, posts, agents, addMessageToAgent, trialActivated, setDbUser } = useStore();
+  const { user, posts, agents, trialActivated, setDbUser } = useStore();
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [trialLoading, setTrialLoading] = useState(false);
   const daily = useDailyContent(user.dailyQuote, user.suggestions);
@@ -53,12 +53,11 @@ function Home() {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    addMessageToAgent('linage', {
-      sender: 'user',
-      text: `Quero criar um conteúdo baseado nesta pauta: "${suggestion}". Como podemos começar?`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    navigate('/chat', {
+      state: {
+        seedMessage: `Quero criar um conteúdo baseado nesta pauta: "${suggestion}". Como podemos começar?`
+      }
     });
-    navigate('/chat');
   };
 
   // Pre-configured custom backgrounds for agent quick launcher
@@ -104,6 +103,7 @@ function Home() {
       </header>
 
       {/* Quote Banner */}
+      {daily.quote && (
       <div className="quote-banner">
         <div className="quote-glow"></div>
         <div className="quote-content">
@@ -111,14 +111,19 @@ function Home() {
             <Sparkles size={24} className="quote-stars" />
           </div>
           <div className="quote-text-wrapper">
-            <span className="quote-label">PERSPECTIVA DO DIA:</span>
-            <p className="quote-text">"{daily.quote}"</p>
+            <span className="quote-label">FRASE DO DIA:</span>
+            <div className="quote-text">
+              {daily.quote.split('\n').map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+            </div>
           </div>
         </div>
         <button className="quote-action-btn magnetic" onClick={() => navigate('/chat')}>
-          Explorar com Linage <ArrowRight size={16} />
+          Começar a escrever <ArrowRight size={16} />
         </button>
       </div>
+      )}
 
       {/* Suggestions Card */}
       <div className="glass-card suggestions-card">

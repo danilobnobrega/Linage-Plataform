@@ -72,6 +72,8 @@ const useStore = create(persist(
       set((s) => ({
         posts: s.posts.map((p) => (p.id === id ? { ...p, ...updates } : p))
       })),
+    removePost: (id) =>
+      set((s) => ({ posts: s.posts.filter((p) => p.id !== id) })),
     // Active draft being worked on in the Advisor page
     activeDraftId: null,
     setActiveDraftId: (id) => set({ activeDraftId: id }),
@@ -99,17 +101,7 @@ const useStore = create(persist(
   }),
   {
     name: 'linage-store-v3',
-    // Agent history is session-only: never written to localStorage
-    partialize: (state) => ({
-      ...state,
-      agents: state.agents.map(a => ({ ...a, history: [] }))
-    }),
-    // Clear any history that might exist in older stored data
-    onRehydrateStorage: () => (state) => {
-      if (state?.agents) {
-        state.agents = state.agents.map(a => ({ ...a, history: [] }));
-      }
-    }
+    partialize: (state) => state,
   }
 ));
 

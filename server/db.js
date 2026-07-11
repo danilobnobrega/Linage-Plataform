@@ -35,6 +35,16 @@ export async function initDb() {
   await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()`;
   await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS chat_history TEXT NOT NULL DEFAULT '[]'`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_activated BOOLEAN NOT NULL DEFAULT FALSE`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_access_token TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_token_expires_at TIMESTAMP`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_person_urn TEXT`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS linkedin_oauth_states (
+      state TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `;
   await sql`
     CREATE TABLE IF NOT EXISTS daily_content (
       date DATE PRIMARY KEY,
@@ -44,18 +54,28 @@ export async function initDb() {
   `;
 }
 
-export async function syncUser({ id, email }) {
-  const byId = await sql`SELECT id, plan, credits, avulso_credits, nickname, instructions, trial_activated FROM users WHERE id = ${id}`;
-  if (byId.length > 0) return byId[0];
+export async function syncUser({ id, email, name }) {
+  const byId = await sql`SELECT id, name, plan, credits, avulso_credits, nickname, instructions, trial_activated FROM users WHERE id = ${id}`;
+  if (byId.length > 0) {
+    if (name && !byId[0].name) {
+      await sql`UPDATE users SET name = ${name} WHERE id = ${id}`;
+    }
+    return byId[0];
+  }
 
   if (email) {
-    const byEmail = await sql`SELECT id, plan, credits, avulso_credits, nickname, instructions, trial_activated FROM users WHERE email = ${email}`;
-    if (byEmail.length > 0) return byEmail[0];
+    const byEmail = await sql`SELECT id, name, plan, credits, avulso_credits, nickname, instructions, trial_activated FROM users WHERE email = ${email}`;
+    if (byEmail.length > 0) {
+      if (name && !byEmail[0].name) {
+        await sql`UPDATE users SET name = ${name} WHERE id = ${byEmail[0].id}`;
+      }
+      return byEmail[0];
+    }
   }
 
   const [user] = await sql`
-    INSERT INTO users (id, email) VALUES (${id}, ${email})
-    RETURNING id, plan, credits, avulso_credits, nickname, instructions, trial_activated
+    INSERT INTO users (id, email, name) VALUES (${id}, ${email}, ${name || ''})
+    RETURNING id, name, plan, credits, avulso_credits, nickname, instructions, trial_activated
   `;
   return user;
 }

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 function Posts() {
-  const { posts, agents, updatePost, setPosts, user } = useStore();
+  const { posts, agents, updatePost, removePost, setPosts, user } = useStore();
   const { getToken } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
   const [selectedPost, setSelectedPost] = useState(null);
@@ -47,14 +47,15 @@ function Posts() {
   const handleDeletePost = async (id, e) => {
     e.stopPropagation();
     if (confirm("Tem certeza que deseja deletar este post?")) {
-      setPosts(posts.filter(p => p.id !== id));
-      if (selectedPost?.id === id) setSelectedPost(null);
       try {
         const token = await getToken();
-        await fetch(`/api/posts/${id}`, {
+        const res = await fetch(`/api/posts/${id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (!res.ok) return;
+        removePost(id);
+        if (selectedPost?.id === id) setSelectedPost(null);
       } catch {}
     }
   };
@@ -63,15 +64,16 @@ function Posts() {
   const handleTogglePublish = async (post, e) => {
     e.stopPropagation();
     const newDraft = !post.draft;
-    updatePost(post.id, { draft: newDraft });
-    if (selectedPost?.id === post.id) setSelectedPost({ ...selectedPost, draft: newDraft });
     try {
       const token = await getToken();
-      await fetch('/api/posts', {
+      const res = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id: post.id, title: post.title, content: post.content, agentId: post.agentId, status: newDraft ? 'draft' : 'completed' }),
       });
+      if (!res.ok) return;
+      updatePost(post.id, { draft: newDraft });
+      if (selectedPost?.id === post.id) setSelectedPost({ ...selectedPost, draft: newDraft });
     } catch {}
   };
 
@@ -90,16 +92,17 @@ function Posts() {
   };
 
   const saveEditedPost = async () => {
-    updatePost(selectedPost.id, { title: editTitle, content: editContent });
-    setSelectedPost({ ...selectedPost, title: editTitle, content: editContent });
-    setIsEditing(false);
     try {
       const token = await getToken();
-      await fetch('/api/posts', {
+      const res = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id: selectedPost.id, title: editTitle, content: editContent, agentId: selectedPost.agentId, status: selectedPost.draft ? 'draft' : 'completed' }),
       });
+      if (!res.ok) return;
+      updatePost(selectedPost.id, { title: editTitle, content: editContent });
+      setSelectedPost({ ...selectedPost, title: editTitle, content: editContent });
+      setIsEditing(false);
     } catch {}
   };
 

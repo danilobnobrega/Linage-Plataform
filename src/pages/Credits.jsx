@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import { Check, Zap, Crown, Star, ArrowRight, Coins, Sparkles } from 'lucide-react';
 
-const PLAN_ORDER = { trial: 0, starter: 1, pro: 2 };
+const PLAN_ORDER = { free: 0, trial: 0, starter: 1, pro: 2 };
 
 export const PLANS = [
   {
@@ -59,9 +58,8 @@ const CREDIT_PACKS = [
 
 function Credits() {
   const { user, credits } = useStore();
-  const { getToken } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(null);
+  const [loading] = useState(null);
   const [billingPerPlan, setBillingPerPlan] = useState({});
   const getPlanBilling = (planId) => billingPerPlan[planId] || 'monthly';
   const setPlanBilling = (planId, value) => setBillingPerPlan(prev => ({ ...prev, [planId]: value }));
@@ -74,22 +72,8 @@ function Credits() {
     navigate(`/checkout?plan=${planId}&billing=${getPlanBilling(planId)}`);
   };
 
-  const handleBuyPack = async (amount, unitAmount) => {
-    setLoading(`pack-${amount}`);
-    try {
-      const token = await getToken();
-      const res = await fetch('/api/stripe/credits-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ amount, unitAmount }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch {
-      alert('Erro ao iniciar checkout. Tente novamente.');
-    } finally {
-      setLoading(null);
-    }
+  const handleBuyPack = (amount, unitAmount, price) => {
+    navigate(`/checkout?mode=credits&amount=${amount}&unitAmount=${unitAmount}&price=${encodeURIComponent(price)}`);
   };
 
   return (
@@ -200,7 +184,7 @@ function Credits() {
               <div className="pack-price">{pack.price}</div>
               <button
                 className="pack-buy-btn"
-                onClick={() => handleBuyPack(pack.amount, pack.unitAmount)}
+                onClick={() => handleBuyPack(pack.amount, pack.unitAmount, pack.price)}
                 disabled={loading === `pack-${pack.amount}`}
               >
                 {loading === `pack-${pack.amount}` ? 'Aguarde...' : <><span>Comprar</span> <ArrowRight size={14} /></>}

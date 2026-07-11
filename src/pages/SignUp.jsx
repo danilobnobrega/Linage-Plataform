@@ -82,6 +82,12 @@ function SignUpPage() {
             signInUrl={signInUrl}
             appearance={appearance}
           />
+          <p style={{ marginTop: '16px', fontSize: '13px', color: '#8b8897', textAlign: 'center', lineHeight: 1.6 }}>
+            Ao continuar, você concorda com os{' '}
+            <a href="/legal/uso" target="_blank" rel="noopener noreferrer" style={{ color: '#00ff88', textDecoration: 'none' }}>Termos de Uso</a>
+            {' '}e a{' '}
+            <a href="/legal/privacidade" target="_blank" rel="noopener noreferrer" style={{ color: '#00ff88', textDecoration: 'none' }}>Política de Privacidade</a>.
+          </p>
         </div>
       </ClerkLoaded>
     </div>

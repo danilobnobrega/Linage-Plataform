@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import useStore from '../store';
 import {
@@ -24,6 +24,7 @@ const CHAT_PHRASES = [
 function Agent() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { getToken } = useAuth();
   const { agents, posts, addPost, credits, addMessageToAgent, resetAgentHistory, user } = useStore();
 
@@ -50,6 +51,67 @@ function Agent() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [agent?.history, isTyping]);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      document.documentElement.style.setProperty('--keyboard-offset', `${offset}px`);
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    update();
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+      document.documentElement.style.removeProperty('--keyboard-offset');
+    };
+  }, []);
+
+  useEffect(() => {
+    const seedMessage = location.state?.seedMessage;
+    if (!seedMessage) return;
+    navigate(location.pathname, { replace: true, state: {} });
+
+    const userMessage = {
+      sender: 'user',
+      text: seedMessage,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    addMessageToAgent(id, userMessage);
+    setIsTyping(true);
+
+    (async () => {
+      try {
+        const token = await getToken();
+        const existingHistory = (agent?.history || []).map(msg => ({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.text,
+        }));
+        const messages = [...existingHistory, { role: 'user', content: seedMessage }];
+        const res = await fetch('/api/agent/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ messages }),
+        });
+        const data = await res.json();
+        addMessageToAgent(id, {
+          sender: 'agent',
+          text: data.text || 'Algo deu errado. Tente novamente.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        });
+      } catch {
+        addMessageToAgent(id, {
+          sender: 'agent',
+          text: 'Algo deu errado. Tente novamente.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        });
+      } finally {
+        setIsTyping(false);
+      }
+    })();
+  }, [location.state?.seedMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!agent) {
     return (
@@ -283,12 +345,13 @@ function Agent() {
                   <span>Ver rascunho</span>
                 </button>
               )}
-              {postGenerated ? (
+              {(agent.history || []).length > 0 && (
                 <button className="generate-post-trigger-btn generate-post-trigger-btn--secondary" onClick={handleNewConversation}>
                   <RefreshCw size={15} />
-                  <span>Nova Conversa</span>
+                  <span>Nova conversa</span>
                 </button>
-              ) : (
+              )}
+              {!postGenerated && (
                 <button
                   className="generate-post-trigger-btn"
                   onClick={handleTriggerGenerator}

@@ -1,7 +1,9 @@
 import React from 'react';
-import { FileText, Shield } from 'lucide-react';
+import { FileText, Shield, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 function Terms() {
+  const navigate = useNavigate();
   return (
     <div className="page-container terms-page animate-fade-in">
       <header className="page-header">
@@ -11,32 +13,32 @@ function Terms() {
         <div className="header-text-container">
           <span className="header-subtitle">Legal</span>
           <h1 className="header-title">Termos & Privacidade</h1>
-          <p className="header-desc">
-            Documentos que regem o uso da plataforma Linage.
-          </p>
+          <p className="header-desc">Documentos que regem o uso da plataforma Linage.</p>
         </div>
       </header>
 
       <div className="terms-cards">
-        <a href="#" className="terms-card glass-card">
+        <button className="terms-card glass-card" onClick={() => navigate('/terms/uso')}>
           <div className="terms-card-icon">
             <FileText size={22} />
           </div>
-          <div>
-            <h3 className="terms-card-title">Termos de Uso</h3>
+          <div className="terms-card-text">
+            <h3 className="terms-card-title">Política de Uso</h3>
             <p className="terms-card-desc">Regras e condições para uso da plataforma Linage.</p>
           </div>
-        </a>
+          <ChevronRight size={16} className="terms-card-chevron" />
+        </button>
 
-        <a href="#" className="terms-card glass-card">
+        <button className="terms-card glass-card" onClick={() => navigate('/terms/privacidade')}>
           <div className="terms-card-icon">
             <Shield size={22} />
           </div>
-          <div>
+          <div className="terms-card-text">
             <h3 className="terms-card-title">Política de Privacidade</h3>
             <p className="terms-card-desc">Como coletamos, usamos e protegemos seus dados.</p>
           </div>
-        </a>
+          <ChevronRight size={16} className="terms-card-chevron" />
+        </button>
       </div>
     </div>
   );

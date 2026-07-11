@@ -640,6 +640,143 @@ body {
   color: var(--text-secondary);
 }
 
+.terms-card {
+  background: none;
+  border: none;
+  text-align: left;
+  width: 100%;
+}
+
+.terms-card-text {
+  flex: 1;
+}
+
+.terms-card-chevron {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.terms-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 20px;
+  transition: color 0.15s;
+}
+
+.terms-back-btn:hover {
+  color: var(--text-primary);
+}
+
+.terms-doc {
+  max-width: 720px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.terms-section {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.terms-section:first-child {
+  padding-top: 0;
+}
+
+.terms-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.terms-section h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.terms-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 16px 0 8px;
+}
+
+.terms-section p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+
+.terms-section p:last-child {
+  margin-bottom: 0;
+}
+
+.terms-section ul {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.terms-section ul li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.terms-section code {
+  font-size: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--text-primary);
+}
+
+.terms-table-wrap {
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+.terms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.terms-table th {
+  text-align: left;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-primary);
+  white-space: nowrap;
+}
+
+.terms-table td {
+  padding: 8px 12px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.terms-table tr:last-child td {
+  border-bottom: none;
+}
+
 .help-response-time {
   display: flex;
   align-items: center;
@@ -1254,6 +1391,12 @@ body {
   border-color: rgba(239, 68, 68, 0.7);
 }
 
+.plan-cancel-confirm-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 /* Toggle switch */
 .settings-toggle {
   position: relative;
@@ -1516,6 +1659,18 @@ body {
   font-weight: 500;
   color: var(--text-primary);
   font-style: italic;
+}
+
+.quote-text p {
+  margin-bottom: 0.3em;
+}
+
+.quote-text p:first-child {
+  margin-bottom: 1.2em;
+}
+
+.quote-text p:last-child {
+  margin-bottom: 0;
 }
 
 .quote-action-btn {
@@ -1903,7 +2058,8 @@ body {
   align-items: center;
   padding: 16px 24px;
   border-bottom: 1px solid var(--border-primary);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(18, 18, 24, 0.95);
+  flex-shrink: 0;
 }
 
 .chat-header-agent-info {
@@ -2394,12 +2550,42 @@ body {
   color: rgba(255,255,255,0.7);
 }
 
+.advisor-chat-scroll-area {
+  display: contents;
+}
+
+.advisor-chat-content-wrapper {
+  display: contents;
+}
+
 .advisor-chat-input {
   display: flex;
   padding: 16px 20px;
   border-top: 1px solid var(--border-primary);
   background-color: var(--bg-secondary);
   gap: 12px;
+  align-items: center;
+}
+
+.new-conversation-fixed-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--border-secondary);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+}
+.new-conversation-fixed-btn:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
 }
 
 .advisor-input-text {
@@ -3595,6 +3781,38 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Generic modal box */
+.modal-box {
+  width: 100%;
+  max-width: 440px;
+  padding: 28px 28px 24px;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 
 /* Redirection topic modal */
@@ -5401,6 +5619,7 @@ body {
   /* ---------- Main layout ---------- */
   .app-layout {
     flex-direction: column;
+    overflow: visible;
   }
 
   .main-content {
@@ -5538,15 +5757,28 @@ body {
   /* ============================================================
      ADVISOR / CHAT PAGE
      ============================================================ */
+  .main-content.advisor-active {
+    overflow: visible;
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 100vh;
+    height: -webkit-fill-available;
+    height: 100dvh;
+  }
+
   .advisor-page {
     padding: 0;
+    padding-top: 56px;
+    box-sizing: border-box;
     margin: 0;
     gap: 0;
     width: 100%;
     max-width: 100%;
     min-height: 0;
-    height: calc(100vh - 56px);
-    overflow: hidden;
+    height: 100%;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
   }
 
   .advisor-page .page-header {
@@ -5556,18 +5788,16 @@ body {
   .advisor-full {
     flex: 1;
     width: 100%;
-    height: 100%;
-    overflow: hidden;
+    min-height: 0;
+    overflow: visible;
   }
 
   .advisor-chat-card {
     position: fixed;
-    top: 0;
+    top: 56px;
     left: 0;
     right: 0;
     bottom: 0;
-    width: auto;
-    height: auto;
     border-radius: 0;
     background: var(--bg-primary);
     display: flex;
@@ -5576,30 +5806,94 @@ body {
     z-index: 10;
   }
 
+  .advisor-chat-scroll-area {
+    display: block;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .advisor-chat-content-wrapper {
+    display: block;
+    min-height: 0;
+  }
+
+
+
   .chat-card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     padding: 12px 16px;
   }
 
   .chat-header-actions {
-    width: 100%;
-    justify-content: flex-start;
+    justify-content: flex-end;
+    flex-shrink: 0;
+  }
+
+  .chat-input-bar {
+    padding-bottom: calc(16px + var(--keyboard-offset, 0px) + env(safe-area-inset-bottom, 0px));
+    transition: padding-bottom 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .chat-messages-container {
+    max-height: none;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ===== AGENT CHAT — full-screen on mobile (like Advisor) ===== */
+  .agent-page {
+    padding: 0;
+    gap: 0;
+    min-height: 0;
+    height: calc(100dvh - 56px);
+    overflow: hidden;
+  }
+
+  .agent-page .agent-hero-banner {
+    display: none;
+  }
+
+  .agent-page .agent-detail-panel {
+    display: none;
+  }
+
+  .agent-page .agent-grid-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .agent-page .chat-card {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    border-radius: 0;
+    background: var(--bg-primary);
   }
 
   .advisor-chat-messages {
     flex: 1;
-    padding: 56px 12px 16px;
-    overflow-y: auto;
+    padding: 16px 12px;
     max-height: none;
-    -webkit-overflow-scrolling: touch;
   }
 
   .advisor-chat-input {
-    flex-shrink: 0;
+    position: fixed;
+    bottom: env(safe-area-inset-bottom, 0px);
+    left: 0;
+    right: 0;
+    z-index: 50;
     padding: 10px 12px;
     background: var(--bg-primary);
+    border-top: 1px solid var(--border-primary);
   }
 
   .advisor-msg-bubble {

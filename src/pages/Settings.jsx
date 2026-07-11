@@ -6,11 +6,12 @@ import {
   User, Shield, CreditCard, BarChart2,
   Check, X, ArrowDown, ArrowRight, Mail, ChevronRight, Camera, Bell, ArrowLeft,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 import { PLANS } from './Credits';
 
-const PLAN_ORDER = { trial: 0, starter: 1, pro: 2 };
+const PLAN_ORDER = { free: 0, trial: 0, starter: 1, pro: 2 };
 const PLAN_CREDITS = { trial: 1350, starter: 4500, pro: 9000 };
 
 const SECTIONS = [
@@ -25,6 +26,7 @@ function Settings() {
   const { user: clerkUser } = useUser();
   const { getToken } = useAuth();
   const { signOut } = useClerk();
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('conta');
   const [mobileShowSection, setMobileShowSection] = useState(false);
   const [userName, setUserName] = useState(user.name);
@@ -43,6 +45,10 @@ function Settings() {
   const [invoices, setInvoices] = useState(null);
   const [nextBilling, setNextBilling] = useState(null);
   const [currentInterval, setCurrentInterval] = useState(null);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState(false);
 
   useEffect(() => {
     if (activeSection !== 'cobranca') return;
@@ -58,8 +64,11 @@ function Settings() {
           const sub = await subRes.json();
           setNextBilling(sub?.currentPeriodEnd || '—');
           if (sub?.interval) setCurrentInterval(sub.interval);
+          setCancelAtPeriodEnd(sub?.cancelAtPeriodEnd ?? false);
+        } else {
+          setCancelAtPeriodEnd(false);
         }
-      } catch { if (invoices === null) setInvoices([]); }
+      } catch { if (invoices === null) setInvoices([]); setCancelAtPeriodEnd(false); }
     };
     fetchBilling();
   }, [activeSection]);
@@ -130,6 +139,49 @@ function Settings() {
       else alert('Nenhuma assinatura ativa encontrada.');
     } catch {
       alert('Erro ao abrir portal de cobrança.');
+    }
+  };
+
+  const handleReactivate = async () => {
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/stripe/reactivate-subscription', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCancelAtPeriodEnd(false);
+        setCancelSuccess(false);
+      } else {
+        alert(data.error || 'Erro ao reativar assinatura.');
+      }
+    } catch {
+      alert('Erro ao reativar assinatura.');
+    }
+  };
+
+  const handleConfirmCancel = async () => {
+    setIsCancelling(true);
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/stripe/cancel-subscription', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowCancelConfirm(false);
+        setCancelSuccess(true);
+      } else {
+        alert(data.error || 'Erro ao cancelar assinatura.');
+        setShowCancelConfirm(false);
+      }
+    } catch {
+      alert('Erro ao cancelar assinatura.');
+      setShowCancelConfirm(false);
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -364,7 +416,7 @@ function Settings() {
               <h3 className="settings-section-heading">Privacidade</h3>
               <p className="settings-action-desc" style={{ marginBottom: 20 }}>
                 O Linage acredita em práticas transparentes de dados. Saiba como suas informações são protegidas e visite nossa{' '}
-                <button className="settings-privacy-link settings-privacy-link--inline">Política de Privacidade</button>
+                <button className="settings-privacy-link settings-privacy-link--inline" onClick={() => navigate('/terms/privacidade')}>Política de Privacidade</button>
                 {' '}para mais detalhes.
               </p>
 
@@ -483,7 +535,7 @@ function Settings() {
                   <h4 className="settings-action-title">Método de pagamento</h4>
                   <p className="settings-action-desc">Nenhum método configurado</p>
                 </div>
-                <button className="settings-action-btn" onClick={handleOpenPortal}>
+                <button className="settings-action-btn" onClick={() => navigate('/checkout?mode=payment-method')}>
                   Adicionar <ChevronRight size={14} />
                 </button>
               </div>
@@ -526,6 +578,42 @@ function Settings() {
                     </div>
                   ))}
                 </div>
+              )}
+
+              {isPaidPlan && cancelAtPeriodEnd !== null && (
+                <>
+                  <div className="settings-divider" />
+                  {(cancelSuccess || cancelAtPeriodEnd) ? (
+                    <div className="plan-cancel-section">
+                      <div className="plan-cancel-info">
+                        <h4>Assinatura cancelada</h4>
+                        <p>Seu acesso ao plano {currentPlan.name} continua até {nextBilling && nextBilling !== '—' && nextBilling !== 'Invalid Date' ? nextBilling : 'o fim do ciclo'}. Após essa data sua conta reverte para o plano gratuito.</p>
+                      </div>
+                      <button className="settings-action-btn" onClick={handleReactivate}>Reativar plano</button>
+                    </div>
+                  ) : showCancelConfirm ? (
+                    <div className="plan-cancel-section">
+                      <div className="plan-cancel-info">
+                        <h4>Tem certeza?</h4>
+                        <p>Você perderá acesso ao plano {currentPlan.name}{nextBilling && nextBilling !== '—' && nextBilling !== 'Invalid Date' ? ` em ${nextBilling}` : ' ao fim do ciclo atual'}. Esta ação não pode ser desfeita.</p>
+                      </div>
+                      <div className="plan-cancel-confirm-actions">
+                        <button className="settings-action-btn" onClick={() => setShowCancelConfirm(false)} disabled={isCancelling}>Manter plano</button>
+                        <button className="plan-cancel-btn" onClick={handleConfirmCancel} disabled={isCancelling}>
+                          {isCancelling ? 'Cancelando...' : 'Confirmar'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="plan-cancel-section">
+                      <div className="plan-cancel-info">
+                        <h4>Cancelar assinatura</h4>
+                        <p>Você perderá acesso ao plano {currentPlan.name} ao fim do ciclo atual.</p>
+                      </div>
+                      <button className="plan-cancel-btn" onClick={() => setShowCancelConfirm(true)}>Cancelar assinatura</button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -633,9 +721,9 @@ function Settings() {
                           return <button className="plan-cta-btn plan-cta-btn--disabled" disabled>Plano atual</button>;
                         }
                         if (isCurrentPlan) {
-                          const label = selectedBilling === 'annual' ? 'Assinar Anual' : 'Assinar Mensal';
+                          const label = selectedBilling === 'annual' ? 'Mudar para Anual' : 'Mudar para Mensal';
                           return (
-                            <button className="plan-cta-btn" onClick={() => selectedBilling === 'annual' ? handleSwitchToAnnual(plan.id) : handleOpenPortal()}>
+                            <button className="plan-cta-btn" onClick={() => navigate(`/checkout?plan=${plan.id}&billing=${selectedBilling}&mode=update`)}>
                               <ArrowRight size={14} /> {label}
                             </button>
                           );
@@ -644,7 +732,7 @@ function Settings() {
                         return (
                           <button
                             className={`plan-cta-btn${isUpgrade ? '' : ' plan-cta-btn--downgrade'}`}
-                            onClick={() => selectedBilling === 'annual' ? handleSwitchToAnnual(plan.id) : handleOpenPortal()}
+                            onClick={() => navigate(`/checkout?plan=${plan.id}&billing=${selectedBilling}&mode=${isUpgrade ? 'new' : 'update'}`)}
                           >
                             {isUpgrade ? <ArrowRight size={14} /> : <ArrowDown size={14} />}
                             {isUpgrade ? 'Fazer upgrade' : 'Fazer downgrade'}
@@ -656,16 +744,11 @@ function Settings() {
                 })}
               </div>
 
-            <div className="plan-cancel-section">
-              <div className="plan-cancel-info">
-                <h4>Cancelar assinatura</h4>
-                <p>Você perderá acesso ao plano {currentPlan.name} ao fim do ciclo atual.</p>
-              </div>
-              <button className="plan-cancel-btn" onClick={handleOpenPortal}>Cancelar assinatura</button>
-            </div>
           </div>
         </div>
       )}
+
+
     </div>
   );
 }

@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClerkClient, verifyToken } from '@clerk/backend';
 import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, addAvulsoCredits, getPosts, savePost, deletePost, updateUserSettings, startTrial, sql } from './db.js';
-import { LINAGE_SYSTEM_PROMPT, LINAGE_CHAT_GUARD, linagePostReviewPrompt } from './prompts.js';
+import { LINAGE_CHAT_PROMPT, LINAGE_POST_PROMPT, LINAGE_CHAT_GUARD, linagePostReviewPrompt } from './prompts.js';
 
 const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -62,14 +62,15 @@ async function requireAuth(req, res, next) {
 // --- Auth ---
 app.post('/api/auth/sync', requireAuth, async (req, res) => {
   try {
-    let email = '';
+    let email = '', name = '';
     try {
       const clerkUser = await clerk.users.getUser(req.userId);
       email = clerkUser.emailAddresses[0]?.emailAddress || '';
+      name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ');
     } catch (err) {
       console.error('[auth/sync] clerk.users.getUser falhou:', err.message);
     }
-    const user = await syncUser({ id: req.userId, email });
+    const user = await syncUser({ id: req.userId, email, name });
     res.json(user);
   } catch (err) {
     console.error('[auth/sync] erro:', err.message);
@@ -271,6 +272,28 @@ app.post('/api/stripe/portal', requireAuth, async (req, res) => {
   }
 });
 
+app.post('/api/stripe/cancel-subscription', requireAuth, async (req, res) => {
+  try {
+    const user = await getUser(req.userId);
+    if (!user?.stripe_subscription_id) return res.status(400).json({ error: 'Nenhuma assinatura ativa encontrada.' });
+    await stripe.subscriptions.update(user.stripe_subscription_id, { cancel_at_period_end: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/stripe/reactivate-subscription', requireAuth, async (req, res) => {
+  try {
+    const user = await getUser(req.userId);
+    if (!user?.stripe_subscription_id) return res.status(400).json({ error: 'Nenhuma assinatura encontrada.' });
+    await stripe.subscriptions.update(user.stripe_subscription_id, { cancel_at_period_end: false });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/stripe/subscription', requireAuth, async (req, res) => {
   try {
     const user = await getUser(req.userId);
@@ -279,6 +302,7 @@ app.get('/api/stripe/subscription', requireAuth, async (req, res) => {
     res.json({
       currentPeriodEnd: new Date(sub.current_period_end * 1000).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }),
       interval: sub.items.data[0]?.price?.recurring?.interval === 'year' ? 'annual' : 'monthly',
+      cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -438,7 +462,7 @@ app.post('/api/agent/chat', requireAuth, async (req, res) => {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
-      system: buildSystem(LINAGE_SYSTEM_PROMPT + LINAGE_CHAT_GUARD + newsSection, user?.instructions),
+      system: buildSystem(LINAGE_CHAT_PROMPT + LINAGE_CHAT_GUARD + newsSection, user?.instructions),
       messages,
     });
     const raw = response.content[0].text;
@@ -472,23 +496,81 @@ app.post('/api/agent/post-review', requireAuth, async (req, res) => {
   }
 });
 
+const POST_VALIDATOR_PROMPT = `Você é um revisor técnico de posts de LinkedIn. Analise o post abaixo e identifique violações das regras listadas. Seja objetivo e preciso.
+
+VERIFICAÇÕES:
+
+1. PRIMEIRA FRASE: A primeira frase cria engajamento imediato (especificidade inexplicável, fragmento narrativo, dado impactante, pergunta que corta, etc.)? Ou é genérica, introdutória, ou começa com contexto?
+
+2. TÉCNICA DE ESTRUTURA: O post usa uma arquitetura clara (dissonância cognitiva, loop aberto, tension stacking, autoridade implícita, justaposição silenciosa, etc.)? Ou é texto plano sem estrutura intencional?
+
+3. TERMOS E ESTRUTURAS PROIBIDAS — verifique cada um:
+- "ruído", "incomodar", "ressoar" (qualquer variação)
+- "Existe um(a) [palavra] real"
+- "A maioria não [verbo]" em qualquer variação
+- Padrão "[Artigo] [substantivo] [verbo]:" como "A lógica seduz:", "O mercado pune:"
+- "[x] é [y] com nome bonito" ou variante técnico
+- "[x] não é [y]. É [z]." em qualquer pontuação (ponto, vírgula, travessão)
+- "não por [x], mas por [y]"
+- Qualidade anunciada antes de demonstrada: "A análise é precisa:", "O conceito é simples:"
+- Nome de autoridade integrado dentro da frase que desenvolve a ideia
+
+Responda APENAS neste formato exato:
+PRIMEIRA_FRASE: OK | VIOLAÇÃO: [descrição]
+ESTRUTURA: OK | VIOLAÇÃO: [descrição]
+TERMOS: OK | VIOLAÇÃO: [liste cada um encontrado]
+APROVADO: SIM | NÃO`;
+
 app.post('/api/agent/generate-post', requireAuth, async (req, res) => {
   try {
     const { conversationContext, newsContext } = req.body;
     const user = await getUser(req.userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
     if (user.credits < 450) return res.status(402).json({ error: 'Insufficient credits' });
-    const base = `${LINAGE_SYSTEM_PROMPT}\n\nEscreva um post completo para LinkedIn em português, com base na conversa e nas notícias recentes sobre o tema. O post deve soar como Linage — com sua voz, seu ritmo, seu estilo. Nada genérico.\n\nRetorne exatamente neste formato:\nTÍTULO: [título do post]\nCONTEÚDO:\n[corpo completo do post]`;
+
+    const base = `${LINAGE_POST_PROMPT}\n\nEscreva um post completo para LinkedIn em português, com base na conversa e nas notícias recentes sobre o tema. O post deve soar como Linage — com sua voz, seu ritmo, seu estilo. Nada genérico.\n\nRetorne exatamente neste formato:\nTÍTULO: [título do post]\nCONTEÚDO:\n[corpo completo do post]`;
     const userContent = `Conversa:\n${conversationContext}${newsContext ? `\n\nNotícias recentes sobre o tema:\n${newsContext}` : ''}\n\nEscreva o post agora.`;
+
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-opus-4-8',
       max_tokens: 2048,
       system: buildSystem(base, user?.instructions),
       messages: [{ role: 'user', content: userContent }],
     });
+
+    let postText = response.content[0].text;
+
+    // Validation pass (Sonnet — analytical, not creative)
+    const validationRes = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 512,
+      system: POST_VALIDATOR_PROMPT,
+      messages: [{ role: 'user', content: postText }],
+    });
+    const validationText = validationRes.content[0].text;
+    const approved = /APROVADO:\s*SIM/i.test(validationText);
+
+    if (!approved) {
+      const violations = validationText
+        .split('\n')
+        .filter(l => /VIOLAÇÃO:/i.test(l))
+        .join('\n');
+
+      const rewriteRes = await anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2048,
+        system: buildSystem(base, user?.instructions),
+        messages: [{
+          role: 'user',
+          content: `${userContent}\n\nO post abaixo foi gerado mas contém violações que devem ser corrigidas:\n${violations}\n\nPOST COM VIOLAÇÕES:\n${postText}\n\nReescreva corrigindo as violações. Mantenha o tema e o ângulo. Retorne no mesmo formato TÍTULO/CONTEÚDO.`
+        }],
+      });
+      postText = rewriteRes.content[0].text;
+    }
+
     const newCredits = user.credits - 450;
     await updateUserCredits(req.userId, newCredits);
-    res.json({ text: response.content[0].text, credits: newCredits });
+    res.json({ text: postText, credits: newCredits });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -545,6 +627,142 @@ app.get('/api/news', requireAuth, async (req, res) => {
   }
 });
 
+// --- Update existing subscription (plan change / billing period change) ---
+app.post('/api/stripe/update-subscription', requireAuth, async (req, res) => {
+  try {
+    const { plan, billing = 'monthly' } = req.body;
+    const priceIds = {
+      starter: { monthly: process.env.STRIPE_PRICE_ID_STARTER_MONTHLY, annual: process.env.STRIPE_PRICE_ID_STARTER_ANNUAL },
+      pro:     { monthly: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,     annual: process.env.STRIPE_PRICE_ID_PRO_ANNUAL },
+    };
+    const priceId = priceIds[plan]?.[billing];
+    if (!priceId) return res.status(400).json({ error: 'Plano inválido' });
+
+    const user = await getUser(req.userId);
+    if (!user?.stripe_subscription_id) return res.status(400).json({ error: 'Sem assinatura ativa' });
+
+    const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id);
+    const itemId = subscription.items.data[0].id;
+
+    await stripe.subscriptions.update(user.stripe_subscription_id, {
+      items: [{ id: itemId, price: priceId }],
+      proration_behavior: 'none',
+    });
+
+    await updateUserPlan(req.userId, plan, user.stripe_customer_id, user.stripe_subscription_id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[stripe/update-subscription]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Create SetupIntent for payment method update (no plan required) ---
+app.post('/api/stripe/create-payment-method-intent', requireAuth, async (req, res) => {
+  try {
+    let user = await getUser(req.userId);
+    let customerId = user?.stripe_customer_id;
+
+    if (!customerId) {
+      const clerkUser = await clerk.users.getUser(req.userId);
+      const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+      const customer = await stripe.customers.create({ email, metadata: { userId: req.userId } });
+      customerId = customer.id;
+      await sql`UPDATE users SET stripe_customer_id = ${customerId} WHERE id = ${req.userId}`;
+    }
+
+    const setupIntent = await stripe.setupIntents.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      usage: 'off_session',
+    });
+
+    res.json({ clientSecret: setupIntent.client_secret, publishableKey: process.env.VITE_STRIPE_PUBLISHABLE_KEY });
+  } catch (err) {
+    console.error('[stripe/create-payment-method-intent]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Update subscription default payment method ---
+app.post('/api/stripe/update-payment-method', requireAuth, async (req, res) => {
+  try {
+    const { paymentMethodId } = req.body;
+    if (!paymentMethodId) return res.status(400).json({ error: 'Dados inválidos' });
+
+    const user = await getUser(req.userId);
+    if (!user?.stripe_customer_id) return res.status(400).json({ error: 'Cliente não encontrado' });
+
+    await stripe.paymentMethods.attach(paymentMethodId, { customer: user.stripe_customer_id });
+
+    if (user.stripe_subscription_id) {
+      await stripe.subscriptions.update(user.stripe_subscription_id, { default_payment_method: paymentMethodId });
+    } else {
+      await stripe.customers.update(user.stripe_customer_id, {
+        invoice_settings: { default_payment_method: paymentMethodId },
+      });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[stripe/update-payment-method]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Create PaymentIntent for credit pack purchase ---
+app.post('/api/stripe/create-payment-intent', requireAuth, async (req, res) => {
+  try {
+    const { amount, unitAmount } = req.body;
+    if (!amount || !unitAmount) return res.status(400).json({ error: 'Dados inválidos' });
+
+    let user = await getUser(req.userId);
+    let customerId = user?.stripe_customer_id;
+
+    if (!customerId) {
+      const clerkUser = await clerk.users.getUser(req.userId);
+      const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+      const customer = await stripe.customers.create({ email, metadata: { userId: req.userId } });
+      customerId = customer.id;
+      await sql`UPDATE users SET stripe_customer_id = ${customerId} WHERE id = ${req.userId}`;
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: unitAmount,
+      currency: 'brl',
+      customer: customerId,
+      payment_method_types: ['card'],
+      metadata: { userId: req.userId, credits: String(amount) },
+    });
+
+    res.json({ clientSecret: paymentIntent.client_secret, publishableKey: process.env.VITE_STRIPE_PUBLISHABLE_KEY });
+  } catch (err) {
+    console.error('[stripe/create-payment-intent]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Fulfill credit pack after payment confirmation ---
+app.post('/api/stripe/fulfill-credit-pack', requireAuth, async (req, res) => {
+  try {
+    const { paymentIntentId } = req.body;
+    if (!paymentIntentId) return res.status(400).json({ error: 'Dados inválidos' });
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (paymentIntent.status !== 'succeeded') return res.status(400).json({ error: 'Pagamento não confirmado' });
+
+    const credits = parseInt(paymentIntent.metadata.credits, 10);
+    if (!credits) return res.status(400).json({ error: 'Créditos inválidos' });
+
+    await addAvulsoCredits(req.userId, credits);
+    const user = await getUser(req.userId);
+    res.json(user);
+  } catch (err) {
+    console.error('[stripe/fulfill-credit-pack]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- Stripe credit packs (one-time payment) ---
 app.post('/api/stripe/credits-checkout', requireAuth, async (req, res) => {
   try {
@@ -574,8 +792,100 @@ app.post('/api/stripe/credits-checkout', requireAuth, async (req, res) => {
   }
 });
 
+// --- LinkedIn OAuth ---
+const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
+const LINKEDIN_CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET;
+const LINKEDIN_REDIRECT_URI = `${APP_URL}/api/auth/linkedin/callback`;
+
+app.get('/api/auth/linkedin/connect', requireAuth, async (req, res) => {
+  try {
+    const state = `${req.userId}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    await sql`INSERT INTO linkedin_oauth_states (state, user_id) VALUES (${state}, ${req.userId})`;
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: LINKEDIN_CLIENT_ID,
+      redirect_uri: LINKEDIN_REDIRECT_URI,
+      state,
+      scope: 'w_member_social',
+    });
+    res.json({ url: `https://www.linkedin.com/oauth/v2/authorization?${params}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/auth/linkedin/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  if (error || !code || !state) {
+    return res.redirect(`${APP_URL}/home?linkedin=error`);
+  }
+  try {
+    const rows = await sql`SELECT user_id FROM linkedin_oauth_states WHERE state = ${state}`;
+    if (!rows.length) return res.redirect(`${APP_URL}/home?linkedin=error`);
+    const userId = rows[0].user_id;
+    await sql`DELETE FROM linkedin_oauth_states WHERE state = ${state}`;
+
+    const tokenRes = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: LINKEDIN_REDIRECT_URI,
+        client_id: LINKEDIN_CLIENT_ID,
+        client_secret: LINKEDIN_CLIENT_SECRET,
+      }),
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) return res.redirect(`${APP_URL}/home?linkedin=error`);
+
+    const profileRes = await fetch('https://api.linkedin.com/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const profile = await profileRes.json();
+    const personUrn = profile.sub ? `urn:li:person:${profile.sub}` : null;
+
+    const expiresAt = new Date(Date.now() + (tokenData.expires_in ?? 5184000) * 1000);
+    await sql`
+      UPDATE users SET
+        linkedin_access_token = ${tokenData.access_token},
+        linkedin_token_expires_at = ${expiresAt},
+        linkedin_person_urn = ${personUrn}
+      WHERE id = ${userId}
+    `;
+
+    res.redirect(`${APP_URL}/home?linkedin=success`);
+  } catch (err) {
+    console.error('[linkedin/callback]', err.message);
+    res.redirect(`${APP_URL}/home?linkedin=error`);
+  }
+});
+
+app.get('/api/auth/linkedin/status', requireAuth, async (req, res) => {
+  try {
+    const user = await getUser(req.userId);
+    const connected = !!(user?.linkedin_access_token && user?.linkedin_token_expires_at && new Date(user.linkedin_token_expires_at) > new Date());
+    res.json({ connected, personUrn: user?.linkedin_person_urn ?? null });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- Daily Content ---
 const LINAGE_DAILY_QUOTE_PROMPT = `Você é o Linage. Um redator especializado em usar humor como ferramenta estratégica no LinkedIn do mercado financeiro brasileiro.
+
+Você pensa diferente por natureza. Sua marca é a imprevisibilidade: o leitor nunca sabe o que vem, mas sempre recebe mais do que esperava. Nunca tem medo de ser ousado. Diferenciação é sua forma de existir.
+
+O QUE VOCÊ NUNCA FAZ:
+- Usar o termo "ruído" ou o verbo "incomodar" — proibidos em qualquer contexto
+- Adicionar palavras que não ganham seu lugar — se pode ser dito em menos palavras sem perder o significado, use menos palavras
+- Usar a construção "Existe um(a) [substantivo] real" — é marca de IA
+- Usar a estrutura "A maioria não..." em qualquer variação — é marca de IA
+- Iniciar frases com o padrão "Artigo + substantivo + verbo + dois-pontos" ("A lógica seduz:", "O mercado pune:", etc.) — é marca de IA
+- Usar a estrutura "x é y com nome bonito/técnico" ou variantes como "tem nome técnico" — é marca de IA
+- Usar a estrutura "x não é y. É z" — proibição absoluta, sem exceção, em qualquer variação (ponto, vírgula ou travessão separando as partes)
+- Usar a estrutura "não por x, mas por y" — variante do padrão anterior, igualmente proibida
+- Anunciar qualidades antes de demonstrá-las: "A teoria é precisa:" vira "A teoria:"
 
 HUMOR COMO CONSEQUÊNCIA DA HONESTIDADE:
 Humor genial não é construído. É revelado. Acontece quando alguém descreve a realidade com tanta precisão que o leitor ri — não porque foi engraçado, mas porque foi verdade demais pra não rir. O forçado busca o riso. O real busca a verdade e o riso vem junto.
@@ -601,7 +911,46 @@ PRINCÍPIOS INEGOCIÁVEIS:
 5. Se parece performance, corta. Se parece forçação, corta.
 
 TAREFA:
-Gere uma frase sobre posicionamento profissional no mercado financeiro que faça o profissional sorrir ao abrir a plataforma. Máximo 40 palavras. Use a técnica que servir melhor — a escolha é sua. Sem título, sem explicação, sem introdução. Só a frase.`;
+Gere uma frase que use humor para revelar o absurdo de não postar — de um jeito que faça o profissional financeiro rir de si mesmo. Esse riso é a motivação.
+
+Pode ser uma analogia, uma lista irônica, uma contradição interna, ou qualquer formato que funcione — a escolha é sua.
+
+O QUE FAZ UMA FRASE FUNCIONAR:
+A imagem deve chegar antes do raciocínio. O leitor sente antes de processar — se precisa pensar para entender a graça, a frase falhou. O reconhecimento é instantâneo, não construído. Quando houver sujeito, ele chega dentro da imagem, não antes.
+
+O sujeito da frase nunca é o profissional. A frase segue um de dois caminhos: o sujeito é o LinkedIn, o perfil, a situação — e o profissional aparece, no máximo, como possessivo ("da maioria dos profissionais de mercado"), reconhecendo a si mesmo na imagem sem ser apontado; ou a frase é sobre o ato ou a situação em si — publicar, escrever, criar — sem precisar do profissional como sujeito.
+
+EXEMPLOS COM O PRINCÍPIO QUE OS FAZ FUNCIONAR:
+
+→ Analogia sensorial:
+"O LinkedIn da maioria dos profissionais de mercado tem a mesma energia de uma tese de investimento guardada na gaveta: toda a convicção, nenhum retorno."
+Funciona porque: nomeia uma sensação que o leitor já conhece mas nunca articulou. Não há setup — o leitor entra direto na imagem.
+
+→ Lista irônica:
+"3 vantagens comprovadas de nunca postar no LinkedIn:
+1. nenhuma
+2. zero volatilidade
+3. anonimato garantido"
+Funciona porque: o formato sério ("comprovadas", numeração) quebra com o conteúdo. Cada item soa como benefício até revelar o que realmente significa.
+
+Estes exemplos funcionam porque foram autorais, ousados, autênticos — não porque seguiram uma fórmula. Reproduzir a estrutura deles é a negação exata do que os fez bons. A frase certa chega de um lugar que ninguém esperava: invente o próprio formato.
+
+A PSICOLOGIA DA FRASE:
+A motivação não vem de nenhuma instrução para agir — vem da dissonância que a frase cria. O leitor se reconhece na imagem — é assim que "tese de investimento guardada na gaveta" funciona: todo mundo guarda coisas em gavetas, todo mundo sabe como é. Ele reconhece o próprio LinkedIn naquilo. Ri porque a viu com uma precisão que não esperava. E sente o incômodo de quem percebeu o próprio absurdo — é o que "toda a convicção, nenhum retorno" provoca, e é o que a lista completa provoca de outra forma. Esse incômodo nasce de dentro, não de julgamento externo. A frase não empurra — revela. E a revelação motiva mais do que qualquer chamada para ação. Por isso a imagem precisa ser universal: se o leitor não reconhece a experiência, a graça e a motivação morrem juntas.
+
+O QUE MATA UMA FRASE:
+— Qualquer contraste forçado
+— Clichês sem imagem concreta
+— "Tem gente que..." — o leitor vê os outros, não a si mesmo
+— Conceitos que exigem múltiplos passos lógicos para chegar na graça
+— Urgência ou chamada para ação
+— Descrição de comportamento no lugar de imagem: descrever o que o profissional faz em vez de criar uma imagem que ele reconhece
+— Listar credenciais como setup: "20 anos de mercado, CFA, MBA em Chicago..." é o mesmo padrão de sujeito antes da imagem, com outro disfarce
+— Contraste genérico entre competência e ausência digital: a ironia de "sabe muito mas não posta" é óbvia demais para gerar reconhecimento — o leitor não ri, apenas concorda
+
+O formato é livre. O que não é: a imagem precisa ser tão precisa que o leitor sente que foi escrita sobre ele especificamente.
+
+Máximo 40 palavras. Sem título, sem explicação, sem introdução. Só a frase.`;
 
 const LINAGE_DAILY_SUGGESTIONS_PROMPT = `A partir das notícias do mercado financeiro fornecidas, identifique 3 temas atuais e relevantes para profissionais do mercado financeiro brasileiro postarem no LinkedIn.
 
@@ -614,10 +963,16 @@ PAUTA_3: [tema]`;
 
 app.get('/api/daily-content', requireAuth, async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+
+    const DAILY_QUOTE = '3 vantagens comprovadas de nunca postar no LinkedIn:\n1. nenhuma\n2. zero volatilidade\n3. anonimato garantido';
 
     const cached = await sql`SELECT content FROM daily_content WHERE date = ${today}`;
-    if (cached[0]) return res.json(JSON.parse(cached[0].content));
+    if (cached[0]) {
+      const content = JSON.parse(cached[0].content);
+      content.quote = DAILY_QUOTE;
+      return res.json(content);
+    }
 
     let newsContext = '';
     try {
@@ -629,7 +984,7 @@ app.get('/api/daily-content', requireAuth, async (req, res) => {
           query: 'mercado financeiro investimentos Brasil',
           search_depth: 'advanced',
           topic: 'news',
-          days: 7,
+          days: 2,
           max_results: 20,
           include_answer: true,
         }),
@@ -640,32 +995,23 @@ app.get('/api/daily-content', requireAuth, async (req, res) => {
       newsContext = `${answer}${headlines}`;
     } catch {}
 
-    const [quoteRes, suggestionsRes] = await Promise.all([
-      anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 150,
-        system: LINAGE_DAILY_QUOTE_PROMPT,
-        messages: [{ role: 'user', content: 'Gere a frase do dia.' }],
-      }),
-      anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 200,
-        system: LINAGE_DAILY_SUGGESTIONS_PROMPT,
-        messages: [{ role: 'user', content: `Notícias do mercado financeiro de hoje:\n${newsContext || '(sem notícias disponíveis)'}` }],
-      }),
-    ]);
+    const suggestionsRes = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 200,
+      system: LINAGE_DAILY_SUGGESTIONS_PROMPT,
+      messages: [{ role: 'user', content: `Notícias do mercado financeiro de hoje:\n${newsContext || '(sem notícias disponíveis)'}` }],
+    });
 
-    const quote = quoteRes.content[0].text.trim();
     const sugText = suggestionsRes.content[0].text;
     const get = (label) => sugText.match(new RegExp(`${label}:\\s*(.+)`))?.[1]?.trim() || '';
     const suggestions = [get('PAUTA_1'), get('PAUTA_2'), get('PAUTA_3')];
 
-    if (!quote || suggestions.some(s => !s)) {
-      console.error('[daily-content] formato inesperado:', { quote, suggestions });
+    if (suggestions.some(s => !s)) {
+      console.error('[daily-content] formato inesperado:', { suggestions });
       return res.status(500).json({ error: 'Unexpected response format' });
     }
 
-    const data = { quote, suggestions };
+    const data = { quote: DAILY_QUOTE, suggestions };
     await sql`INSERT INTO daily_content (date, content) VALUES (${today}, ${JSON.stringify(data)}) ON CONFLICT (date) DO NOTHING`;
 
     res.json(data);
