@@ -19,9 +19,14 @@ import TermsOfUse from './pages/TermsOfUse';
 import Privacy from './pages/Privacy';
 import LegalTermsOfUse from './pages/LegalTermsOfUse';
 import LegalPrivacy from './pages/LegalPrivacy';
+import ComingSoon from './pages/ComingSoon';
 import useStore from './store';
 import { Menu, Coins } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+// Interruptor único: enquanto true, mostra só a página "em breve" em qualquer rota.
+// Nada do app abaixo foi removido — reverter é só voltar isso para false.
+const COMING_SOON = true;
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -175,6 +180,9 @@ function AppContent() {
 }
 
 function App() {
+  if (COMING_SOON) {
+    return <ComingSoon />;
+  }
   return (
     <Router>
       <AppContent />

@@ -52,6 +52,13 @@ export async function initDb() {
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS waitlist_signups (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `;
 }
 
 export async function syncUser({ id, email, name }) {
@@ -139,6 +146,16 @@ export async function deletePost(id, userId) {
 
 export async function updateUserSettings(id, { nickname, instructions }) {
   await sql`UPDATE users SET nickname = ${nickname}, instructions = ${instructions} WHERE id = ${id}`;
+}
+
+export async function addWaitlistSignup(email) {
+  const [row] = await sql`
+    INSERT INTO waitlist_signups (id, email)
+    VALUES (${`wl_${Date.now()}_${Math.random().toString(36).slice(2)}`}, ${email})
+    ON CONFLICT (email) DO NOTHING
+    RETURNING *
+  `;
+  return row || null;
 }
 
 export { sql };

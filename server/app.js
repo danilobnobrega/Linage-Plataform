@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClerkClient, verifyToken } from '@clerk/backend';
-import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, addAvulsoCredits, getPosts, savePost, deletePost, updateUserSettings, startTrial, sql } from './db.js';
+import { initDb, syncUser, getUser, updateUserCredits, updateUserPlan, addAvulsoCredits, getPosts, savePost, deletePost, updateUserSettings, startTrial, addWaitlistSignup, sql } from './db.js';
 import { LINAGE_CHAT_PROMPT, LINAGE_POST_PROMPT, LINAGE_CHAT_GUARD, linagePostReviewPrompt } from './prompts.js';
 
 const app = express();
@@ -58,6 +58,19 @@ async function requireAuth(req, res, next) {
     res.status(401).json({ error: 'Unauthorized' });
   }
 }
+
+// --- Waitlist (página "em breve") ---
+app.post('/api/waitlist', async (req, res) => {
+  try {
+    const email = (req.body?.email || '').trim().toLowerCase();
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!validEmail) return res.status(400).json({ error: 'E-mail inválido' });
+    await addWaitlistSignup(email);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // --- Auth ---
 app.post('/api/auth/sync', requireAuth, async (req, res) => {
